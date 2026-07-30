@@ -19,6 +19,10 @@ performance-proven and is not submission-ready.
 - report rejection of missing, duplicate, forged, or tampered records
 - zero simulated adversarial false passes
 - signed-run tamper rejection
+- bounded, path- and secret-redacted verifier-output and patch receipts before temporary
+  workspace cleanup
+- proof-bundle verification of the completed calibration record, its archived
+  scenario set, and the no-model forensic record
 - existing product-benchmark identity unchanged
 - existing executor-profile acceptance test unchanged and passing
 
@@ -41,13 +45,13 @@ math fixture. It is not evidence that real models save money.
 | External scenario selector | Not collected |
 | Local run-attestation public key | Frozen; private key stored outside the repository |
 | Independent reproduction | Not collected |
-| Model calls made by this work | None |
+| Model calls made across calibration attempts | 6 total; 4 in the completed record |
 
-The official Codex CLI was installed and verified with a version-only command;
-no model call was made. Citadel's Windows launcher now prefers the reviewed npm
-entrypoint over an inaccessible Windows Store desktop executable. Calibration,
-external selection, and attestation remain machine-readable blockers, so
-`actual-run` execution and the submission gate remain closed.
+Citadel's Windows launcher prefers the reviewed npm entrypoint over an
+inaccessible Windows Store desktop executable. Calibration and the local
+attestation key are complete. The remaining machine-readable blockers are
+outside scenario selection and independent reproduction, so `actual-run`
+execution and the submission gate remain closed.
 
 ## Claim boundary
 
@@ -55,7 +59,8 @@ Safe current claim:
 
 > Citadel now contains a separate, reproducible engineering contract for
 > outcome-aware economic routing and can run a frozen comparative evaluation
-> once exact executors, subscription quota, and external selection are approved.
+> once outside selection, independent reproduction, and matrix subscription
+> quota are approved.
 
 Unsafe current claims:
 
@@ -83,10 +88,18 @@ verified, and every cost source was known. The normalized comparison total was
 `$3.534060`, not a subscription invoice. Aggregate elapsed runtime was
 1,439,995 ms.
 
-All four task verifiers failed. That does not invalidate the access and
-telemetry calibration, but it means these runs provide no task-quality or
-savings evidence. The next gate is therefore the attested preliminary matrix,
-not a stronger public claim.
+All four task verifiers failed. A no-model reproduction established that the
+original `npm test` verifier failed on unrelated lint and TypeScript tooling
+before reaching the queue tests. A task-focused AVA invocation then failed on
+the actual queue bug, and a bounded reference repair touching `index.js` and
+`test.js` passed all 22 tests with no unhandled rejection. The archived
+calibration scenario set preserves what actually ran; the corrected actual
+matrix has a new frozen scenario-set identity. The 0/4 calibration result is
+therefore not interpretable as model quality and supplies no savings evidence.
+
+The next quota-consuming gate is a small diagnostic pilot against the corrected
+verifier. The full matrix should not run until that pilot produces auditable
+task-verifier receipts.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

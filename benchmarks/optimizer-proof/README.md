@@ -26,6 +26,14 @@ that the authenticated accounts can launch those exact IDs and that runtime
 telemetry reports the same identity and a known normalized cost source. It does
 not prove task quality or savings: all four calibration task verifiers failed.
 
+The completed calibration remains bound to
+`calibration-scenarios/`, an unchanged archive of the scenario set it actually
+ran. A no-model forensic audit proved that the original `npm test` verifier for
+`p-limit-cleanup-pending` failed on unrelated lint and TypeScript tooling before
+task tests executed. The actual matrix was therefore re-frozen with a
+task-focused AVA verifier. That verifier fails on the pinned queue bug and
+passes a reference repair touching both expected artifacts.
+
 ## Evidence levels
 
 `fixture-simulation` validates schemas, policy determinism, report math,
@@ -36,7 +44,9 @@ quality or savings.
 
 1. exact frozen models and bound executor profiles;
 2. a checked-in outside scenario selection and Ed25519 public key;
-3. runner-owned verification of changed artifacts and repository tests;
+3. runner-owned verification of changed artifacts and repository tests, with
+   bounded path- and secret-redacted output and patch receipts for every attempted
+   verification;
 4. strict cost provenance;
 5. a signed raw run record.
 
@@ -72,9 +82,11 @@ node scripts/test-optimizer.js
 ## Frozen identities
 
 - Scenario set:
+  `optimizer-scenarios-sha256:1269928412c49b9405293a0cbf814d6e62ab50988579f0fbdb1353b4c17df2b2`
+- Archived calibration scenario set:
   `optimizer-scenarios-sha256:d9e0a9eab6c005ae8fdabbc69696397cecab2a0f45009b88357c989818103a7a`
 - Executor set:
-  `optimizer-executors-sha256:00f184d107a29f367a1cbfabea7ec01e1893692398f30afcdad2bcb400ded750`
+  `optimizer-executors-sha256:8eb2367e150c75864573e8369a481e4a13be331b8544291563ab9cf9b457d4cb`
 - Metric set:
   `optimizer-metrics-sha256:bedffbda2b18d725610b0f294a8273ef908237fd957bf9e51a5af4885b123e4f`
 - Pricing snapshot:

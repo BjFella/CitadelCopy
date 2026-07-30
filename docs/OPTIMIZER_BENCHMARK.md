@@ -53,8 +53,10 @@ holdout record. An outside maintainer later selects one already frozen holdout.
 The local matrix signer and outside reproducer are separate trust roles.
 
 The runner verifies repository tests and requires every expected artifact to
-appear in the Git diff. It preserves failures in the raw record. A successful
-task counts only when:
+appear in the Git diff. Each verification attempt preserves a bounded,
+path- and secret-redacted verifier-output excerpt, patch excerpt, digests, changed paths,
+exit status, and truncation flags before deleting its temporary workspace.
+A successful task counts only when:
 
 - repository verification passes;
 - the outcome is marked verified;
@@ -105,8 +107,14 @@ vendor-reported `total_cost_usd`.
 2. **Calibration**: 4 completed, non-holdout CLI runs (one scenario × 4 frozen
    profiles) prove account access, observed model identity, and known cost
    sources. The digest-bound record reports 0/4 task-verifier passes, so it is
-   not performance evidence. The subscription-quota budget capped this at 4
-   runs and 160 aggregate model-runtime timeout minutes.
+   not performance evidence. A no-model forensic reproduction found that the
+   original full-repository verifier failed on unrelated lint and TypeScript
+   tooling before reaching the task tests. The old scenario set is archived
+   unchanged with that record. The actual matrix is re-frozen with a
+   task-focused verifier that fails on the queue bug and passes a bounded
+   repair touching both expected artifacts. The subscription-quota budget
+   capped calibration at 4 runs and 160 aggregate model-runtime timeout
+   minutes.
 3. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
 4. **Independent reproduction**: outside selection, outside run, public key,
@@ -130,6 +138,12 @@ node scripts/optimizer-proof-bundle.js verify <bundle-directory>
 Actual execution remains fail-closed until the doctor has no blockers and the
 user explicitly approves consuming the frozen run/runtime allowance from their
 subscription quota.
+
+The proof bundle carries both scenario sets: `inputs/calibration-scenarios/`
+reproduces the exact set used by the completed calibration, while
+`inputs/scenarios/` is the corrected set frozen for the actual matrix. It also
+includes and verifies `calibration-record.json` and
+`calibration-forensics.json`.
 
 Model and pricing references:
 

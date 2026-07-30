@@ -193,10 +193,26 @@ const RUN_FIELDS = Object.freeze([
   'topology',
   'cost',
   'artifact_paths',
+  'verification_receipts',
   'receipt_status',
   'adversarial_result',
   'failure_code',
   'attestation',
+]);
+const VERIFICATION_RECEIPT_FIELDS = Object.freeze([
+  'attempt',
+  'profile_id',
+  'status',
+  'exit_code',
+  'timed_out',
+  'output_digest',
+  'output_excerpt',
+  'output_truncated',
+  'patch_exit_code',
+  'patch_digest',
+  'patch_excerpt',
+  'patch_truncated',
+  'changed_paths',
 ]);
 const FREEZE_FIELDS = Object.freeze([
   'schema',
@@ -212,6 +228,7 @@ const FREEZE_FIELDS = Object.freeze([
   'pricing_snapshot_digest',
   'calibration_plan_digest',
   'calibration_record_digest',
+  'calibration_forensics_digest',
   'external_scenario',
   'external_reproduction_digest',
   'attestation_public_key',
@@ -549,6 +566,52 @@ function validateAttestation(value, source) {
   }
 }
 
+function validateVerificationReceipt(value, source = 'verification receipt') {
+  if (!exactFields(value, VERIFICATION_RECEIPT_FIELDS)) {
+    throw new Error(`${source} fields must exactly match schema 1`);
+  }
+  if (!Number.isInteger(value.attempt) || value.attempt < 1) {
+    throw new Error(`${source}.attempt is invalid`);
+  }
+  if (typeof value.profile_id !== 'string' || !SAFE_ID.test(value.profile_id)) {
+    throw new Error(`${source}.profile_id is invalid`);
+  }
+  if (!['passed', 'failed'].includes(value.status)) {
+    throw new Error(`${source}.status is invalid`);
+  }
+  if (value.exit_code !== null && !Number.isInteger(value.exit_code)) {
+    throw new Error(`${source}.exit_code is invalid`);
+  }
+  if (typeof value.timed_out !== 'boolean') {
+    throw new Error(`${source}.timed_out is invalid`);
+  }
+  if (value.status === 'passed' && (value.exit_code !== 0 || value.timed_out)) {
+    throw new Error(`${source} passed status requires exit code 0 without timeout`);
+  }
+  if (value.patch_exit_code !== null && !Number.isInteger(value.patch_exit_code)) {
+    throw new Error(`${source}.patch_exit_code is invalid`);
+  }
+  for (const field of ['output_digest', 'patch_digest']) {
+    if (!DIGEST.test(value[field])) throw new Error(`${source}.${field} is invalid`);
+  }
+  for (const field of ['output_excerpt', 'patch_excerpt']) {
+    if (typeof value[field] !== 'string' || value[field].length > 8192 || value[field].includes('\0')) {
+      throw new Error(`${source}.${field} is invalid`);
+    }
+  }
+  for (const field of ['output_truncated', 'patch_truncated']) {
+    if (typeof value[field] !== 'boolean') throw new Error(`${source}.${field} is invalid`);
+  }
+  if (!Array.isArray(value.changed_paths) || value.changed_paths.length > 256) {
+    throw new Error(`${source}.changed_paths is invalid`);
+  }
+  value.changed_paths.forEach((item, index) => safeRelative(item, `${source}.changed_paths[${index}]`));
+  if (new Set(value.changed_paths).size !== value.changed_paths.length) {
+    throw new Error(`${source}.changed_paths must be unique`);
+  }
+  return value;
+}
+
 function validateRun(value, source = 'run') {
   if (!exactFields(value, RUN_FIELDS)) throw new Error(`${source} fields must exactly match schema 1`);
   if (value.schema !== SCHEMA_VERSION) throw new Error(`${source}.schema must be 1`);
@@ -590,6 +653,24 @@ function validateRun(value, source = 'run') {
   validateCost(value.cost, `${source}.cost`);
   if (!Array.isArray(value.artifact_paths)) throw new Error(`${source}.artifact_paths is invalid`);
   value.artifact_paths.forEach((item, index) => safeRelative(item, `${source}.artifact_paths[${index}]`));
+  if (!Array.isArray(value.verification_receipts) || value.verification_receipts.length > value.attempts) {
+    throw new Error(`${source}.verification_receipts is invalid`);
+  }
+  value.verification_receipts.forEach((receipt, index) => {
+    validateVerificationReceipt(receipt, `${source}.verification_receipts[${index}]`);
+    if (receipt.attempt > value.attempts || (index > 0 && receipt.attempt <= value.verification_receipts[index - 1].attempt)) {
+      throw new Error(`${source}.verification_receipts must follow attempt order`);
+    }
+  });
+  if (['VERIFICATION_FAILED', 'EXPECTED_ARTIFACTS_NOT_CHANGED'].includes(value.failure_code)
+    && value.verification_receipts.length === 0) {
+    throw new Error(`${source} verification failure requires a receipt`);
+  }
+  if (value.outcome === 'passed'
+    && (value.verification_receipts.length === 0
+      || value.verification_receipts.at(-1).status !== 'passed')) {
+    throw new Error(`${source} passed outcome requires a passed verification receipt`);
+  }
   if (!['verified', 'failed', 'unknown'].includes(value.receipt_status)) throw new Error(`${source}.receipt_status is invalid`);
   if (value.verified && (value.model_proof_status !== 'passed' || value.receipt_status !== 'verified')) {
     throw new Error(`${source} verified outcome requires passed model proof and a verified receipt`);
@@ -653,6 +734,9 @@ function validateFreeze(value, scenarios, executors, source = 'freeze') {
   }
   if (value.calibration_record_digest !== null && !DIGEST.test(value.calibration_record_digest)) {
     throw new Error(`${source}.calibration_record_digest is invalid`);
+  }
+  if (value.calibration_forensics_digest !== null && !DIGEST.test(value.calibration_forensics_digest)) {
+    throw new Error(`${source}.calibration_forensics_digest is invalid`);
   }
   if (value.external_reproduction_digest !== null && !DIGEST.test(value.external_reproduction_digest)) {
     throw new Error(`${source}.external_reproduction_digest is invalid`);
@@ -773,4 +857,5 @@ module.exports = Object.freeze({
   validateProbe,
   validateRun,
   validateScenario,
+  validateVerificationReceipt,
 });

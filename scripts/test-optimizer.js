@@ -50,9 +50,11 @@ const {
   FAILURE_CODES,
   adapterSourceDigest,
   changedArtifacts,
+  redactDiagnosticText,
   runScenario,
   sumAttemptCosts,
   validateAdapterOutput,
+  verificationReceipt,
 } = require('../core/optimizer/runner');
 const { buildBundle, verifyBundle } = require('../core/optimizer/bundle');
 const runtimeAdapter = require('./optimizer-runtime-adapter');
@@ -67,6 +69,7 @@ const {
   validateCalibrationPlan,
   validateCalibrationRecord,
 } = require('../core/optimizer/calibration');
+const { validateCalibrationForensics } = require('../core/optimizer/calibration-forensics');
 const {
   externalReproductionDigest,
   validateExternalReproduction,
@@ -98,13 +101,19 @@ function knownCost(amount, source = 'test') {
 
 function main() {
   const scenarios = loadScenarios(path.join(BENCHMARK, 'scenarios'));
+  const calibrationScenarios = loadScenarios(path.join(BENCHMARK, 'calibration-scenarios'));
   const executors = loadExecutors(path.join(BENCHMARK, 'executors.json'));
   validateBenchmarkShape(scenarios, executors);
   const freeze = loadFreeze(path.join(BENCHMARK, 'freeze.json'), scenarios, executors);
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'calibration-plan.json'), 'utf8')),
-    scenarios,
+    calibrationScenarios,
     executors,
+  );
+  const calibrationForensics = validateCalibrationForensics(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'calibration-forensics.json'), 'utf8')),
+    calibrationScenarios,
+    scenarios,
   );
   const truth = validateFixtureTruth(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'truth.json'), 'utf8')),
@@ -126,18 +135,28 @@ function main() {
   assert.strictEqual(calibrationPlan.approval_status, 'completed');
   assert.strictEqual(calibrationPlan.quota_acknowledged, true);
   assert.strictEqual(calibrationPlan.record_digest, freeze.calibration_record_digest);
+  assert.strictEqual(digest(calibrationForensics), freeze.calibration_forensics_digest);
+  assert.notStrictEqual(scenarioSetIdentity(calibrationScenarios), scenarioSetIdentity(scenarios));
+  assert.strictEqual(
+    scenarioSetIdentity(calibrationScenarios),
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'calibration-record.json'), 'utf8')).scenario_set_id,
+  );
+  assert.throws(() => validateCalibrationForensics({
+    ...calibrationForensics,
+    model_calls_made: 1,
+  }, calibrationScenarios, scenarios), /observation boundary/);
   assert.strictEqual(Object.hasOwn(calibrationPlan, 'approved_spend_usd'), false);
   assert.throws(() => validateCalibrationPlan({
     ...calibrationPlan,
     quota_budget: { ...calibrationPlan.quota_budget, max_cli_runs: 13 },
-  }, scenarios, executors), /quota_budget/);
+  }, calibrationScenarios, executors), /quota_budget/);
   assert.throws(() => validateCalibrationPlan({
     ...calibrationPlan,
     approval_status: 'approved',
     quota_acknowledged: false,
     approved_by: 'Seth Gammon',
     approved_at: '2026-07-30T00:00:00.000Z',
-  }, scenarios, executors), /quota acknowledgement/);
+  }, calibrationScenarios, executors), /quota acknowledgement/);
   const pendingCalibrationPlan = {
     ...calibrationPlan,
     approval_status: 'pending',
@@ -146,7 +165,7 @@ function main() {
     approved_at: null,
     record_digest: null,
   };
-  assert.doesNotThrow(() => validateCalibrationPlan(pendingCalibrationPlan, scenarios, executors));
+  assert.doesNotThrow(() => validateCalibrationPlan(pendingCalibrationPlan, calibrationScenarios, executors));
   const approvedCalibrationPlan = {
     ...calibrationPlan,
     approval_status: 'approved',
@@ -155,8 +174,8 @@ function main() {
     approved_at: '2026-07-30T00:00:00.000Z',
     record_digest: null,
   };
-  assert.doesNotThrow(() => validateCalibrationPlan(approvedCalibrationPlan, scenarios, executors));
-  const calibrationCaseList = calibrationCases(calibrationPlan, scenarios, executors);
+  assert.doesNotThrow(() => validateCalibrationPlan(approvedCalibrationPlan, calibrationScenarios, executors));
+  const calibrationCaseList = calibrationCases(calibrationPlan, calibrationScenarios, executors);
   assert.strictEqual(calibrationCaseList.length, 4);
   assert.strictEqual(calibrationCaseList[0].scenario.id, calibrationPlan.scenario_ids[0]);
   assert.strictEqual(calibrationCaseList[0].profile.profile_id, calibrationPlan.profile_ids[0]);
@@ -179,7 +198,7 @@ function main() {
     schema: 1,
     kind: 'citadel_optimizer_calibration_record',
     authorization_digest: calibrationAuthorizationDigest(approvedCalibrationPlan),
-    scenario_set_id: scenarioSetIdentity(scenarios),
+    scenario_set_id: scenarioSetIdentity(calibrationScenarios),
     executor_set_id: executorSetIdentity(executors),
     access_basis: approvedCalibrationPlan.access_basis,
     quota_budget: approvedCalibrationPlan.quota_budget,
@@ -194,24 +213,24 @@ function main() {
   assert.doesNotThrow(() => validateCalibrationRecord(
     calibrationRecord,
     approvedCalibrationPlan,
-    scenarios,
+    calibrationScenarios,
     executors,
   ));
   assert.throws(() => validateCalibrationRecord(
     calibrationRecord,
     pendingCalibrationPlan,
-    scenarios,
+    calibrationScenarios,
     executors,
   ), /approved subscription quota/);
   assert.throws(() => validateCalibrationRecord({
     ...calibrationRecord,
     quota_budget: { ...calibrationRecord.quota_budget, max_cli_runs: 13 },
-  }, approvedCalibrationPlan, scenarios, executors), /frozen authorization/);
+  }, approvedCalibrationPlan, calibrationScenarios, executors), /frozen authorization/);
   assert.throws(() => validateCalibrationRecord({
     ...calibrationRecord,
     status: 'passed',
     completed_at: '2026-07-30T00:01:00.000Z',
-  }, approvedCalibrationPlan, scenarios, executors), /every frozen calibration case/);
+  }, approvedCalibrationPlan, calibrationScenarios, executors), /every frozen calibration case/);
   assert(executors.every((executor) => executor.executor_profile_digest === boundExecutorProfileDigest(executor)));
   assert.strictEqual(freeze.scenario_set_id, scenarioSetIdentity(scenarios));
   assert.strictEqual(freeze.executor_set_id, executorSetIdentity(executors));
@@ -369,7 +388,33 @@ function main() {
     assert.deepStrictEqual(changedArtifacts(probeRoot, pLimitShort, () => ({
       status: 0,
       stdout: 'test.js\n',
-    }), 1000), { passed: true, paths: ['test.js'] });
+    }), 1000), { passed: true, paths: ['test.js'], changed_paths: ['test.js'] });
+    const diagnosticReceipt = verificationReceipt({
+      attempt: 1,
+      profileId: expectedProfile.profile_id,
+      verification: {
+        status: 1,
+        stdout: `${probeRoot}\\test.js\n${'x'.repeat(9000)}`,
+        stderr: `${process.env.USERPROFILE || ''}\\private\nghp_123456789012345678901234567890123456`,
+        timed_out: false,
+      },
+      patch: {
+        status: 0,
+        stdout: `diff --git a/test.js b/test.js\n--- ${probeRoot}\\test.js\n+++ ${probeRoot}\\test.js\n`,
+      },
+      changedPaths: ['test.js'],
+      sandbox: temp,
+      workspace: probeRoot,
+    });
+    assert.strictEqual(diagnosticReceipt.status, 'failed');
+    assert.strictEqual(diagnosticReceipt.output_truncated, true);
+    assert(diagnosticReceipt.output_excerpt.length <= 8192);
+    assert(!diagnosticReceipt.output_excerpt.includes(probeRoot));
+    assert(!diagnosticReceipt.output_excerpt.includes('ghp_'));
+    assert(diagnosticReceipt.output_excerpt.includes('<REDACTED_SECRET_OR_PATH>'));
+    assert(!diagnosticReceipt.patch_excerpt.includes(probeRoot));
+    assert(diagnosticReceipt.patch_excerpt.includes('<WORKSPACE>'));
+    assert.strictEqual(redactDiagnosticText(probeRoot, temp, probeRoot), '<WORKSPACE>');
 
     const adapterFile = path.join(temp, 'adapter.js');
     fs.writeFileSync(adapterFile, '// mock adapter file\n');
@@ -417,6 +462,16 @@ function main() {
     assert.strictEqual(unsigned.outcome, 'passed');
     assert.strictEqual(unsigned.verified, true);
     assert.strictEqual(unsigned.cost.status, 'known');
+    assert.strictEqual(unsigned.verification_receipts.length, 1);
+    assert.strictEqual(unsigned.verification_receipts[0].status, 'passed');
+    assert.strictEqual(unsigned.verification_receipts[0].profile_id, unsigned.selected_profile_id);
+    assert.throws(() => validateRun({
+      ...unsigned,
+      verification_receipts: [{
+        ...unsigned.verification_receipts[0],
+        output_excerpt: 'x'.repeat(8193),
+      }],
+    }), /output_excerpt/);
     const keys = crypto.generateKeyPairSync('ed25519');
     const signed = attestRun(unsigned, keys.privateKey);
     assert.strictEqual(verifyRunAttestation(signed, keys.publicKey), true);
@@ -483,6 +538,21 @@ function main() {
     assert.strictEqual(verifiedBundle.valid, true);
     assert.strictEqual(verifiedBundle.bundle_id, bundle.manifest.bundle_id);
     assert.strictEqual(verifiedBundle.report_reproduced, true);
+    assert.strictEqual(verifiedBundle.calibration_record_verified, true);
+    assert.strictEqual(verifiedBundle.calibration_forensics_verified, true);
+    const bundledCalibration = path.join(bundleDirectory, 'inputs', 'calibration-record.json');
+    assert.strictEqual(fs.existsSync(bundledCalibration), true);
+    assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'calibration-forensics.json')), true);
+    assert.strictEqual(fs.existsSync(path.join(
+      bundleDirectory,
+      'inputs',
+      'calibration-scenarios',
+      '10-p-limit-cleanup-pending.json',
+    )), true);
+    const originalCalibration = fs.readFileSync(bundledCalibration, 'utf8');
+    fs.writeFileSync(bundledCalibration, originalCalibration.replace('"status": "passed"', '"status": "failed"'));
+    assert.throws(() => verifyBundle(bundleDirectory), /digest mismatch/);
+    fs.writeFileSync(bundledCalibration, originalCalibration);
     fs.appendFileSync(path.join(bundleDirectory, 'README.md'), '\ntampered\n');
     assert.throws(() => verifyBundle(bundleDirectory), /digest mismatch/);
   } finally {

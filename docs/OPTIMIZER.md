@@ -91,6 +91,12 @@ Implemented:
 - exact public model IDs and canonical Operation Fork profile digests;
 - a digest-bound official-list-price normalization for Codex token telemetry;
 - a completed, digest-bound 4-run non-holdout calibration record;
+- an archived calibration scenario set plus a digest-bound no-model forensic
+  record explaining why its task verifiers failed;
+- bounded, path- and secret-redacted verifier and patch receipts on every future actual-run
+  verification attempt;
+- proof bundles that independently validate the completed calibration record,
+  forensics, and both frozen scenario sets;
 - a separate 120-run benchmark matrix;
 - fixture-only adversarial and anti-gaming tests;
 - a submission gate that refuses missing calibration, unattested runs,

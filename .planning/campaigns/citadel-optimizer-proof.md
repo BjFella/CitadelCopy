@@ -29,6 +29,10 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Pass the complete no-model Citadel test suite.
 - [x] Approve the bounded subscription-quota calibration.
 - [x] Run the bounded subscription-quota calibration.
+- [x] Preserve bounded verifier and patch diagnostics before workspace cleanup.
+- [x] Bind the completed calibration record into the reproducible proof bundle.
+- [x] Forensically explain the 0/4 task result and re-freeze a corrected matrix
+  verifier without rewriting the archived calibration scenario set.
 - [ ] Run the attested actual matrix.
 - [ ] Collect outside selection and independent reproduction.
 - [ ] Replace fixture presentation with actual evidence.

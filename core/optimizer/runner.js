@@ -22,6 +22,7 @@ const {
 const { nextAdaptiveAction, route } = require('./policy');
 const { probeWorkspace } = require('./probe');
 const { validateExecutorBindings } = require('./executor-binding');
+const { SECRET_PATTERN } = require('../forks/redaction');
 
 const ADAPTER_FIELDS = Object.freeze([
   'schema',
@@ -46,6 +47,7 @@ const FAILURE_CODES = Object.freeze({
   profile_binding: 'EXECUTOR_PROFILE_UNBOUND',
   unexpected: 'UNEXPECTED_FAILED',
 });
+const DIAGNOSTIC_EXCERPT_LIMIT = 8192;
 
 class OptimizerRunError extends Error {
   constructor(code) {
@@ -151,13 +153,78 @@ function sumAttemptCosts(costs) {
 
 function changedArtifacts(workspace, scenario, executeCommand, timeoutMs) {
   const result = executeCommand(['git', 'diff', '--name-only', '--'], workspace, timeoutMs);
-  if (result.status !== 0) return { passed: false, paths: [] };
+  if (result.status !== 0) return { passed: false, paths: [], changed_paths: [] };
   const changed = new Set(String(result.stdout || '').split(/\r?\n/).filter(Boolean).map((item) => item.replace(/\\/g, '/')));
   const expected = scenario.expected_artifacts.map((item) => item.replace(/\\/g, '/'));
   return {
     passed: expected.every((item) => changed.has(item)),
     paths: expected.filter((item) => changed.has(item)),
+    changed_paths: [...changed].sort(),
   };
+}
+
+function escapeRegularExpression(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function redactDiagnosticText(value, sandbox, workspace) {
+  let output = String(value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const replacements = [
+    [workspace, '<WORKSPACE>'],
+    [sandbox, '<SANDBOX>'],
+    [process.env.USERPROFILE, '<HOME>'],
+    [process.env.HOME, '<HOME>'],
+  ].filter(([candidate]) => typeof candidate === 'string' && candidate);
+  for (const [candidate, replacement] of replacements) {
+    const variants = [...new Set([candidate, candidate.replace(/\\/g, '/'), candidate.replace(/\//g, '\\')])];
+    for (const variant of variants) {
+      output = output.replace(new RegExp(escapeRegularExpression(variant), 'gi'), replacement);
+    }
+  }
+  return output.split('\n').map((line) => (
+    SECRET_PATTERN.test(line) ? '<REDACTED_SECRET_OR_PATH>' : line
+  )).join('\n');
+}
+
+function boundedDiagnostic(value) {
+  return {
+    excerpt: value.slice(-DIAGNOSTIC_EXCERPT_LIMIT),
+    truncated: value.length > DIAGNOSTIC_EXCERPT_LIMIT,
+  };
+}
+
+function verificationReceipt({
+  attempt,
+  profileId,
+  verification,
+  patch,
+  changedPaths,
+  sandbox,
+  workspace,
+}) {
+  const outputCapture = redactDiagnosticText(
+    `[stdout]\n${verification.stdout || ''}\n[stderr]\n${verification.stderr || ''}`,
+    sandbox,
+    workspace,
+  );
+  const patchCapture = redactDiagnosticText(patch.stdout || '', sandbox, workspace);
+  const output = boundedDiagnostic(outputCapture);
+  const patchEvidence = boundedDiagnostic(patchCapture);
+  return Object.freeze({
+    attempt,
+    profile_id: profileId,
+    status: verification.status === 0 && !verification.timed_out ? 'passed' : 'failed',
+    exit_code: Number.isInteger(verification.status) ? verification.status : null,
+    timed_out: Boolean(verification.timed_out),
+    output_digest: digest(outputCapture),
+    output_excerpt: output.excerpt,
+    output_truncated: output.truncated,
+    patch_exit_code: Number.isInteger(patch.status) ? patch.status : null,
+    patch_digest: digest(patchCapture),
+    patch_excerpt: patchEvidence.excerpt,
+    patch_truncated: patchEvidence.truncated,
+    changed_paths: [...new Set(changedPaths)].sort(),
+  });
 }
 
 function readAdapterOutput(sandbox, outputFile, expectedProfile) {
@@ -213,6 +280,7 @@ function runScenario({
   let outcome = 'unknown';
   let verified = false;
   let artifactPaths = [];
+  const verificationReceipts = [];
   let failureCode = null;
   let probe = null;
   try {
@@ -266,6 +334,16 @@ function runScenario({
       humanInterventions += finalAdapter.human_interventions;
       const verification = executeCommand(scenario.verification_command, workspace, timeoutMs);
       const artifacts = changedArtifacts(workspace, scenario, executeCommand, timeoutMs);
+      const patch = executeCommand(['git', 'diff', '--no-ext-diff', '--binary', '--'], workspace, timeoutMs);
+      verificationReceipts.push(verificationReceipt({
+        attempt: attempts,
+        profileId: currentProfile.profile_id,
+        verification,
+        patch,
+        changedPaths: artifacts.changed_paths,
+        sandbox,
+        workspace,
+      }));
       artifactPaths = artifacts.paths;
       if (verification.status === 0 && artifacts.passed) {
         outcome = 'passed';
@@ -326,6 +404,7 @@ function runScenario({
     topology: decision ? decision.topology : 'single',
     cost: sumAttemptCosts(costs),
     artifact_paths: artifactPaths,
+    verification_receipts: verificationReceipts,
     receipt_status: adapter.receipt_status,
     adversarial_result: scenario.adversarial_case === null ? null : verified ? 'detected' : 'unknown',
     failure_code: failureCode,
@@ -340,7 +419,9 @@ module.exports = Object.freeze({
   assertActualReady,
   adapterSourceDigest,
   changedArtifacts,
+  redactDiagnosticText,
   runScenario,
   sumAttemptCosts,
   validateAdapterOutput,
+  verificationReceipt,
 });

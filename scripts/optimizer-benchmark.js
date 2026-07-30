@@ -34,6 +34,7 @@ const {
   validateCalibrationPlan,
   validateCalibrationRecord,
 } = require('../core/optimizer/calibration');
+const { validateCalibrationForensics } = require('../core/optimizer/calibration-forensics');
 const {
   externalReproductionDigest,
   validateExternalReproduction,
@@ -42,12 +43,14 @@ const {
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK_ROOT = path.join(ROOT, 'benchmarks', 'optimizer-proof');
 const SCENARIO_DIRECTORY = path.join(BENCHMARK_ROOT, 'scenarios');
+const CALIBRATION_SCENARIO_DIRECTORY = path.join(BENCHMARK_ROOT, 'calibration-scenarios');
 const EXECUTOR_FILE = path.join(BENCHMARK_ROOT, 'executors.json');
 const FREEZE_FILE = path.join(BENCHMARK_ROOT, 'freeze.json');
 const FIXTURE_TRUTH_FILE = path.join(BENCHMARK_ROOT, 'fixtures', 'truth.json');
 const PRICING_FILE = path.join(BENCHMARK_ROOT, 'pricing.json');
 const CALIBRATION_PLAN_FILE = path.join(BENCHMARK_ROOT, 'calibration-plan.json');
 const CALIBRATION_RECORD_FILE = path.join(BENCHMARK_ROOT, 'calibration-record.json');
+const CALIBRATION_FORENSICS_FILE = path.join(BENCHMARK_ROOT, 'calibration-forensics.json');
 const EXTERNAL_REPRODUCTION_FILE = path.join(BENCHMARK_ROOT, 'external-reproduction.json');
 
 function args(argv) {
@@ -80,13 +83,14 @@ function readJsonl(file) {
 
 function checkedInBenchmark() {
   const scenarios = loadScenarios(SCENARIO_DIRECTORY);
+  const calibrationScenarios = loadScenarios(CALIBRATION_SCENARIO_DIRECTORY);
   const executors = loadExecutors(EXECUTOR_FILE);
   validateBenchmarkShape(scenarios, executors);
   const freeze = loadFreeze(FREEZE_FILE, scenarios, executors);
   const fixtureTruth = validateFixtureTruth(JSON.parse(fs.readFileSync(FIXTURE_TRUTH_FILE, 'utf8')), scenarios);
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(CALIBRATION_PLAN_FILE, 'utf8')),
-    scenarios,
+    calibrationScenarios,
     executors,
   );
   if (digest(calibrationPlan) !== freeze.calibration_plan_digest) {
@@ -95,13 +99,22 @@ function checkedInBenchmark() {
   if (calibrationPlan.record_digest !== freeze.calibration_record_digest) {
     throw new Error('Calibration plan and freeze record digests differ');
   }
+  if (!fs.existsSync(CALIBRATION_FORENSICS_FILE)) throw new Error('Frozen calibration forensics are missing');
+  const calibrationForensics = validateCalibrationForensics(
+    JSON.parse(fs.readFileSync(CALIBRATION_FORENSICS_FILE, 'utf8')),
+    calibrationScenarios,
+    scenarios,
+  );
+  if (digest(calibrationForensics) !== freeze.calibration_forensics_digest) {
+    throw new Error('Frozen calibration forensics digest mismatch');
+  }
   let calibrationRecord = null;
   if (freeze.calibration_record_digest !== null) {
     if (!fs.existsSync(CALIBRATION_RECORD_FILE)) throw new Error('Frozen calibration record is missing');
     calibrationRecord = validateCalibrationRecord(
       JSON.parse(fs.readFileSync(CALIBRATION_RECORD_FILE, 'utf8')),
       calibrationPlan,
-      scenarios,
+      calibrationScenarios,
       executors,
     );
     if (digest(calibrationRecord) !== freeze.calibration_record_digest) {
@@ -129,12 +142,14 @@ function checkedInBenchmark() {
   }
   return {
     scenarios,
+    calibrationScenarios,
     executors,
     freeze,
     fixtureTruth,
     pricingSnapshot,
     calibrationPlan,
     calibrationRecord,
+    calibrationForensics,
     externalReproduction,
   };
 }
@@ -205,6 +220,8 @@ function doctor(benchmark) {
     unbound_adapters: unboundAdapters,
     pricing_snapshot_digest: benchmark.freeze.pricing_snapshot_digest,
     calibration_record_digest: benchmark.freeze.calibration_record_digest,
+    calibration_forensics_digest: benchmark.freeze.calibration_forensics_digest,
+    calibration_scenario_set_id: scenarioSetIdentity(benchmark.calibrationScenarios),
     blockers,
   };
 }
@@ -278,14 +295,14 @@ function main() {
     const adapterFile = path.join(ROOT, 'scripts', 'optimizer-runtime-adapter.js');
     const cases = calibrationCases(
       benchmark.calibrationPlan,
-      benchmark.scenarios,
+      benchmark.calibrationScenarios,
       benchmark.executors,
     );
     const record = {
       schema: 1,
       kind: 'citadel_optimizer_calibration_record',
       authorization_digest: calibrationAuthorizationDigest(benchmark.calibrationPlan),
-      scenario_set_id: benchmark.freeze.scenario_set_id,
+      scenario_set_id: scenarioSetIdentity(benchmark.calibrationScenarios),
       executor_set_id: benchmark.freeze.executor_set_id,
       access_basis: benchmark.calibrationPlan.access_basis,
       quota_budget: benchmark.calibrationPlan.quota_budget,
@@ -300,13 +317,13 @@ function main() {
     writeJson(output, validateCalibrationRecord(
       record,
       benchmark.calibrationPlan,
-      benchmark.scenarios,
+      benchmark.calibrationScenarios,
       benchmark.executors,
     ));
     for (const item of cases) {
       const run = runScenario({
         scenario: item.scenario,
-        scenarios: benchmark.scenarios,
+        scenarios: benchmark.calibrationScenarios,
         executors: [item.profile],
         policyId: 'prompt-only',
         repetition: 1,
@@ -327,7 +344,7 @@ function main() {
       writeJson(output, validateCalibrationRecord(
         record,
         benchmark.calibrationPlan,
-        benchmark.scenarios,
+        benchmark.calibrationScenarios,
         benchmark.executors,
       ));
       process.stdout.write(`${JSON.stringify({

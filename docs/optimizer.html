@@ -481,7 +481,7 @@
       <aside class="claim-card" aria-label="Current claim boundary">
         <div class="claim-label">Current claim boundary</div>
         <p>The controller and proof contract are implemented. Real savings are not yet proven.</p>
-        <code>status: engineering-contract-only<br />actual-run: blocked<br />model calls made: 0</code>
+        <code>status: engineering-contract-only<br />actual-run: blocked<br />calibration: 4 recorded / 6 total calls</code>
       </aside>
     </header>
 
@@ -569,7 +569,9 @@
             <li>Continue, escalate, split, and stop decisions.</li>
             <li>Holdout rejection during capability learning.</li>
             <li>Signed-run tamper rejection and adversarial gates.</li>
-            <li>4/4 exact model, receipt, and cost-source calibration gates passed; 0/4 task verifiers passed.</li>
+            <li>4/4 exact model, receipt, and cost-source calibration gates passed; 0/4 original task verifiers passed.</li>
+            <li>No-model forensics found the original verifier failed before task tests; the matrix now uses a task-focused verifier proven against the bug and a reference repair.</li>
+            <li>Future failed attempts retain bounded, path- and secret-redacted verifier and patch receipts.</li>
           </ul>
         </article>
         <article class="truth-card blocked">

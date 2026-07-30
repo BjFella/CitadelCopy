@@ -109,6 +109,15 @@ matrix, and independent reproduction remain open.
 The list-price normalization is a common comparison unit, not a claim that
 Seth's subscription is billed per run.
 
+A no-model forensic reproduction found that the original calibration verifier
+failed on unrelated repository tooling before reaching the task tests. The
+exact calibration scenario set is archived with its record. The actual matrix
+is re-frozen with a task-focused verifier that fails on the pinned queue bug and
+passes a bounded reference repair touching both expected artifacts. Future run
+records retain bounded, path- and secret-redacted verifier and patch receipts, and the
+standalone bundle verifies the completed calibration record, the forensic
+record, and both scenario sets.
+
 ## Evaluation
 
 Pre-application evidence gate:

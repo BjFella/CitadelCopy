@@ -12,7 +12,8 @@ const {
 } = require('./contracts');
 const { pricingSnapshotDigest, validatePricingSnapshot } = require('./pricing');
 const { buildReport } = require('./report');
-const { validateCalibrationPlan } = require('./calibration');
+const { validateCalibrationPlan, validateCalibrationRecord } = require('./calibration');
+const { validateCalibrationForensics } = require('./calibration-forensics');
 const {
   externalReproductionDigest,
   validateExternalReproduction,
@@ -82,22 +83,55 @@ function writeFile(target, content) {
 function checkedInInputs(root) {
   const benchmarkRoot = path.join(root, 'benchmarks', 'optimizer-proof');
   const scenarioDirectory = path.join(benchmarkRoot, 'scenarios');
+  const calibrationScenarioDirectory = path.join(benchmarkRoot, 'calibration-scenarios');
   const executorFile = path.join(benchmarkRoot, 'executors.json');
   const freezeFile = path.join(benchmarkRoot, 'freeze.json');
   const pricingFile = path.join(benchmarkRoot, 'pricing.json');
   const calibrationPlanFile = path.join(benchmarkRoot, 'calibration-plan.json');
+  const calibrationRecordFile = path.join(benchmarkRoot, 'calibration-record.json');
+  const calibrationForensicsFile = path.join(benchmarkRoot, 'calibration-forensics.json');
   const externalReproductionFile = path.join(benchmarkRoot, 'external-reproduction.json');
   const scenarios = loadScenarios(scenarioDirectory);
+  const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
   const executors = loadExecutors(executorFile);
   const freeze = loadFreeze(freezeFile, scenarios, executors);
   if (!realRegularFile(benchmarkRoot, calibrationPlanFile)) throw new Error('Frozen calibration plan is missing');
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(calibrationPlanFile, 'utf8')),
-    scenarios,
+    calibrationScenarios,
     executors,
   );
   if (digest(calibrationPlan) !== freeze.calibration_plan_digest) {
     throw new Error('Frozen calibration plan digest mismatch');
+  }
+  if (calibrationPlan.record_digest !== freeze.calibration_record_digest) {
+    throw new Error('Calibration plan and freeze record digests differ');
+  }
+  if (!realRegularFile(benchmarkRoot, calibrationForensicsFile)) {
+    throw new Error('Frozen calibration forensics are missing');
+  }
+  const calibrationForensics = validateCalibrationForensics(
+    JSON.parse(fs.readFileSync(calibrationForensicsFile, 'utf8')),
+    calibrationScenarios,
+    scenarios,
+  );
+  if (digest(calibrationForensics) !== freeze.calibration_forensics_digest) {
+    throw new Error('Frozen calibration forensics digest mismatch');
+  }
+  let calibrationRecord = null;
+  if (freeze.calibration_record_digest !== null) {
+    if (!realRegularFile(benchmarkRoot, calibrationRecordFile)) {
+      throw new Error('Frozen calibration record is missing');
+    }
+    calibrationRecord = validateCalibrationRecord(
+      JSON.parse(fs.readFileSync(calibrationRecordFile, 'utf8')),
+      calibrationPlan,
+      calibrationScenarios,
+      executors,
+    );
+    if (digest(calibrationRecord) !== freeze.calibration_record_digest) {
+      throw new Error('Frozen calibration record digest mismatch');
+    }
   }
   if (freeze.pricing_snapshot_digest !== null) {
     if (!realRegularFile(benchmarkRoot, pricingFile)) throw new Error('Frozen pricing snapshot is missing');
@@ -122,10 +156,15 @@ function checkedInInputs(root) {
   return {
     benchmarkRoot,
     scenarioDirectory,
+    calibrationScenarioDirectory,
     executorFile,
     freezeFile,
     pricingFile: freeze.pricing_snapshot_digest === null ? null : pricingFile,
     calibrationPlanFile,
+    calibrationRecordFile: calibrationRecord === null ? null : calibrationRecordFile,
+    calibrationRecord,
+    calibrationForensicsFile,
+    calibrationForensics,
     externalReproductionFile: externalReproduction === null ? null : externalReproductionFile,
     externalReproduction,
     scenarios,
@@ -151,8 +190,9 @@ function bundleReadme(report) {
 
 Claim status: **${report.claim_status}**
 
-This directory contains frozen benchmark inputs, raw run records, the derived
-report, and a content-addressed manifest.
+This directory contains frozen benchmark inputs, the archived calibration
+scenario set, the completed calibration and forensic records, raw run records,
+the derived report, and a content-addressed manifest.
 
 Verify from a Citadel checkout:
 
@@ -182,6 +222,10 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
   copyFile(inputs.freezeFile, path.join(output, 'inputs', 'freeze.json'));
   copyFile(inputs.executorFile, path.join(output, 'inputs', 'executors.json'));
   copyFile(inputs.calibrationPlanFile, path.join(output, 'inputs', 'calibration-plan.json'));
+  if (inputs.calibrationRecordFile !== null) {
+    copyFile(inputs.calibrationRecordFile, path.join(output, 'inputs', 'calibration-record.json'));
+  }
+  copyFile(inputs.calibrationForensicsFile, path.join(output, 'inputs', 'calibration-forensics.json'));
   if (inputs.pricingFile !== null) {
     copyFile(inputs.pricingFile, path.join(output, 'inputs', 'pricing.json'));
   }
@@ -194,6 +238,12 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
       path.join(output, 'inputs', 'scenarios', name),
     );
   }
+  for (const name of fs.readdirSync(inputs.calibrationScenarioDirectory).filter((item) => item.endsWith('.json')).sort()) {
+    copyFile(
+      path.join(inputs.calibrationScenarioDirectory, name),
+      path.join(output, 'inputs', 'calibration-scenarios', name),
+    );
+  }
   copyFile(rawPath, path.join(output, 'evidence', 'raw.jsonl'));
   copyFile(reportPath, path.join(output, 'evidence', 'report.json'));
   writeFile(path.join(output, 'README.md'), bundleReadme(expectedReport));
@@ -203,8 +253,12 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     'inputs/freeze.json',
     'inputs/executors.json',
     'inputs/calibration-plan.json',
+    ...(inputs.calibrationRecordFile === null ? [] : ['inputs/calibration-record.json']),
+    'inputs/calibration-forensics.json',
     ...(inputs.pricingFile === null ? [] : ['inputs/pricing.json']),
     ...(inputs.externalReproductionFile === null ? [] : ['inputs/external-reproduction.json']),
+    ...fs.readdirSync(path.join(output, 'inputs', 'calibration-scenarios')).sort()
+      .map((name) => `inputs/calibration-scenarios/${name}`),
     ...fs.readdirSync(path.join(output, 'inputs', 'scenarios')).sort()
       .map((name) => `inputs/scenarios/${name}`),
     'evidence/raw.jsonl',
@@ -284,16 +338,48 @@ function verifyBundle(bundleDirectory) {
     if (canonical(actual) !== canonical(record)) throw new Error(`Bundle file digest mismatch: ${record.path}`);
   }
   const scenarioDirectory = path.join(root, 'inputs', 'scenarios');
+  const calibrationScenarioDirectory = path.join(root, 'inputs', 'calibration-scenarios');
   const executors = loadExecutors(path.join(root, 'inputs', 'executors.json'));
   const scenarios = loadScenarios(scenarioDirectory);
+  const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
   const freeze = loadFreeze(path.join(root, 'inputs', 'freeze.json'), scenarios, executors);
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'calibration-plan.json'), 'utf8')),
-    scenarios,
+    calibrationScenarios,
     executors,
   );
   if (digest(calibrationPlan) !== freeze.calibration_plan_digest) {
     throw new Error('Bundle calibration plan digest mismatch');
+  }
+  if (calibrationPlan.record_digest !== freeze.calibration_record_digest) {
+    throw new Error('Bundle calibration plan and freeze record digests differ');
+  }
+  const calibrationForensicsFile = path.join(root, 'inputs', 'calibration-forensics.json');
+  if (!realRegularFile(root, calibrationForensicsFile)) {
+    throw new Error('Bundle calibration forensics are missing');
+  }
+  const calibrationForensics = validateCalibrationForensics(
+    JSON.parse(fs.readFileSync(calibrationForensicsFile, 'utf8')),
+    calibrationScenarios,
+    scenarios,
+  );
+  if (digest(calibrationForensics) !== freeze.calibration_forensics_digest) {
+    throw new Error('Bundle calibration forensics digest mismatch');
+  }
+  if (freeze.calibration_record_digest !== null) {
+    const calibrationRecordFile = path.join(root, 'inputs', 'calibration-record.json');
+    if (!realRegularFile(root, calibrationRecordFile)) {
+      throw new Error('Bundle calibration record is missing');
+    }
+    const calibrationRecord = validateCalibrationRecord(
+      JSON.parse(fs.readFileSync(calibrationRecordFile, 'utf8')),
+      calibrationPlan,
+      calibrationScenarios,
+      executors,
+    );
+    if (digest(calibrationRecord) !== freeze.calibration_record_digest) {
+      throw new Error('Bundle calibration record digest mismatch');
+    }
   }
   if (freeze.pricing_snapshot_digest !== null) {
     const pricingFile = path.join(root, 'inputs', 'pricing.json');
@@ -336,6 +422,8 @@ function verifyBundle(bundleDirectory) {
     claim_status: manifest.claim_status,
     files_verified: manifest.files.length,
     report_reproduced: true,
+    calibration_record_verified: freeze.calibration_record_digest !== null,
+    calibration_forensics_verified: true,
   });
 }
 
