@@ -18,8 +18,8 @@
     "max_model_calls": 162,
     "max_model_runtime_minutes": 7230
   },
-  "approval_status": "pending",
-  "quota_acknowledged": false,
-  "approved_by": null,
-  "approved_at": null
+  "approval_status": "approved",
+  "quota_acknowledged": true,
+  "approved_by": "Seth Gammon",
+  "approved_at": "2026-07-30T20:44:02.628Z"
 }

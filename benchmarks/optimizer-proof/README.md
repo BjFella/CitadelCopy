@@ -99,17 +99,17 @@ The fixed record path and completed status prevent a duplicate pilot. Its raw
 failed result, archived inputs, and zero-call forensic replay are all
 digest-bound and remain excluded from performance claims.
 
-`matrix-plan` makes no model calls. The checked-in authorization is pending and
-caps the frozen matrix at 120 CLI cells, 162 model attempts, and 7,230 aggregate
-timeout-minutes. The timeout figure is a fail-safe ceiling, not expected
-duration or a dollar estimate. `run` fails before key parsing or model launch
-until that exact subscription envelope is explicitly approved.
+`matrix-plan` makes no model calls. Seth Gammon approved the checked-in
+authorization at `2026-07-30T20:44:02.628Z`; it caps the frozen matrix at 120
+CLI cells, 162 model attempts, and 7,230 aggregate timeout-minutes. The timeout
+figure is a fail-safe ceiling, not expected duration or a dollar estimate.
+No matrix run predates that approval.
 
 `selection-request`, `select-holdout`, `freeze-selection`, `reproduction-plan`,
 `verify-reproduction`, and `freeze-reproduction` make no model calls. The
 selection command reads one precommitted public beacon round from three
-relays; it does not contact a human. The matrix command is blocked until the
-checked-in subscription authorization is explicitly approved. The `reproduce`
+relays; it does not contact a human. The matrix command requires the checked-in
+subscription authorization, which is now approved. The `reproduce`
 command is an optional, separately quota-gated path for any third party who
 independently chooses to rerun the selected scenario; it is not a submission
 gate and requires no outreach. See

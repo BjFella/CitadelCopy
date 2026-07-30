@@ -27,5 +27,5 @@
     "selection_source": "https://api.drand.sh/public/6333716"
   },
   "external_reproduction_digest": null,
-  "attestation_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgImYiRsz1MlhupbP2MOI5ORRVayyWIgORgOjnXzMSHI=\n-----END PUBLIC KEY-----\n"
+  "attestation_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA449Pa1w6WakDXkDDacrA3/CX2fcT6NzS2NlhkvkoNGI=\n-----END PUBLIC KEY-----\n"
 }

@@ -46,16 +46,15 @@ math fixture. It is not evidence that real models save money.
 | Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
 | Diagnostic pilot | Completed 2/2 identity and receipt gates; raw record failed; Claude's 22-test pass was an artifact-gate false negative |
 | Holdout selector | `citadel-short-executor-proof`, selected by precommitted drand round 6333716; three relays agreed and the BLS signature verified |
-| Local run-attestation public key | Frozen; private key stored outside the repository |
+| Local run-attestation public key | Rotated before any matrix run because the original private key was unavailable; replacement private key stored outside the repository and public rotation record checked in |
 | Clean hosted verification | Beacon selection passed on GitHub-hosted runner; matrix bundle verification awaits the unrun matrix |
 | Model calls made across calibration attempts | 6 total; 4 in the completed record |
 | Model calls made in diagnostic pilot | 2 total; no rerun |
 
 Citadel's Windows launcher prefers the reviewed npm entrypoint over an
 inaccessible Windows Store desktop executable. Calibration, the local
-attestation key, and public-random holdout selection are complete. Matrix
-subscription quota remains separately approval-gated, and no matrix run has
-started.
+attestation key, public-random holdout selection, and the exact subscription
+quota authorization are complete. No matrix run has started.
 
 The method and public-random selection request were published before drand round
 `6333716`. All three committed relays agreed; the exact rule selected
@@ -68,9 +67,9 @@ Safe current claim:
 
 > Citadel now contains a separate, reproducible engineering contract for
 > outcome-aware economic routing. Its precommitted public beacon selected
-> `citadel-short-executor-proof`; the frozen comparative matrix remains unrun
-> until subscription quota is explicitly approved. Clean hosted verification
-> remains required before a grant claim.
+> `citadel-short-executor-proof`; the frozen comparative matrix is approved but
+> remains unrun. Clean hosted verification remains required before a grant
+> claim.
 
 Unsafe current claims:
 

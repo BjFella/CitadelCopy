@@ -92,10 +92,12 @@ const {
   validateExternalSelectionRequest,
 } = require('../core/optimizer/external-selection');
 const {
+  assertMatrixAuthorized,
   expectedQuota,
   matrixAuthorizationDigest,
   validateMatrixAuthorization,
 } = require('../core/optimizer/matrix-authorization');
+const { validateAttestationRotation } = require('../core/optimizer/attestation-rotation');
 
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK = path.join(ROOT, 'benchmarks', 'optimizer-proof');
@@ -135,6 +137,10 @@ function main() {
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'matrix-authorization.json'), 'utf8')),
     freeze,
     scenarios,
+  );
+  const attestationRotation = validateAttestationRotation(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'attestation-key-rotation.json'), 'utf8')),
+    freeze,
   );
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'calibration-plan.json'), 'utf8')),
@@ -191,7 +197,11 @@ function main() {
   assert.deepStrictEqual(selectionRequest.holdout_scenario_ids, freeze.holdout_scenario_ids);
   assert.strictEqual(selectionRequest.beacon.round, 6333716);
   assert.strictEqual(selectionRequest.beacon.round_time, '2026-07-30T20:15:00.000Z');
-  assert.strictEqual(matrixAuthorization.approval_status, 'pending');
+  assert.strictEqual(matrixAuthorization.approval_status, 'approved');
+  assert.strictEqual(matrixAuthorization.quota_acknowledged, true);
+  assert.strictEqual(matrixAuthorization.approved_by, 'Seth Gammon');
+  assert.strictEqual(attestationRotation.matrix_runs_before_rotation, 0);
+  assert.strictEqual(attestationRotation.selection_record_digest, publishedSelection.selection_digest);
   assert.deepStrictEqual(matrixAuthorization.quota_budget, {
     max_cli_runs: 120,
     max_model_calls: 162,
@@ -202,6 +212,18 @@ function main() {
     matrixAuthorizationDigest(matrixAuthorization, freeze, scenarios),
     /^sha256:[0-9a-f]{64}$/,
   );
+  const pendingMatrixAuthorization = validateMatrixAuthorization({
+    ...matrixAuthorization,
+    approval_status: 'pending',
+    quota_acknowledged: false,
+    approved_by: null,
+    approved_at: null,
+  }, freeze, scenarios);
+  assert.throws(
+    () => assertMatrixAuthorized(pendingMatrixAuthorization, freeze, scenarios),
+    /explicitly approved subscription quota/,
+  );
+  assert.doesNotThrow(() => assertMatrixAuthorized(matrixAuthorization, freeze, scenarios));
   const beaconSignature = 'ab'.repeat(96);
   const beacon = {
     round: selectionRequest.beacon.round,
@@ -1050,8 +1072,8 @@ function main() {
   assert.strictEqual(new Set(matrixOutput.runs.map((run) => run.run_key)).size, 120);
   assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'), false);
   assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'), false);
-  assert(matrixOutput.blockers.includes('MATRIX_QUOTA_NOT_APPROVED'));
-  assert.strictEqual(matrixOutput.authorization_status, 'pending');
+  assert.strictEqual(matrixOutput.blockers.includes('MATRIX_QUOTA_NOT_APPROVED'), false);
+  assert.strictEqual(matrixOutput.authorization_status, 'approved');
   assert.deepStrictEqual(matrixOutput.quota_budget, matrixAuthorization.quota_budget);
   const actualBlocked = invoke([
     'run',
@@ -1060,10 +1082,9 @@ function main() {
     '--repetition', '1',
     '--adapter', __filename,
     '--output', path.join(os.tmpdir(), 'must-not-write-optimizer-run.json'),
-    '--signing-key', __filename,
   ]);
   assert.notStrictEqual(actualBlocked.status, 0);
-  assert.match(actualBlocked.stderr, /explicitly approved subscription quota/);
+  assert.match(actualBlocked.stderr, /run requires --signing-key/);
   const reproductionOutput = path.join(
     os.tmpdir(),
     `must-not-write-optimizer-reproduction-${process.pid}.json`,

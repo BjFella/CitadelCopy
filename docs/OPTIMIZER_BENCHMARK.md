@@ -158,10 +158,12 @@ node scripts/optimizer-proof-bundle.js verify <bundle-directory>
 
 Actual matrix execution remains fail-closed until the public-random scenario is
 selected and the user explicitly approves consuming the frozen run, model-call,
-and runtime allowance from their subscription quota. A third-party model rerun
-is optional and is not a submission blocker.
+and runtime allowance from their subscription quota. Both gates are now closed:
+the holdout is selected and Seth Gammon approved the exact subscription
+envelope at `2026-07-30T20:44:02.628Z`. A third-party model rerun is optional
+and is not a submission blocker.
 
-The pending authorization caps the matrix at 120 CLI cells, 162 model attempts,
+The approved authorization caps the matrix at 120 CLI cells, 162 model attempts,
 and 7,230 aggregate timeout-minutes. The timeout figure is the sum of every
 per-attempt fail-safe timeout; it is not expected elapsed time, usage-based
 billing, or a claim about subscription cost.

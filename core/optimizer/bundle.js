@@ -12,6 +12,7 @@ const {
 } = require('./contracts');
 const { pricingSnapshotDigest, validatePricingSnapshot } = require('./pricing');
 const { buildReport } = require('./report');
+const { validateAttestationRotation } = require('./attestation-rotation');
 const { validateCalibrationPlan, validateCalibrationRecord } = require('./calibration');
 const { validateCalibrationForensics } = require('./calibration-forensics');
 const {
@@ -108,6 +109,7 @@ function checkedInInputs(root) {
   const calibrationPlanFile = path.join(benchmarkRoot, 'calibration-plan.json');
   const calibrationRecordFile = path.join(benchmarkRoot, 'calibration-record.json');
   const calibrationForensicsFile = path.join(benchmarkRoot, 'calibration-forensics.json');
+  const attestationRotationFile = path.join(benchmarkRoot, 'attestation-key-rotation.json');
   const matrixAuthorizationFile = path.join(benchmarkRoot, 'matrix-authorization.json');
   const selectionRequestFile = path.join(
     benchmarkRoot,
@@ -128,12 +130,17 @@ function checkedInInputs(root) {
   const executors = loadExecutors(executorFile);
   const freeze = loadFreeze(freezeFile, scenarios, executors);
   for (const [label, file] of [
+    ['attestation key rotation', attestationRotationFile],
     ['matrix authorization', matrixAuthorizationFile],
     ['selection request', selectionRequestFile],
     ['selection record', selectionRecordFile],
   ]) {
     if (!realRegularFile(benchmarkRoot, file)) throw new Error(`Frozen ${label} is missing`);
   }
+  const attestationRotation = validateAttestationRotation(
+    JSON.parse(fs.readFileSync(attestationRotationFile, 'utf8')),
+    freeze,
+  );
   const matrixAuthorization = validateMatrixAuthorization(
     JSON.parse(fs.readFileSync(matrixAuthorizationFile, 'utf8')),
     freeze,
@@ -269,6 +276,8 @@ function checkedInInputs(root) {
     calibrationRecord,
     calibrationForensicsFile,
     calibrationForensics,
+    attestationRotationFile,
+    attestationRotation,
     matrixAuthorizationFile,
     matrixAuthorization,
     selectionRequestFile,
@@ -344,6 +353,7 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     copyFile(inputs.calibrationRecordFile, path.join(output, 'inputs', 'calibration-record.json'));
   }
   copyFile(inputs.calibrationForensicsFile, path.join(output, 'inputs', 'calibration-forensics.json'));
+  copyFile(inputs.attestationRotationFile, path.join(output, 'inputs', 'attestation-key-rotation.json'));
   copyFile(inputs.matrixAuthorizationFile, path.join(output, 'inputs', 'matrix-authorization.json'));
   copyFile(inputs.selectionRequestFile, path.join(output, 'inputs', 'external-selection-request.json'));
   copyFile(inputs.selectionRecordFile, path.join(output, 'inputs', 'external-selection.json'));
@@ -390,6 +400,7 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     'inputs/calibration-plan.json',
     ...(inputs.calibrationRecordFile === null ? [] : ['inputs/calibration-record.json']),
     'inputs/calibration-forensics.json',
+    'inputs/attestation-key-rotation.json',
     'inputs/matrix-authorization.json',
     'inputs/external-selection-request.json',
     'inputs/external-selection.json',
@@ -492,6 +503,11 @@ function verifyBundle(bundleDirectory) {
   const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
   const diagnosticPilotScenarios = loadScenarios(diagnosticPilotScenarioDirectory);
   const freeze = loadFreeze(path.join(root, 'inputs', 'freeze.json'), scenarios, executors);
+  validateAttestationRotation(
+    JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'attestation-key-rotation.json'), 'utf8')),
+    freeze,
+    'bundle attestation key rotation',
+  );
   const matrixAuthorization = validateMatrixAuthorization(
     JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'matrix-authorization.json'), 'utf8')),
     freeze,
