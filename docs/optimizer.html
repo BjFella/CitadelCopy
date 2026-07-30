@@ -595,13 +595,13 @@
       <div class="section-heading">
         <h2>The gate stays shut until reality catches up.</h2>
         <p>
-          The actual-run command checks these conditions before any paid
+          The actual-run command checks these conditions before any model-backed
           execution. A fixture, manual edit, or relabeled record cannot bypass
           them.
         </p>
       </div>
       <div class="blockers">
-        <div class="blocker"><b>CALIBRATION_REQUIRED</b><span>The 12-run non-holdout plan is frozen, but no spend is approved and no model call has been made.</span></div>
+        <div class="blocker"><b>CALIBRATION_REQUIRED</b><span>The 12-run non-holdout plan is frozen, but its subscription quota is not authorized and no model call has been made.</span></div>
         <div class="blocker"><b>ACTUAL_RUNS_REQUIRED</b><span>The 120-run matrix has not executed, so the fixture cannot support a savings claim.</span></div>
         <div class="blocker"><b>EXTERNAL_SCENARIO_NOT_SELECTED</b><span>An outside maintainer has not selected a frozen holdout.</span></div>
         <div class="blocker"><b>EXTERNAL_REPRODUCTION_REQUIRED</b><span>No separately signed reproduction of the outside-selected holdout exists.</span></div>

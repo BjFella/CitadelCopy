@@ -1,6 +1,6 @@
 # Citadel Optimizer Proof
 
-Status: no-spend engineering complete; evidence execution approval-gated
+Status: no-model-run engineering complete; evidence execution approval-gated
 
 ## Objective
 
@@ -25,7 +25,7 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Add a frozen 12-run calibration plan and complete 120-run matrix plan.
 - [x] Separate local run signing from cryptographically verified outside reproduction.
 - [x] Pass the complete no-model Citadel test suite.
-- [ ] Approve and run small paid calibration.
+- [ ] Approve and run the bounded subscription-quota calibration.
 - [ ] Run the attested actual matrix.
 - [ ] Collect outside selection and independent reproduction.
 - [ ] Replace fixture presentation with actual evidence.
@@ -33,5 +33,7 @@ multi-step agent cost without lowering independently verified completion.
 
 ## Approval boundaries
 
-Model/tool spending, external outreach, publishing, and grant submission require
-Seth's explicit approval.
+Consuming subscription quota, external outreach, publishing, and grant
+submission require Seth's explicit approval. The calibration approval is
+bounded by CLI run count and runtime minutes; it does not require a dollar
+spend ceiling.

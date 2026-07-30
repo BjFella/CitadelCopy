@@ -1,6 +1,6 @@
 # Citadel Optimizer Proof Report
 
-Observed: 2026-07-29
+Observed: 2026-07-30
 
 ## Answer
 
@@ -37,7 +37,7 @@ math fixture. It is not evidence that real models save money.
 | Executor profile digests | Bound to canonical Operation Fork profiles |
 | Runtime adapter | Self-contained and bound by source digest |
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
-| Calibration | 12-run non-holdout plan frozen; spend not approved; no runs made |
+| Calibration | 12-run non-holdout plan frozen; subscription quota not authorized; no runs made |
 | External scenario selector | Not collected |
 | Local run-attestation public key | Not frozen |
 | Independent reproduction | Not collected |
@@ -55,7 +55,7 @@ Safe current claim:
 
 > Citadel now contains a separate, reproducible engineering contract for
 > outcome-aware economic routing and can run a frozen comparative evaluation
-> once exact executors, spend, and external selection are approved.
+> once exact executors, subscription quota, and external selection are approved.
 
 Unsafe current claims:
 
@@ -67,8 +67,13 @@ Unsafe current claims:
 
 ## Next evidence, not next feature
 
-The next gate is the frozen 12-run paid calibration across three non-holdout
-scenarios and all four profiles. It verifies authenticated access to the frozen
-models, checks observed identity and real cost provenance, and establishes the
-full-matrix spend envelope. It requires explicit approval because it incurs
-model/tool cost.
+The next gate is the frozen 12-run subscription-backed calibration across three
+non-holdout scenarios and all four profiles. It verifies authenticated access
+to the frozen models, checks observed identity and cost provenance, and tests
+whether the telemetry supports a common normalized-cost comparison. Approval
+authorizes at most 12 CLI runs and 620 aggregate runtime minutes from the
+subscription quota. It does not require or imply a dollar spend ceiling.
+
+Official API list prices remain a normalization basis for comparing routes.
+They are not a claim about Seth's invoice or the marginal cost of a
+subscription-backed run.

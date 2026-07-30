@@ -27,8 +27,9 @@ inferred entitlement.
 ## Problem
 
 Agent stacks optimize for task completion but usually make economic decisions
-piecemeal. A builder selects a model, a harness spawns agents, tools make paid
-calls, retries accumulate, and the final bill is discovered afterward.
+piecemeal. A builder selects a model, a harness spawns agents, tools consume
+subscription quota or metered calls, retries accumulate, and the resource
+footprint is discovered afterward.
 
 Cheap routing alone is insufficient. It can look economical by failing tasks,
 silently accepting partial work, substituting a different model, or excluding
@@ -100,8 +101,10 @@ Already implemented:
 
 Current fixture simulations validate report math only. They are not model
 performance evidence. Exact model IDs, canonical executor digests, the runtime
-adapter, and a list-price normalization are frozen; paid calibration, outside
-selection, and independent reproduction remain open.
+adapter, and a list-price normalization are frozen; subscription-backed
+calibration, outside selection, and independent reproduction remain open.
+The list-price normalization is a common comparison unit, not a claim that
+Seth's subscription is billed per run.
 
 ## Evaluation
 
@@ -127,8 +130,8 @@ or stop the economic claim.
 ## Open-source deliverables by evidence gate
 
 1. **Execution-ready**: validate the frozen model bindings, runtime adapter,
-   and cost sources through approved calibration, then publish the spend
-   envelope.
+   and cost sources through an approved, bounded subscription-quota
+   calibration, then publish its run/runtime envelope.
 2. **Preliminary proof**: complete attested matrix, held-out comparison, raw
    records, limitations, and one-command verifier.
 3. **Independent proof**: outside-selected scenario, external reproduction,
@@ -177,7 +180,8 @@ credits from Sentient could reduce the cash evaluation line.
 
 Do not submit until:
 
-- calibration spend is approved and measured;
+- the frozen calibration quota is explicitly authorized and the runs are
+  measured;
 - the actual preliminary matrix closes or honestly fails;
 - an outside maintainer selects and reproduces a scenario;
 - the demo and results page link to actual proof rather than fixtures;

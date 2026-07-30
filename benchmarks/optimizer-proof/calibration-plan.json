@@ -15,8 +15,13 @@
   "runs_per_pair": 1,
   "total_runs": 12,
   "no_holdouts": true,
+  "access_basis": "subscription",
+  "quota_budget": {
+    "max_cli_runs": 12,
+    "max_runtime_minutes": 620
+  },
   "approval_status": "pending",
-  "approved_spend_usd": null,
+  "quota_acknowledged": false,
   "approved_by": null,
   "approved_at": null,
   "record_digest": null

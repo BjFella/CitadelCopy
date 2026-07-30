@@ -102,9 +102,10 @@ vendor-reported `total_cost_usd`.
 
 1. **Contract proof**: local unit tests, deterministic policies, frozen
    identities, anti-tamper tests.
-2. **Calibration**: 12 approved, non-holdout runs (3 scenarios × 4 frozen
-   profiles) used to prove account access, observed model identity, cost
-   sources, and the spend envelope.
+2. **Calibration**: 12 approved, non-holdout CLI runs (3 scenarios × 4 frozen
+   profiles) used to prove account access, observed model identity, and cost
+   sources. The checked-in subscription-quota budget caps this at 12 runs and
+   620 aggregate runtime minutes.
 3. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
 4. **Independent reproduction**: outside selection, outside run, public key,
@@ -125,7 +126,8 @@ node scripts/optimizer-proof-bundle.js verify <bundle-directory>
 ```
 
 Actual execution remains fail-closed until the doctor has no blockers and the
-user approves model/tool spending.
+user explicitly approves consuming the frozen run/runtime allowance from their
+subscription quota.
 
 Model and pricing references:
 

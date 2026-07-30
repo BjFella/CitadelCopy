@@ -112,6 +112,31 @@ function main() {
   assert.strictEqual(new Set(executors.map((executor) => executor.runtime)).size, 2);
   assert.deepStrictEqual([...validateExecutorBindings(executors)], []);
   assert.strictEqual(calibrationPlan.total_runs, 12);
+  assert.strictEqual(calibrationPlan.access_basis, 'subscription');
+  assert.deepStrictEqual(calibrationPlan.quota_budget, {
+    max_cli_runs: 12,
+    max_runtime_minutes: 620,
+  });
+  assert.strictEqual(calibrationPlan.quota_acknowledged, false);
+  assert.strictEqual(Object.hasOwn(calibrationPlan, 'approved_spend_usd'), false);
+  assert.throws(() => validateCalibrationPlan({
+    ...calibrationPlan,
+    quota_budget: { ...calibrationPlan.quota_budget, max_cli_runs: 13 },
+  }, scenarios, executors), /quota_budget/);
+  assert.throws(() => validateCalibrationPlan({
+    ...calibrationPlan,
+    approval_status: 'approved',
+    quota_acknowledged: false,
+    approved_by: 'Seth Gammon',
+    approved_at: '2026-07-30T00:00:00.000Z',
+  }, scenarios, executors), /quota acknowledgement/);
+  assert.doesNotThrow(() => validateCalibrationPlan({
+    ...calibrationPlan,
+    approval_status: 'approved',
+    quota_acknowledged: true,
+    approved_by: 'Seth Gammon',
+    approved_at: '2026-07-30T00:00:00.000Z',
+  }, scenarios, executors));
   assert(executors.every((executor) => executor.executor_profile_digest === boundExecutorProfileDigest(executor)));
   assert.strictEqual(freeze.scenario_set_id, scenarioSetIdentity(scenarios));
   assert.strictEqual(freeze.executor_set_id, executorSetIdentity(executors));

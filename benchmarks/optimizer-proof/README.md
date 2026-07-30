@@ -40,7 +40,9 @@ quality or savings.
 5. a signed raw run record.
 
 Unknown cost remains unknown. A failed or unknown outcome still contributes its
-known spend and can never be counted as a saving.
+known normalized cost and can never be counted as a saving. For the current
+subscription-backed calibration, this is a comparison metric rather than an
+invoice amount.
 
 ## Commands
 

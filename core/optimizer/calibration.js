@@ -10,11 +10,17 @@ const PLAN_FIELDS = Object.freeze([
   'runs_per_pair',
   'total_runs',
   'no_holdouts',
+  'access_basis',
+  'quota_budget',
   'approval_status',
-  'approved_spend_usd',
+  'quota_acknowledged',
   'approved_by',
   'approved_at',
   'record_digest',
+]);
+const QUOTA_BUDGET_FIELDS = Object.freeze([
+  'max_cli_runs',
+  'max_runtime_minutes',
 ]);
 
 function validateCalibrationPlan(value, scenarios, executors, source = 'calibration plan') {
@@ -45,21 +51,33 @@ function validateCalibrationPlan(value, scenarios, executors, source = 'calibrat
   if (value.total_runs !== value.scenario_ids.length * value.profile_ids.length) {
     throw new Error(`${source}.total_runs mismatch`);
   }
+  if (value.access_basis !== 'subscription') {
+    throw new Error(`${source}.access_basis must be subscription`);
+  }
+  const maxRuntimeMinutes = value.scenario_ids.reduce(
+    (total, id) => total + scenarioMap.get(id).timeout_minutes,
+    0,
+  ) * value.profile_ids.length * value.runs_per_pair;
+  if (!exactFields(value.quota_budget, QUOTA_BUDGET_FIELDS)
+    || value.quota_budget.max_cli_runs !== value.total_runs
+    || value.quota_budget.max_runtime_minutes !== maxRuntimeMinutes) {
+    throw new Error(`${source}.quota_budget must match the frozen run and runtime limits`);
+  }
   if (!['pending', 'approved', 'completed'].includes(value.approval_status)) {
     throw new Error(`${source}.approval_status is invalid`);
   }
   if (value.approval_status === 'pending') {
-    if (value.approved_spend_usd !== null
+    if (value.quota_acknowledged !== false
       || value.approved_by !== null
       || value.approved_at !== null
       || value.record_digest !== null) {
       throw new Error(`${source} pending approval cannot carry approval or evidence`);
     }
   } else {
-    if (!Number.isFinite(value.approved_spend_usd) || value.approved_spend_usd <= 0
+    if (value.quota_acknowledged !== true
       || typeof value.approved_by !== 'string' || !value.approved_by.trim()
       || typeof value.approved_at !== 'string' || !Number.isFinite(Date.parse(value.approved_at))) {
-      throw new Error(`${source} approved calibration requires a spend envelope and approver`);
+      throw new Error(`${source} approved calibration requires subscription quota acknowledgement and approver`);
     }
     if (value.approval_status === 'approved' && value.record_digest !== null) {
       throw new Error(`${source} approved calibration cannot claim a completed record`);
@@ -74,5 +92,6 @@ function validateCalibrationPlan(value, scenarios, executors, source = 'calibrat
 
 module.exports = Object.freeze({
   PLAN_FIELDS,
+  QUOTA_BUDGET_FIELDS,
   validateCalibrationPlan,
 });

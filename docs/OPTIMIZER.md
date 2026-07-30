@@ -73,6 +73,10 @@ Claude's machine-readable `total_cost_usd` remains vendor-reported. Calibration
 must show that both sources are usable and comparable before any economic
 claim.
 
+The current calibration access basis is `subscription`. Its authorization
+contract caps execution at 12 CLI runs and 620 aggregate runtime minutes. It
+does not ask the user for a dollar ceiling.
+
 ## Current implementation
 
 Implemented:
@@ -97,7 +101,7 @@ Not yet proven:
 - any real cost reduction;
 - parity with frontier verified completion;
 - authenticated access to every frozen model;
-- paid task execution and real cost observation;
+- subscription-backed task execution and real normalized-cost observation;
 - externally reproduced results;
 - usefulness outside the three frozen repositories.
 
