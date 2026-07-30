@@ -165,9 +165,18 @@ function main() {
     path.join(BENCHMARK, 'holdout', 'external-selection-request.json'),
     'utf8',
   ));
+  const publishedSelection = JSON.parse(fs.readFileSync(
+    path.join(BENCHMARK, 'external-selection.json'),
+    'utf8',
+  ));
   validateExternalSelectionRequest(selectionRequest, freeze, scenarios);
   validateExternalSelectionRequest(publishedSelectionRequest, freeze, scenarios);
+  validateBeaconSelectionRecord(publishedSelection, selectionRequest, freeze, scenarios);
   assert.deepStrictEqual(publishedSelectionRequest, selectionRequest);
+  assert.deepStrictEqual(
+    freeze.external_scenario,
+    frozenSelectionFromRecord(publishedSelection, selectionRequest, freeze, scenarios),
+  );
   assert.strictEqual(selectionRequest.scenario_set_id, freeze.scenario_set_id);
   assert.deepStrictEqual(selectionRequest.holdout_scenario_ids, freeze.holdout_scenario_ids);
   assert.strictEqual(selectionRequest.beacon.round, 6333716);
@@ -493,9 +502,9 @@ function main() {
   for (const blocker of [
     'ACTUAL_RUNS_REQUIRED',
     'ACTUAL_RUNS_UNATTESTED',
-    'EXTERNAL_SCENARIO_NOT_SELECTED',
     'EXTERNAL_REPRODUCTION_REQUIRED',
   ]) assert(report.submission_gate.blockers.includes(blocker), `missing blocker ${blocker}`);
+  assert.strictEqual(report.submission_gate.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'), false);
 
   const unknownRuns = fixtureRuns.map((run, index) => (
     index === fixtureRuns.findIndex((item) => item.holdout && item.policy_id === 'adaptive')
@@ -957,7 +966,7 @@ function main() {
   assert.strictEqual(selectionCli.status, 0, selectionCli.stderr);
   const selectionOutput = JSON.parse(selectionCli.stdout);
   assert.strictEqual(selectionOutput.no_model_calls_made, true);
-  assert.strictEqual(selectionOutput.current_selection, null);
+  assert.deepStrictEqual(selectionOutput.current_selection, freeze.external_scenario);
   assert.strictEqual(selectionOutput.request.request_id, selectionRequest.request_id);
   assert.deepStrictEqual(
     selectionOutput.request.holdout_scenario_ids,
@@ -967,8 +976,8 @@ function main() {
   assert.strictEqual(reproductionPlanCli.status, 0, reproductionPlanCli.stderr);
   const reproductionPlanOutput = JSON.parse(reproductionPlanCli.stdout);
   assert.strictEqual(reproductionPlanOutput.no_model_calls_made, true);
-  assert.strictEqual(reproductionPlanOutput.status, 'blocked');
-  assert.deepStrictEqual(reproductionPlanOutput.blockers, ['EXTERNAL_SCENARIO_NOT_SELECTED']);
+  assert.strictEqual(reproductionPlanOutput.status, 'ready');
+  assert.deepStrictEqual(reproductionPlanOutput.blockers, []);
   const selectionTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'optimizer-selection-'));
   try {
     const requestPath = path.join(selectionTemp, 'request.json');
@@ -986,11 +995,9 @@ function main() {
       '--input', responsePath,
       '--output', candidateFreezePath,
     ]);
-    assert.strictEqual(freezeSelectionCli.status, 0, freezeSelectionCli.stderr);
-    assert.match(freezeSelectionCli.stdout, /no model calls made/);
-    const candidateFreeze = JSON.parse(fs.readFileSync(candidateFreezePath, 'utf8'));
-    assert.deepStrictEqual(candidateFreeze.external_scenario, selectedExternalScenario);
-    validateFreeze(candidateFreeze, scenarios, executors);
+    assert.notStrictEqual(freezeSelectionCli.status, 0);
+    assert.match(freezeSelectionCli.stderr, /already frozen/);
+    assert.strictEqual(fs.existsSync(candidateFreezePath), false);
   } finally {
     fs.rmSync(selectionTemp, { recursive: true, force: true });
   }
@@ -1000,7 +1007,7 @@ function main() {
   assert.strictEqual(matrixOutput.no_model_calls_made, true);
   assert.strictEqual(matrixOutput.run_count, 120);
   assert.strictEqual(new Set(matrixOutput.runs.map((run) => run.run_key)).size, 120);
-  assert(matrixOutput.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'));
+  assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'), false);
   assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'), false);
   assert(matrixOutput.submission_blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'));
   const actualBlocked = invoke([
@@ -1010,10 +1017,9 @@ function main() {
     '--repetition', '1',
     '--adapter', __filename,
     '--output', path.join(os.tmpdir(), 'must-not-write-optimizer-run.json'),
-    '--signing-key', __filename,
   ]);
   assert.notStrictEqual(actualBlocked.status, 0);
-  assert.match(actualBlocked.stderr, /frozen external scenario/);
+  assert.match(actualBlocked.stderr, /run requires --signing-key/);
   const reproductionOutput = path.join(
     os.tmpdir(),
     `must-not-write-optimizer-reproduction-${process.pid}.json`,
@@ -1025,10 +1031,9 @@ function main() {
     '--reproduced-by', 'independent-maintainer',
     '--source', 'https://example.com/optimizer-reproduction',
     '--output', reproductionOutput,
-    '--acknowledge-external-quota',
   ]);
   assert.notStrictEqual(reproductionBlocked.status, 0);
-  assert.match(reproductionBlocked.stderr, /frozen external scenario/);
+  assert.match(reproductionBlocked.stderr, /requires --acknowledge-external-quota/);
   assert.strictEqual(fs.existsSync(reproductionOutput), false);
 
   process.stdout.write('Optimizer contracts, routing, runner, and proof tests passed.\n');

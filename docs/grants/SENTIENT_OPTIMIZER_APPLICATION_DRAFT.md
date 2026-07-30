@@ -104,16 +104,18 @@ performance evidence. Exact model IDs, canonical executor digests, the runtime
 adapter, and a list-price normalization are frozen. A four-profile
 subscription-backed calibration verified exact model identity, receipts, and
 known cost sources, while all four task verifiers failed. The local Ed25519
-run-attestation public key is also frozen. The precommitted public-random
-selection, preliminary matrix, and clean hosted verification remain open.
+run-attestation public key is also frozen. Precommitted drand round `6333716`
+selected `citadel-short-executor-proof`; the preliminary matrix and its clean
+hosted verification remain open.
 The list-price normalization is a common comparison unit, not a claim that
 Seth's subscription is billed per run.
 
-The selection request is bound to the frozen scenario-set identity and commits
-to a future League of Entropy drand round while the method is already public.
-Three relays must agree before its deterministic choice can be bound into the
-freeze. This removes human discretion and does not require favors, engagement,
-model quota, or a private selector.
+The selection request is bound to the frozen scenario-set identity and was
+public before League of Entropy drand round `6333716`. Three committed relays
+returned the same beacon, the exact rule selected
+`citadel-short-executor-proof`, and the official pinned client verified the BLS
+signature. This removes human discretion and did not require favors,
+engagement, model quota, or a private selector.
 
 A no-model forensic reproduction found that the original calibration verifier
 failed on unrelated repository tooling before reaching the task tests. The

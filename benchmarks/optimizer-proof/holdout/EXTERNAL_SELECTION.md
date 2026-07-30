@@ -14,6 +14,15 @@ The checked-in request commits, before the beacon round exists, to:
 The canonical request is
 [`external-selection-request.json`](external-selection-request.json).
 
+## Recorded result
+
+Round `6333716` was observed at `2026-07-30T20:15:31.940Z`. All three
+committed relays agreed, the pinned official client verified the BLS signature,
+and the frozen rule selected index `0`:
+`citadel-short-executor-proof`. The checked-in record is
+[`../external-selection.json`](../external-selection.json), with digest
+`sha256:234e805981ef070475960905f65243fa01fbfffa7b7e7babf39ee3dc982f3de1`.
+
 ## Selection procedure
 
 After the committed round time:

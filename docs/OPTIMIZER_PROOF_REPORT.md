@@ -45,32 +45,32 @@ math fixture. It is not evidence that real models save money.
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
 | Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
 | Diagnostic pilot | Completed 2/2 identity and receipt gates; raw record failed; Claude's 22-test pass was an artifact-gate false negative |
-| Holdout selector | Future drand round committed; not yet collected |
+| Holdout selector | `citadel-short-executor-proof`, selected by precommitted drand round 6333716; three relays agreed and the BLS signature verified |
 | Local run-attestation public key | Frozen; private key stored outside the repository |
 | Independent reproduction | Not collected |
 | Model calls made across calibration attempts | 6 total; 4 in the completed record |
 | Model calls made in diagnostic pilot | 2 total; no rerun |
 
 Citadel's Windows launcher prefers the reviewed npm entrypoint over an
-inaccessible Windows Store desktop executable. Calibration and the local
-attestation key are complete. The remaining machine-readable blockers are
-outside scenario selection and independent reproduction, so `actual-run`
-execution and the submission gate remain closed.
+inaccessible Windows Store desktop executable. Calibration, the local
+attestation key, and public-random holdout selection are complete. Matrix
+subscription quota remains separately approval-gated, and no matrix run has
+started.
 
-The method and public-random selection request are published. The request binds
-one future drand round, three relay URLs, and a deterministic modulo rule. No
-human selector is involved, no selection has yet been collected, and no matrix
-run has started.
+The method and public-random selection request were published before drand round
+`6333716`. All three committed relays agreed; the exact rule selected
+`citadel-short-executor-proof`, and `drand-client@1.4.2` verified the BLS
+signature. No human selector was involved and no matrix run has started.
 
 ## Claim boundary
 
 Safe current claim:
 
 > Citadel now contains a separate, reproducible engineering contract for
-> outcome-aware economic routing and can run a frozen comparative evaluation
-> once the precommitted public beacon is collected and matrix subscription
-> quota is approved. Clean hosted verification remains required before a grant
-> claim.
+> outcome-aware economic routing. Its precommitted public beacon selected
+> `citadel-short-executor-proof`; the frozen comparative matrix remains unrun
+> until subscription quota is explicitly approved. Clean hosted verification
+> remains required before a grant claim.
 
 Unsafe current claims:
 

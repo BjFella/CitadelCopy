@@ -19,7 +19,13 @@
   "calibration_record_digest": "sha256:007953799c8422a61cca18abd28f54433d12f3fa63e8fdaf6fbf1fc8a498282c",
   "calibration_forensics_digest": "sha256:7fd0b97c28e1510c8c5cd7666578a98f6d430875c77cf58e282e6064902d09b2",
   "diagnostic_pilot_forensics_digest": "sha256:e7c23deb5337cc5622d6149fe4420afd3d2b4cb898267824bb0ab8e3b7ac839c",
-  "external_scenario": null,
+  "external_scenario": {
+    "scenario_id": "citadel-short-executor-proof",
+    "selection_method": "drand-public-beacon",
+    "selection_record_digest": "sha256:234e805981ef070475960905f65243fa01fbfffa7b7e7babf39ee3dc982f3de1",
+    "selected_at": "2026-07-30",
+    "selection_source": "https://api.drand.sh/public/6333716"
+  },
   "external_reproduction_digest": null,
   "attestation_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgImYiRsz1MlhupbP2MOI5ORRVayyWIgORgOjnXzMSHI=\n-----END PUBLIC KEY-----\n"
 }

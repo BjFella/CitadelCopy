@@ -17,12 +17,14 @@ selector URL alone cannot satisfy the reproduction gate. The quota-bounded
 outside workflow is in
 [`EXTERNAL_REPRODUCTION.md`](EXTERNAL_REPRODUCTION.md).
 
-Current holdout selection: **future public beacon committed; round not yet
-collected**.
+Current holdout selection: **`citadel-short-executor-proof`**, selected by
+precommitted drand round `6333716` and bound by selection digest
+`sha256:234e805981ef070475960905f65243fa01fbfffa7b7e7babf39ee3dc982f3de1`.
 
 The exact machine-bound request is
-[`external-selection-request.json`](external-selection-request.json). It must
-produce a validated public-random record before the local matrix is run. No
-human selector is required.
+[`external-selection-request.json`](external-selection-request.json). It
+produced the checked-in
+[`../external-selection.json`](../external-selection.json) record before any
+local matrix run. No human selector was required.
 
 Current outside reproduction: **not collected**.

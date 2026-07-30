@@ -165,8 +165,9 @@ one frozen holdout, and writes a reviewable candidate freeze. The
 independent-reproduction tooling reports its exact call/runtime
 envelope before execution, requires an outside signing key and explicit quota
 acknowledgement, and validates the signed record before writing a second
-candidate freeze. The selection method is public; the committed round has not
-yet been collected or frozen.
+candidate freeze. The selection method was public before the committed round.
+Round `6333716` selected `citadel-short-executor-proof`; three relays agreed,
+the BLS signature verified, and the selection record is frozen.
 
 The proof bundle carries three scenario sets:
 `inputs/calibration-scenarios/` reproduces the exact set used by calibration,
