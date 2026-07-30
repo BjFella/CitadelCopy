@@ -201,7 +201,10 @@ function main() {
   assert.strictEqual(calibrationPlan.quota_acknowledged, true);
   assert.strictEqual(calibrationPlan.record_digest, freeze.calibration_record_digest);
   assert.strictEqual(digest(calibrationForensics), freeze.calibration_forensics_digest);
-  assert.strictEqual(diagnosticPilotPlan.approval_status, 'pending');
+  assert(['approved', 'completed'].includes(diagnosticPilotPlan.approval_status));
+  assert.strictEqual(diagnosticPilotPlan.quota_acknowledged, true);
+  assert.strictEqual(diagnosticPilotPlan.approved_by, 'Seth Gammon');
+  assert(Number.isFinite(Date.parse(diagnosticPilotPlan.approved_at)));
   assert.strictEqual(diagnosticPilotPlan.total_runs, 2);
   assert.deepStrictEqual(diagnosticPilotPlan.quota_budget, {
     max_cli_runs: 2,
@@ -882,14 +885,13 @@ function main() {
   const pilotPlanOutput = JSON.parse(pilotPlanCli.stdout);
   assert.strictEqual(pilotPlanOutput.no_model_calls_made, true);
   assert.strictEqual(pilotPlanOutput.plan.total_runs, 2);
-  assert.strictEqual(pilotPlanOutput.plan.approval_status, 'pending');
-  assert.strictEqual(pilotPlanOutput.record_present, false);
+  assert.strictEqual(
+    pilotPlanOutput.plan.approval_status,
+    diagnosticPilotPlan.approval_status,
+  );
   const pilotRecordPath = path.join(BENCHMARK, 'diagnostic-pilot-record.json');
-  assert.strictEqual(fs.existsSync(pilotRecordPath), false);
-  const blockedPilot = invoke(['pilot']);
-  assert.notStrictEqual(blockedPilot.status, 0);
-  assert.match(blockedPilot.stderr, /explicitly approved subscription quota/);
-  assert.strictEqual(fs.existsSync(pilotRecordPath), false);
+  assert.strictEqual(pilotPlanOutput.record_present, fs.existsSync(pilotRecordPath));
+  assert.strictEqual(pilotPlanOutput.plan.quota_acknowledged, true);
   const selectionCli = invoke(['selection-request']);
   assert.strictEqual(selectionCli.status, 0, selectionCli.stderr);
   const selectionOutput = JSON.parse(selectionCli.stdout);
