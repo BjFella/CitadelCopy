@@ -109,14 +109,20 @@ matrix, and independent reproduction remain open.
 The list-price normalization is a common comparison unit, not a claim that
 Seth's subscription is billed per run.
 
+The outside-selection request and response are bound to the frozen scenario-set
+identity. A separate reproduction command discloses its maximum call/runtime
+envelope, requires explicit quota acknowledgement and a fresh outside Ed25519
+key, and validates the signed record before it can be bound into the freeze.
+Those workflows are prepared locally but have not been published or run.
+
 A no-model forensic reproduction found that the original calibration verifier
 failed on unrelated repository tooling before reaching the task tests. The
 exact calibration scenario set is archived with its record. The actual matrix
 is re-frozen with a task-focused verifier that fails on the pinned queue bug and
 passes a bounded reference repair touching both expected artifacts. Future run
-records retain bounded, path- and secret-redacted verifier and patch receipts, and the
-standalone bundle verifies the completed calibration record, the forensic
-record, and both scenario sets.
+records retain bounded, path- and secret-redacted verifier and patch receipts,
+and the standalone bundle verifies the completed calibration record, the
+forensic record, and both scenario sets.
 
 A two-run, frontier-only diagnostic pilot is prepared but not approved. It is
 explicitly excluded from performance evidence and exists to prove the corrected

@@ -61,6 +61,8 @@ invoice amount.
 node scripts/optimizer-benchmark.js validate
 node scripts/optimizer-benchmark.js doctor
 node scripts/optimizer-benchmark.js pilot-plan
+node scripts/optimizer-benchmark.js selection-request
+node scripts/optimizer-benchmark.js reproduction-plan
 node scripts/optimizer-benchmark.js plan \
   --scenario p-limit-short-clear-queue \
   --policy adaptive \
@@ -85,6 +87,14 @@ diagnostic at 2 frontier-profile CLI runs and 80 aggregate model-runtime
 timeout minutes. `pilot` remains fail-closed until Seth explicitly approves
 that subscription-quota envelope. The fixed record path prevents accidentally
 starting a second pilot over an interrupted or completed record.
+
+`selection-request`, `freeze-selection`, `reproduction-plan`,
+`verify-reproduction`, and `freeze-reproduction` make no model calls. The
+outside `reproduce` command is separately quota-gated, runs one selected
+scenario, requires a fresh outside Ed25519 key and explicit acknowledgement,
+and refuses to overwrite its output. See
+[`holdout/EXTERNAL_SELECTION.md`](holdout/EXTERNAL_SELECTION.md) and
+[`holdout/EXTERNAL_REPRODUCTION.md`](holdout/EXTERNAL_REPRODUCTION.md).
 
 ## Frozen identities
 

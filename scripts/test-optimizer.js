@@ -81,6 +81,12 @@ const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
+const {
+  buildExternalSelectionRequest,
+  frozenSelectionFromResponse,
+  validateExternalSelectionRequest,
+  validateExternalSelectionResponse,
+} = require('../core/optimizer/external-selection');
 
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK = path.join(ROOT, 'benchmarks', 'optimizer-proof');
@@ -133,6 +139,53 @@ function main() {
   );
   const publicIndex = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
   const optimizerPage = fs.readFileSync(path.join(ROOT, 'docs', 'optimizer.html'), 'utf8');
+  const selectionRequest = buildExternalSelectionRequest(freeze, scenarios);
+  validateExternalSelectionRequest(selectionRequest, freeze, scenarios);
+  assert.strictEqual(selectionRequest.scenario_set_id, freeze.scenario_set_id);
+  assert.deepStrictEqual(selectionRequest.holdout_scenario_ids, freeze.holdout_scenario_ids);
+  assert.deepStrictEqual(selectionRequest.response_fields, [
+    'request_id',
+    'scenario_set_id',
+    'scenario_id',
+    'selected_by',
+    'selected_at',
+    'selection_source',
+  ]);
+  const selectionResponse = {
+    request_id: selectionRequest.request_id,
+    scenario_set_id: selectionRequest.scenario_set_id,
+    scenario_id: freeze.holdout_scenario_ids[0],
+    selected_by: 'independent-maintainer',
+    selected_at: freeze.frozen_at,
+    selection_source: 'https://example.com/optimizer-selection',
+  };
+  validateExternalSelectionResponse(selectionResponse, selectionRequest, freeze, scenarios);
+  assert.deepStrictEqual(
+    frozenSelectionFromResponse(selectionResponse, selectionRequest, freeze, scenarios),
+    {
+      scenario_id: selectionResponse.scenario_id,
+      selected_by: selectionResponse.selected_by,
+      selected_at: selectionResponse.selected_at,
+      selection_source: selectionResponse.selection_source,
+    },
+  );
+  assert.throws(() => validateExternalSelectionRequest({
+    ...selectionRequest,
+    request_id: `sha256:${'0'.repeat(64)}`,
+  }, freeze, scenarios), /does not bind/);
+  assert.throws(() => validateExternalSelectionResponse({
+    ...selectionResponse,
+    scenario_id: scenarios.find((scenario) => !scenario.holdout).id,
+  }, selectionRequest, freeze, scenarios), /frozen holdout/);
+  assert.throws(() => validateFreeze({
+    ...freeze,
+    external_scenario: {
+      scenario_id: scenarios.find((scenario) => !scenario.holdout).id,
+      selected_by: 'independent-maintainer',
+      selected_at: freeze.frozen_at,
+      selection_source: 'https://example.com/optimizer-selection',
+    },
+  }, scenarios, executors), /not a frozen holdout/);
 
   assert.strictEqual(scenarios.length, 10);
   assert.strictEqual(new Set(scenarios.map((scenario) => scenario.repository)).size, 3);
@@ -657,6 +710,10 @@ function main() {
   }
 
   const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
+  const {
+    privateKey: externalPrivateKey,
+    publicKey: externalPublicKey,
+  } = crypto.generateKeyPairSync('ed25519');
   const pricingSnapshot = validatePricingSnapshot({
     schema: 1,
     currency: 'USD',
@@ -759,14 +816,27 @@ function main() {
     observed_model: profileById.get(run.observed_profile_id).model,
     cost: knownCost(run.cost.amount_usd, 'actual-test'),
   }, privateKey));
+  const externalRun = attestRun({
+    ...actualRuns.find((run) => run.scenario_id === selectedExternalScenario.scenario_id),
+    attestation: null,
+  }, externalPrivateKey);
+  assert.throws(() => validateExternalReproduction({
+    schema: 1,
+    kind: 'citadel_optimizer_external_reproduction',
+    scenario_id: selectedExternalScenario.scenario_id,
+    reproduced_by: 'not-independent',
+    reproduction_source: 'https://example.com/optimizer-reproduction',
+    public_key: publicPem,
+    run: actualRuns.find((run) => run.scenario_id === selectedExternalScenario.scenario_id),
+  }, preReproductionFreeze), /must differ from the local matrix signer/);
   const externalReproduction = validateExternalReproduction({
     schema: 1,
     kind: 'citadel_optimizer_external_reproduction',
     scenario_id: selectedExternalScenario.scenario_id,
     reproduced_by: 'independent-maintainer',
     reproduction_source: 'https://example.com/optimizer-reproduction',
-    public_key: publicPem,
-    run: actualRuns.find((run) => run.scenario_id === selectedExternalScenario.scenario_id),
+    public_key: externalPublicKey.export({ type: 'spki', format: 'pem' }),
+    run: externalRun,
   }, preReproductionFreeze);
   const boundFreeze = validateFreeze({
     ...preReproductionFreeze,
@@ -820,6 +890,52 @@ function main() {
   assert.notStrictEqual(blockedPilot.status, 0);
   assert.match(blockedPilot.stderr, /explicitly approved subscription quota/);
   assert.strictEqual(fs.existsSync(pilotRecordPath), false);
+  const selectionCli = invoke(['selection-request']);
+  assert.strictEqual(selectionCli.status, 0, selectionCli.stderr);
+  const selectionOutput = JSON.parse(selectionCli.stdout);
+  assert.strictEqual(selectionOutput.no_model_calls_made, true);
+  assert.strictEqual(selectionOutput.current_selection, null);
+  assert.strictEqual(selectionOutput.request.request_id, selectionRequest.request_id);
+  assert.deepStrictEqual(
+    selectionOutput.request.holdout_scenario_ids,
+    freeze.holdout_scenario_ids,
+  );
+  const reproductionPlanCli = invoke(['reproduction-plan']);
+  assert.strictEqual(reproductionPlanCli.status, 0, reproductionPlanCli.stderr);
+  const reproductionPlanOutput = JSON.parse(reproductionPlanCli.stdout);
+  assert.strictEqual(reproductionPlanOutput.no_model_calls_made, true);
+  assert.strictEqual(reproductionPlanOutput.status, 'blocked');
+  assert.deepStrictEqual(reproductionPlanOutput.blockers, ['EXTERNAL_SCENARIO_NOT_SELECTED']);
+  const selectionTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'optimizer-selection-'));
+  try {
+    const requestPath = path.join(selectionTemp, 'request.json');
+    const selectionFileCli = invoke(['selection-request', '--output', requestPath]);
+    assert.strictEqual(selectionFileCli.status, 0, selectionFileCli.stderr);
+    assert.deepStrictEqual(
+      JSON.parse(fs.readFileSync(requestPath, 'utf8')),
+      selectionRequest,
+    );
+    const responsePath = path.join(selectionTemp, 'response.json');
+    const candidateFreezePath = path.join(selectionTemp, 'freeze.candidate.json');
+    fs.writeFileSync(responsePath, `${JSON.stringify(selectionResponse, null, 2)}\n`);
+    const freezeSelectionCli = invoke([
+      'freeze-selection',
+      '--input', responsePath,
+      '--output', candidateFreezePath,
+    ]);
+    assert.strictEqual(freezeSelectionCli.status, 0, freezeSelectionCli.stderr);
+    assert.match(freezeSelectionCli.stdout, /no model calls made/);
+    const candidateFreeze = JSON.parse(fs.readFileSync(candidateFreezePath, 'utf8'));
+    assert.deepStrictEqual(candidateFreeze.external_scenario, {
+      scenario_id: selectionResponse.scenario_id,
+      selected_by: selectionResponse.selected_by,
+      selected_at: selectionResponse.selected_at,
+      selection_source: selectionResponse.selection_source,
+    });
+    validateFreeze(candidateFreeze, scenarios, executors);
+  } finally {
+    fs.rmSync(selectionTemp, { recursive: true, force: true });
+  }
   const matrixCli = invoke(['matrix-plan']);
   assert.strictEqual(matrixCli.status, 0, matrixCli.stderr);
   const matrixOutput = JSON.parse(matrixCli.stdout);
@@ -840,6 +956,22 @@ function main() {
   ]);
   assert.notStrictEqual(actualBlocked.status, 0);
   assert.match(actualBlocked.stderr, /frozen external scenario/);
+  const reproductionOutput = path.join(
+    os.tmpdir(),
+    `must-not-write-optimizer-reproduction-${process.pid}.json`,
+  );
+  fs.rmSync(reproductionOutput, { force: true });
+  const reproductionBlocked = invoke([
+    'reproduce',
+    '--signing-key', __filename,
+    '--reproduced-by', 'independent-maintainer',
+    '--source', 'https://example.com/optimizer-reproduction',
+    '--output', reproductionOutput,
+    '--acknowledge-external-quota',
+  ]);
+  assert.notStrictEqual(reproductionBlocked.status, 0);
+  assert.match(reproductionBlocked.stderr, /frozen external scenario/);
+  assert.strictEqual(fs.existsSync(reproductionOutput), false);
 
   process.stdout.write('Optimizer contracts, routing, runner, and proof tests passed.\n');
 }

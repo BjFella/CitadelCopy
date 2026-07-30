@@ -53,14 +53,18 @@ attestation key are complete. The remaining machine-readable blockers are
 outside scenario selection and independent reproduction, so `actual-run`
 execution and the submission gate remain closed.
 
+The selection request, response binding, outside quota plan, fresh-key
+reproduction, signature verification, and candidate-freeze commands are now
+prepared and tested locally. None has been published, sent, selected, or run.
+
 ## Claim boundary
 
 Safe current claim:
 
 > Citadel now contains a separate, reproducible engineering contract for
 > outcome-aware economic routing and can run a frozen comparative evaluation
-> once outside selection, independent reproduction, and matrix subscription
-> quota are approved.
+> once outside selection is collected and matrix subscription quota is
+> approved. Independent reproduction remains required before a grant claim.
 
 Unsafe current claims:
 

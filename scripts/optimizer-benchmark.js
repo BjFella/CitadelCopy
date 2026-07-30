@@ -14,6 +14,7 @@ const {
   scenarioSetIdentity,
   digest,
   validateBenchmarkShape,
+  validateFreeze,
 } = require('../core/optimizer/contracts');
 const { generateFixtureRuns, validateFixtureTruth } = require('../core/optimizer/fixture');
 const { fixtureProbe, probeWorkspace } = require('../core/optimizer/probe');
@@ -46,6 +47,10 @@ const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
+const {
+  buildExternalSelectionRequest,
+  frozenSelectionFromResponse,
+} = require('../core/optimizer/external-selection');
 
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK_ROOT = path.join(ROOT, 'benchmarks', 'optimizer-proof');
@@ -259,10 +264,15 @@ function doctor(benchmark) {
   };
 }
 
-function privateKeyForRun(file, freeze) {
+function privateEd25519Key(file) {
   const text = fs.readFileSync(path.resolve(file), 'utf8');
   const privateKey = crypto.createPrivateKey(text);
   if (privateKey.asymmetricKeyType !== 'ed25519') throw new Error('signing key must be Ed25519');
+  return privateKey;
+}
+
+function privateKeyForRun(file, freeze) {
+  const privateKey = privateEd25519Key(file);
   const publicPem = crypto.createPublicKey(privateKey).export({ type: 'spki', format: 'pem' });
   if (publicPem.trim() !== freeze.attestation_public_key.trim()) {
     throw new Error('signing key does not match the frozen attestation public key');
@@ -316,6 +326,111 @@ function main() {
       record_present: benchmark.diagnosticPilotRecord !== null,
       output_path: path.relative(ROOT, DIAGNOSTIC_PILOT_RECORD_FILE).replace(/\\/g, '/'),
     }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'selection-request') {
+    const request = buildExternalSelectionRequest(benchmark.freeze, benchmark.scenarios);
+    if (options.output) {
+      const output = path.resolve(options.output);
+      if (fs.existsSync(output)) throw new Error('selection request output already exists');
+      writeJson(output, request);
+    }
+    process.stdout.write(`${JSON.stringify({
+      no_model_calls_made: true,
+      request,
+      current_selection: benchmark.freeze.external_scenario,
+      output_path: options.output ? path.resolve(options.output) : null,
+    }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'reproduction-plan') {
+    const scenario = benchmark.freeze.external_scenario === null
+      ? null
+      : benchmark.scenarios.find((item) => item.id === benchmark.freeze.external_scenario.scenario_id);
+    process.stdout.write(`${JSON.stringify({
+      no_model_calls_made: true,
+      status: scenario === null ? 'blocked' : 'ready',
+      blockers: scenario === null ? ['EXTERNAL_SCENARIO_NOT_SELECTED'] : [],
+      scenario_id: scenario === null ? null : scenario.id,
+      policy_id: 'adaptive',
+      repetition: 1,
+      min_model_calls: scenario === null ? null : 1,
+      max_model_calls: scenario === null ? null : scenario.max_attempts,
+      max_model_runtime_minutes: scenario === null
+        ? null
+        : scenario.max_attempts * scenario.timeout_minutes,
+      purpose: 'independent_reproduction_not_local_matrix_evidence',
+    }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'freeze-selection') {
+    for (const required of ['input', 'output']) {
+      if (!options[required]) throw new Error(`freeze-selection requires --${required}`);
+    }
+    if (benchmark.freeze.external_scenario !== null) {
+      throw new Error('External scenario is already frozen');
+    }
+    const output = path.resolve(options.output);
+    if (fs.existsSync(output)) throw new Error('selection freeze output already exists');
+    const request = buildExternalSelectionRequest(benchmark.freeze, benchmark.scenarios);
+    const response = JSON.parse(fs.readFileSync(path.resolve(options.input), 'utf8'));
+    const externalScenario = frozenSelectionFromResponse(
+      response,
+      request,
+      benchmark.freeze,
+      benchmark.scenarios,
+    );
+    const nextFreeze = validateFreeze({
+      ...benchmark.freeze,
+      external_scenario: externalScenario,
+    }, benchmark.scenarios, benchmark.executors);
+    writeJson(output, nextFreeze);
+    process.stdout.write(`Wrote externally selected candidate freeze to ${output}; no model calls made\n`);
+    return;
+  }
+
+  if (command === 'verify-reproduction') {
+    if (!options.input) throw new Error('verify-reproduction requires --input');
+    const reproduction = validateExternalReproduction(
+      JSON.parse(fs.readFileSync(path.resolve(options.input), 'utf8')),
+      benchmark.freeze,
+    );
+    const recordDigest = externalReproductionDigest(reproduction, benchmark.freeze);
+    process.stdout.write(`${JSON.stringify({
+      valid: true,
+      no_model_calls_made: true,
+      scenario_id: reproduction.scenario_id,
+      record_digest: recordDigest,
+      bound_to_freeze: benchmark.freeze.external_reproduction_digest === recordDigest,
+    }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'freeze-reproduction') {
+    for (const required of ['input', 'output']) {
+      if (!options[required]) throw new Error(`freeze-reproduction requires --${required}`);
+    }
+    if (benchmark.freeze.external_reproduction_digest !== null) {
+      throw new Error('External reproduction is already frozen');
+    }
+    const output = path.resolve(options.output);
+    if (fs.existsSync(output)) throw new Error('reproduction freeze output already exists');
+    const reproduction = validateExternalReproduction(
+      JSON.parse(fs.readFileSync(path.resolve(options.input), 'utf8')),
+      benchmark.freeze,
+    );
+    const nextFreeze = validateFreeze({
+      ...benchmark.freeze,
+      external_reproduction_digest: externalReproductionDigest(
+        reproduction,
+        benchmark.freeze,
+      ),
+    }, benchmark.scenarios, benchmark.executors);
+    writeJson(output, nextFreeze);
+    process.stdout.write(`Wrote externally reproduced candidate freeze to ${output}; no model calls made\n`);
     return;
   }
 
@@ -598,6 +713,55 @@ function main() {
     const signed = attestRun(unsigned, privateKey);
     writeJson(options.output, signed);
     process.stdout.write(`Wrote attested actual optimizer run to ${options.output}\n`);
+    return;
+  }
+
+  if (command === 'reproduce') {
+    for (const required of ['signing-key', 'reproduced-by', 'source', 'output']) {
+      if (!options[required]) throw new Error(`reproduce requires --${required}`);
+    }
+    if (options['acknowledge-external-quota'] !== true) {
+      throw new Error('reproduce requires --acknowledge-external-quota');
+    }
+    assertActualReady(benchmark.freeze, benchmark.executors);
+    if (benchmark.freeze.external_reproduction_digest !== null) {
+      throw new Error('External reproduction is already frozen');
+    }
+    if (typeof options['reproduced-by'] !== 'string' || !options['reproduced-by'].trim()) {
+      throw new Error('reproduce --reproduced-by must be non-empty');
+    }
+    if (typeof options.source !== 'string' || !/^https:\/\//.test(options.source)) {
+      throw new Error('reproduce --source must be an HTTPS URL');
+    }
+    const output = path.resolve(options.output);
+    if (fs.existsSync(output)) throw new Error('reproduction output already exists');
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.accessSync(path.dirname(output), fs.constants.W_OK);
+    const scenario = benchmark.scenarios.find((item) => (
+      item.id === benchmark.freeze.external_scenario.scenario_id
+    ));
+    const privateKey = privateEd25519Key(options['signing-key']);
+    const publicKey = crypto.createPublicKey(privateKey).export({ type: 'spki', format: 'pem' });
+    const unsigned = runScenario({
+      scenario,
+      scenarios: benchmark.scenarios,
+      executors: benchmark.executors,
+      policyId: 'adaptive',
+      repetition: 1,
+      adapterFile: path.join(ROOT, 'scripts', 'optimizer-runtime-adapter.js'),
+      pricingSnapshot: benchmark.pricingSnapshot,
+    });
+    const reproduction = validateExternalReproduction({
+      schema: 1,
+      kind: 'citadel_optimizer_external_reproduction',
+      scenario_id: scenario.id,
+      reproduced_by: options['reproduced-by'],
+      reproduction_source: options.source,
+      public_key: publicKey,
+      run: attestRun(unsigned, privateKey),
+    }, benchmark.freeze);
+    writeJson(output, reproduction);
+    process.stdout.write(`Wrote independently signed optimizer reproduction to ${output}\n`);
     return;
   }
 

@@ -748,7 +748,9 @@ function validateFreeze(value, scenarios, executors, source = 'freeze') {
     if (!exactFields(value.external_scenario, EXTERNAL_SCENARIO_FIELDS)) {
       throw new Error(`${source}.external_scenario fields are invalid`);
     }
-    if (!scenarioIds.has(value.external_scenario.scenario_id)) throw new Error(`${source}.external_scenario is not frozen`);
+    if (!value.holdout_scenario_ids.includes(value.external_scenario.scenario_id)) {
+      throw new Error(`${source}.external_scenario is not a frozen holdout`);
+    }
     if (typeof value.external_scenario.selected_by !== 'string' || !value.external_scenario.selected_by.trim()) {
       throw new Error(`${source}.external_scenario.selected_by is invalid`);
     }

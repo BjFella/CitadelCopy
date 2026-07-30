@@ -139,6 +139,8 @@ node scripts/optimizer-benchmark.js calibration-plan
 node scripts/optimizer-benchmark.js calibrate --output benchmarks/optimizer-proof/calibration-record.json
 node scripts/optimizer-benchmark.js pilot-plan
 node scripts/optimizer-benchmark.js pilot
+node scripts/optimizer-benchmark.js selection-request
+node scripts/optimizer-benchmark.js reproduction-plan
 node scripts/optimizer-benchmark.js matrix-plan
 node scripts/test-optimizer.js
 node scripts/optimizer-proof-bundle.js verify <bundle-directory>
@@ -150,11 +152,19 @@ allowance from their subscription quota. Independent reproduction remains a
 submission blocker, but it does not have to finish before the local matrix
 starts.
 
+The no-model outside-selection tooling emits a digest-bound request, verifies
+that the response selects one frozen holdout, and writes a reviewable candidate
+freeze. The independent-reproduction tooling reports its exact call/runtime
+envelope before execution, requires an outside signing key and explicit quota
+acknowledgement, and validates the signed record before writing a second
+candidate freeze. These workflows are prepared locally but have not been
+published, sent, selected, or run.
+
 The proof bundle carries both scenario sets: `inputs/calibration-scenarios/`
 reproduces the exact set used by the completed calibration, while
 `inputs/scenarios/` is the corrected set frozen for the actual matrix. It also
 includes and verifies `calibration-record.json` and
-`calibration-forensics.json`. It also carries the pending or completed
+`calibration-forensics.json`. It carries the pending or completed
 diagnostic-pilot plan and verifies the pilot record when one is bound.
 
 Model and pricing references:

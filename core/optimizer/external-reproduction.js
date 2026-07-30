@@ -58,6 +58,10 @@ function validateExternalReproduction(value, freeze, source = 'external reproduc
   } catch {
     throw new Error(`${source}.public_key must be Ed25519 PEM`);
   }
+  if (freeze.attestation_public_key
+    && value.public_key.trim() === freeze.attestation_public_key.trim()) {
+    throw new Error(`${source}.public_key must differ from the local matrix signer`);
+  }
   validateRun(value.run, `${source}.run`);
   if (value.run.evidence_kind !== 'actual-run'
     || value.run.scenario_id !== value.scenario_id
