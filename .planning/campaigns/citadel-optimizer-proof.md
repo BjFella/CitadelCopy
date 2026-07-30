@@ -36,7 +36,9 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Define a fail-closed 2-run diagnostic pilot across both frontier runtimes.
 - [x] Prepare machine-bound outside selection and independently signed
   reproduction workflows without publishing or consuming quota.
-- [ ] Approve and run the bounded diagnostic pilot.
+- [x] Approve and run the bounded diagnostic pilot.
+- [ ] Forensically classify the pilot's artifact-gate false negative and
+  re-freeze the corrected actual matrix without rewriting the pilot record.
 - [ ] Collect outside holdout selection.
 - [ ] Run the attested actual matrix.
 - [ ] Collect independent reproduction.

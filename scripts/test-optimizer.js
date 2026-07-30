@@ -274,6 +274,7 @@ function main() {
     quota_acknowledged: true,
     approved_by: 'Seth Gammon',
     approved_at: '2026-07-30T00:00:00.000Z',
+    record_digest: null,
   };
   assert.doesNotThrow(() => validateDiagnosticPilotPlan(
     approvedDiagnosticPilotPlan,
@@ -690,12 +691,12 @@ function main() {
     assert.strictEqual(verifiedBundle.calibration_record_verified, true);
     assert.strictEqual(verifiedBundle.calibration_forensics_verified, true);
     assert.strictEqual(verifiedBundle.diagnostic_pilot_plan_verified, true);
-    assert.strictEqual(verifiedBundle.diagnostic_pilot_record_verified, false);
+    assert.strictEqual(verifiedBundle.diagnostic_pilot_record_verified, true);
     const bundledCalibration = path.join(bundleDirectory, 'inputs', 'calibration-record.json');
     assert.strictEqual(fs.existsSync(bundledCalibration), true);
     assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'calibration-forensics.json')), true);
     assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-plan.json')), true);
-    assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-record.json')), false);
+    assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-record.json')), true);
     assert.strictEqual(fs.existsSync(path.join(
       bundleDirectory,
       'inputs',
