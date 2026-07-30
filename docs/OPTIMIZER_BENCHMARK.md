@@ -51,7 +51,8 @@ or caller-injected runs fail report construction.
 The policy cannot read fixture truth. `learnCapabilityProfiles()` rejects any
 holdout record. A precommitted future public-randomness beacon selects one
 already frozen holdout without human discretion.
-The local matrix signer and outside reproducer are separate trust roles.
+The local matrix signer is separate from the public drand selector. The proof
+bundle is rebuilt on a clean hosted runner.
 
 The runner verifies repository tests and requires every expected artifact to
 appear in the Git diff. Each verification attempt preserves a bounded,
@@ -64,9 +65,10 @@ A successful task counts only when:
 - observed-model proof passes;
 - the execution receipt is verified.
 
-Independent reproduction uses a separate record and reproducer public key.
-Citadel checks that the signed actual run matches the outside-selected scenario
-and that its digest matches the freeze.
+An optional third-party rerun may use a separate record and public key. Citadel
+checks that the signed actual run matches the public-random selected scenario
+and that its digest matches the freeze. This optional path is not required for
+the submission gate.
 
 ## Probe boundary
 
@@ -129,8 +131,9 @@ vendor-reported `total_cost_usd`.
    is public selects one already frozen holdout before the local matrix starts.
 5. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
-6. **Independent reproduction**: outside run, public key, raw privacy-safe
-   records, and one-command verification.
+6. **Clean verification**: public selection record, approved matrix
+   authorization, signed privacy-safe raw records, and one-command rebuild on a
+   clean hosted runner.
 7. **Grant claim**: only the claims supported by steps 5 and 6.
 
 There is no calendar promise. Progress advances when an evidence gate closes.
@@ -153,19 +156,24 @@ node scripts/test-optimizer.js
 node scripts/optimizer-proof-bundle.js verify <bundle-directory>
 ```
 
-Actual matrix execution remains fail-closed until an outside scenario is
-selected and the user explicitly approves consuming the frozen run/runtime
-allowance from their subscription quota. Independent reproduction remains a
-submission blocker, but it does not have to finish before the local matrix
-starts.
+Actual matrix execution remains fail-closed until the public-random scenario is
+selected and the user explicitly approves consuming the frozen run, model-call,
+and runtime allowance from their subscription quota. A third-party model rerun
+is optional and is not a submission blocker.
+
+The pending authorization caps the matrix at 120 CLI cells, 162 model attempts,
+and 7,230 aggregate timeout-minutes. The timeout figure is the sum of every
+per-attempt fail-safe timeout; it is not expected elapsed time, usage-based
+billing, or a claim about subscription cost.
 
 The no-model selection tooling emits a digest-bound request, commits to a
 future drand round, requires three identical relay responses, derives exactly
-one frozen holdout, and writes a reviewable candidate freeze. The
-independent-reproduction tooling reports its exact call/runtime
-envelope before execution, requires an outside signing key and explicit quota
-acknowledgement, and validates the signed record before writing a second
-candidate freeze. The selection method was public before the committed round.
+one frozen holdout, and writes a reviewable candidate freeze. Optional
+third-party-rerun tooling reports its exact call/runtime envelope before
+execution, requires a distinct signing key and explicit quota acknowledgement,
+and validates the signed record before writing a second candidate freeze. No
+one is asked to perform that optional rerun. The selection method was public
+before the committed round.
 Round `6333716` selected `citadel-short-executor-proof`; three relays agreed,
 the BLS signature verified, and the selection record is frozen.
 

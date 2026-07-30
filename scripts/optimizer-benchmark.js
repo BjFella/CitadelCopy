@@ -55,6 +55,11 @@ const {
   buildExternalSelectionRequest,
   frozenSelectionFromRecord,
 } = require('../core/optimizer/external-selection');
+const {
+  assertMatrixAuthorized,
+  matrixAuthorizationDigest,
+  validateMatrixAuthorization,
+} = require('../core/optimizer/matrix-authorization');
 
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK_ROOT = path.join(ROOT, 'benchmarks', 'optimizer-proof');
@@ -77,6 +82,7 @@ const DIAGNOSTIC_PILOT_FORENSICS_FILE = path.join(
   BENCHMARK_ROOT,
   'diagnostic-pilot-forensics.json',
 );
+const MATRIX_AUTHORIZATION_FILE = path.join(BENCHMARK_ROOT, 'matrix-authorization.json');
 const EXTERNAL_REPRODUCTION_FILE = path.join(BENCHMARK_ROOT, 'external-reproduction.json');
 
 function args(argv) {
@@ -114,6 +120,11 @@ function checkedInBenchmark() {
   const executors = loadExecutors(EXECUTOR_FILE);
   validateBenchmarkShape(scenarios, executors);
   const freeze = loadFreeze(FREEZE_FILE, scenarios, executors);
+  const matrixAuthorization = validateMatrixAuthorization(
+    JSON.parse(fs.readFileSync(MATRIX_AUTHORIZATION_FILE, 'utf8')),
+    freeze,
+    scenarios,
+  );
   const fixtureTruth = validateFixtureTruth(JSON.parse(fs.readFileSync(FIXTURE_TRUTH_FILE, 'utf8')), scenarios);
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(CALIBRATION_PLAN_FILE, 'utf8')),
@@ -214,6 +225,7 @@ function checkedInBenchmark() {
     diagnosticPilotPlan,
     diagnosticPilotRecord,
     diagnosticPilotForensics,
+    matrixAuthorization,
     externalReproduction,
   };
 }
@@ -270,7 +282,10 @@ function doctor(benchmark) {
   }
   if (!benchmark.freeze.calibration_record_digest) blockers.push('CALIBRATION_REQUIRED');
   if (!benchmark.freeze.external_scenario) blockers.push('EXTERNAL_SCENARIO_NOT_SELECTED');
-  if (!benchmark.freeze.external_reproduction_digest) blockers.push('EXTERNAL_REPRODUCTION_REQUIRED');
+  if (benchmark.matrixAuthorization.approval_status !== 'approved'
+    || benchmark.matrixAuthorization.quota_acknowledged !== true) {
+    blockers.push('MATRIX_QUOTA_NOT_APPROVED');
+  }
   if (!benchmark.freeze.attestation_public_key) blockers.push('ATTESTATION_KEY_NOT_FROZEN');
   return {
     schema: 1,
@@ -516,7 +531,7 @@ async function main() {
     const readiness = doctor(benchmark);
     const allowedBlockers = new Set([
       'EXTERNAL_SCENARIO_NOT_SELECTED',
-      'EXTERNAL_REPRODUCTION_REQUIRED',
+      'MATRIX_QUOTA_NOT_APPROVED',
     ]);
     const blocking = readiness.blockers.filter((blocker) => !allowedBlockers.has(blocker));
     if (blocking.length) throw new Error(`Diagnostic pilot readiness failed: ${blocking.join(', ')}`);
@@ -607,7 +622,7 @@ async function main() {
     const allowedBlockers = new Set([
       'CALIBRATION_REQUIRED',
       'EXTERNAL_SCENARIO_NOT_SELECTED',
-      'EXTERNAL_REPRODUCTION_REQUIRED',
+      'MATRIX_QUOTA_NOT_APPROVED',
       'ATTESTATION_KEY_NOT_FROZEN',
     ]);
     const blocking = readiness.blockers.filter((blocker) => !allowedBlockers.has(blocker));
@@ -700,9 +715,7 @@ async function main() {
       }
     }
     const submissionReadiness = doctor(benchmark);
-    const executionBlockers = submissionReadiness.blockers.filter((blocker) => (
-      blocker !== 'EXTERNAL_REPRODUCTION_REQUIRED'
-    ));
+    const executionBlockers = submissionReadiness.blockers;
     process.stdout.write(`${JSON.stringify({
       schema: 1,
       kind: 'citadel_optimizer_matrix_plan',
@@ -714,6 +727,14 @@ async function main() {
       execution_status: executionBlockers.length ? 'blocked' : 'ready',
       blockers: executionBlockers,
       submission_blockers: submissionReadiness.blockers,
+      authorization_status: benchmark.matrixAuthorization.approval_status,
+      authorization_digest: matrixAuthorizationDigest(
+        benchmark.matrixAuthorization,
+        benchmark.freeze,
+        benchmark.scenarios,
+      ),
+      access_basis: benchmark.matrixAuthorization.access_basis,
+      quota_budget: benchmark.matrixAuthorization.quota_budget,
       runs,
     }, null, 2)}\n`);
     return;
@@ -768,6 +789,11 @@ async function main() {
     for (const required of ['scenario', 'policy', 'repetition', 'adapter', 'output', 'signing-key']) {
       if (!options[required]) throw new Error(`run requires --${required}`);
     }
+    assertMatrixAuthorized(
+      benchmark.matrixAuthorization,
+      benchmark.freeze,
+      benchmark.scenarios,
+    );
     assertActualReady(benchmark.freeze, benchmark.executors);
     const scenario = benchmark.scenarios.find((item) => item.id === options.scenario);
     if (!scenario) throw new Error(`Unknown scenario: ${options.scenario}`);

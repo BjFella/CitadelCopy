@@ -52,7 +52,7 @@ quality or savings.
 `actual-run` requires:
 
 1. exact frozen models and bound executor profiles;
-2. a checked-in outside scenario selection and Ed25519 public key;
+2. a checked-in public-random scenario selection and Ed25519 public key;
 3. runner-owned verification of changed artifacts and repository tests, with
    bounded path- and secret-redacted output and patch receipts for every attempted
    verification;
@@ -73,7 +73,7 @@ node scripts/optimizer-benchmark.js pilot-plan
 node scripts/optimizer-benchmark.js selection-request
 node scripts/optimizer-benchmark.js select-holdout \
   --output <external-selection.json>
-node scripts/optimizer-benchmark.js reproduction-plan
+node scripts/optimizer-benchmark.js matrix-plan
 node scripts/optimizer-benchmark.js plan \
   --scenario p-limit-short-clear-queue \
   --policy adaptive \
@@ -99,15 +99,22 @@ The fixed record path and completed status prevent a duplicate pilot. Its raw
 failed result, archived inputs, and zero-call forensic replay are all
 digest-bound and remain excluded from performance claims.
 
+`matrix-plan` makes no model calls. The checked-in authorization is pending and
+caps the frozen matrix at 120 CLI cells, 162 model attempts, and 7,230 aggregate
+timeout-minutes. The timeout figure is a fail-safe ceiling, not expected
+duration or a dollar estimate. `run` fails before key parsing or model launch
+until that exact subscription envelope is explicitly approved.
+
 `selection-request`, `select-holdout`, `freeze-selection`, `reproduction-plan`,
 `verify-reproduction`, and `freeze-reproduction` make no model calls. The
 selection command reads one precommitted public beacon round from three
-relays; it does not contact a human. The `reproduce` command is separately
-quota-gated, runs one selected
-scenario, requires a fresh outside Ed25519 key and explicit acknowledgement,
-and refuses to overwrite its output. See
+relays; it does not contact a human. The matrix command is blocked until the
+checked-in subscription authorization is explicitly approved. The `reproduce`
+command is an optional, separately quota-gated path for any third party who
+independently chooses to rerun the selected scenario; it is not a submission
+gate and requires no outreach. See
 [`holdout/EXTERNAL_SELECTION.md`](holdout/EXTERNAL_SELECTION.md) and
-[`holdout/EXTERNAL_REPRODUCTION.md`](holdout/EXTERNAL_REPRODUCTION.md).
+[`holdout/OPTIONAL_REPRODUCTION.md`](holdout/OPTIONAL_REPRODUCTION.md).
 The canonical public request is
 [`holdout/external-selection-request.json`](holdout/external-selection-request.json).
 

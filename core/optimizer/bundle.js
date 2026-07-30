@@ -25,6 +25,13 @@ const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('./external-reproduction');
+const {
+  buildExternalSelectionRequest,
+  frozenSelectionFromRecord,
+  validateBeaconSelectionRecord,
+  validateExternalSelectionRequest,
+} = require('./external-selection');
+const { validateMatrixAuthorization } = require('./matrix-authorization');
 
 const MANIFEST_FIELDS = Object.freeze([
   'schema',
@@ -101,6 +108,13 @@ function checkedInInputs(root) {
   const calibrationPlanFile = path.join(benchmarkRoot, 'calibration-plan.json');
   const calibrationRecordFile = path.join(benchmarkRoot, 'calibration-record.json');
   const calibrationForensicsFile = path.join(benchmarkRoot, 'calibration-forensics.json');
+  const matrixAuthorizationFile = path.join(benchmarkRoot, 'matrix-authorization.json');
+  const selectionRequestFile = path.join(
+    benchmarkRoot,
+    'holdout',
+    'external-selection-request.json',
+  );
+  const selectionRecordFile = path.join(benchmarkRoot, 'external-selection.json');
   const diagnosticPilotPlanFile = path.join(benchmarkRoot, 'diagnostic-pilot-plan.json');
   const diagnosticPilotRecordFile = path.join(benchmarkRoot, 'diagnostic-pilot-record.json');
   const diagnosticPilotForensicsFile = path.join(
@@ -113,6 +127,38 @@ function checkedInInputs(root) {
   const diagnosticPilotScenarios = loadScenarios(diagnosticPilotScenarioDirectory);
   const executors = loadExecutors(executorFile);
   const freeze = loadFreeze(freezeFile, scenarios, executors);
+  for (const [label, file] of [
+    ['matrix authorization', matrixAuthorizationFile],
+    ['selection request', selectionRequestFile],
+    ['selection record', selectionRecordFile],
+  ]) {
+    if (!realRegularFile(benchmarkRoot, file)) throw new Error(`Frozen ${label} is missing`);
+  }
+  const matrixAuthorization = validateMatrixAuthorization(
+    JSON.parse(fs.readFileSync(matrixAuthorizationFile, 'utf8')),
+    freeze,
+    scenarios,
+  );
+  const expectedSelectionRequest = buildExternalSelectionRequest(freeze, scenarios);
+  const selectionRequest = validateExternalSelectionRequest(
+    JSON.parse(fs.readFileSync(selectionRequestFile, 'utf8')),
+    freeze,
+    scenarios,
+  );
+  if (canonical(selectionRequest) !== canonical(expectedSelectionRequest)) {
+    throw new Error('Published selection request does not reproduce from the freeze');
+  }
+  const selectionRecord = validateBeaconSelectionRecord(
+    JSON.parse(fs.readFileSync(selectionRecordFile, 'utf8')),
+    selectionRequest,
+    freeze,
+    scenarios,
+  );
+  if (canonical(freeze.external_scenario) !== canonical(
+    frozenSelectionFromRecord(selectionRecord, selectionRequest, freeze, scenarios),
+  )) {
+    throw new Error('Frozen external scenario does not match the public-random selection');
+  }
   if (!realRegularFile(benchmarkRoot, calibrationPlanFile)) throw new Error('Frozen calibration plan is missing');
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(calibrationPlanFile, 'utf8')),
@@ -223,6 +269,12 @@ function checkedInInputs(root) {
     calibrationRecord,
     calibrationForensicsFile,
     calibrationForensics,
+    matrixAuthorizationFile,
+    matrixAuthorization,
+    selectionRequestFile,
+    selectionRequest,
+    selectionRecordFile,
+    selectionRecord,
     diagnosticPilotPlanFile,
     diagnosticPilotPlan,
     diagnosticPilotRecordFile: diagnosticPilotRecord === null ? null : diagnosticPilotRecordFile,
@@ -292,6 +344,9 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     copyFile(inputs.calibrationRecordFile, path.join(output, 'inputs', 'calibration-record.json'));
   }
   copyFile(inputs.calibrationForensicsFile, path.join(output, 'inputs', 'calibration-forensics.json'));
+  copyFile(inputs.matrixAuthorizationFile, path.join(output, 'inputs', 'matrix-authorization.json'));
+  copyFile(inputs.selectionRequestFile, path.join(output, 'inputs', 'external-selection-request.json'));
+  copyFile(inputs.selectionRecordFile, path.join(output, 'inputs', 'external-selection.json'));
   copyFile(inputs.diagnosticPilotPlanFile, path.join(output, 'inputs', 'diagnostic-pilot-plan.json'));
   if (inputs.diagnosticPilotRecordFile !== null) {
     copyFile(inputs.diagnosticPilotRecordFile, path.join(output, 'inputs', 'diagnostic-pilot-record.json'));
@@ -335,6 +390,9 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     'inputs/calibration-plan.json',
     ...(inputs.calibrationRecordFile === null ? [] : ['inputs/calibration-record.json']),
     'inputs/calibration-forensics.json',
+    'inputs/matrix-authorization.json',
+    'inputs/external-selection-request.json',
+    'inputs/external-selection.json',
     'inputs/diagnostic-pilot-plan.json',
     ...(inputs.diagnosticPilotRecordFile === null ? [] : ['inputs/diagnostic-pilot-record.json']),
     'inputs/diagnostic-pilot-forensics.json',
@@ -434,6 +492,31 @@ function verifyBundle(bundleDirectory) {
   const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
   const diagnosticPilotScenarios = loadScenarios(diagnosticPilotScenarioDirectory);
   const freeze = loadFreeze(path.join(root, 'inputs', 'freeze.json'), scenarios, executors);
+  const matrixAuthorization = validateMatrixAuthorization(
+    JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'matrix-authorization.json'), 'utf8')),
+    freeze,
+    scenarios,
+  );
+  const expectedSelectionRequest = buildExternalSelectionRequest(freeze, scenarios);
+  const selectionRequest = validateExternalSelectionRequest(
+    JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'external-selection-request.json'), 'utf8')),
+    freeze,
+    scenarios,
+  );
+  if (canonical(selectionRequest) !== canonical(expectedSelectionRequest)) {
+    throw new Error('Bundle selection request does not reproduce from the freeze');
+  }
+  const selectionRecord = validateBeaconSelectionRecord(
+    JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'external-selection.json'), 'utf8')),
+    selectionRequest,
+    freeze,
+    scenarios,
+  );
+  if (canonical(freeze.external_scenario) !== canonical(
+    frozenSelectionFromRecord(selectionRecord, selectionRequest, freeze, scenarios),
+  )) {
+    throw new Error('Bundle frozen scenario does not match the public-random selection');
+  }
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'calibration-plan.json'), 'utf8')),
     calibrationScenarios,
@@ -540,6 +623,7 @@ function verifyBundle(bundleDirectory) {
     scenarios,
     executors,
     freeze,
+    matrixAuthorization,
     externalReproduction,
   });
   if (canonical(report) !== canonical(reproduced)) throw new Error('Bundle report does not reproduce');

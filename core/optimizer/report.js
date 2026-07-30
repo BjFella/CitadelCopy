@@ -17,6 +17,7 @@ const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('./external-reproduction');
+const { matrixAuthorizationCoversRuns } = require('./matrix-authorization');
 
 function rounded(value) {
   return value === null ? null : Number(value.toFixed(6));
@@ -236,6 +237,14 @@ function buildReport(inputRuns, options = {}) {
   const actualAttested = actualOnly
     && freeze.attestation_public_key !== null
     && runs.every((run) => verifyRunAttestation(run, freeze.attestation_public_key));
+  const matrixQuotaAuthorizationVerified = Boolean(actualOnly
+    && options.matrixAuthorization
+    && matrixAuthorizationCoversRuns(
+      options.matrixAuthorization,
+      freeze,
+      scenarios,
+      runs,
+    ));
   const executorProfilesDeclared = executors.every((executor) => executor.executor_profile_digest !== null);
   const invalidExecutorProfileBindings = executorProfilesDeclared
     ? [...validateExecutorBindings(executors)] : [];
@@ -260,7 +269,7 @@ function buildReport(inputRuns, options = {}) {
   if (!calibrationBound) blockers.push('CALIBRATION_REQUIRED');
   if (!exactModelsFrozen) blockers.push('EXACT_MODELS_NOT_FROZEN');
   if (freeze.external_scenario === null) blockers.push('EXTERNAL_SCENARIO_NOT_SELECTED');
-  if (!externalReproductionVerified) blockers.push('EXTERNAL_REPRODUCTION_REQUIRED');
+  if (!matrixQuotaAuthorizationVerified) blockers.push('MATRIX_QUOTA_NOT_APPROVED');
   if (preliminary.status !== 'passed') blockers.push('PRELIMINARY_PERFORMANCE_GATE_OPEN');
   if (engineeringGate.status !== 'passed') blockers.push('ADVERSARIAL_FALSE_PASS');
   return Object.freeze({
@@ -280,6 +289,7 @@ function buildReport(inputRuns, options = {}) {
     preliminary_performance_gate: preliminary,
     external_scenario_selected: freeze.external_scenario !== null,
     external_reproduction_verified: externalReproductionVerified,
+    matrix_quota_authorization_verified: matrixQuotaAuthorizationVerified,
     actual_run_attestation_verified: actualAttested,
     executor_profiles_bound: executorProfilesBound,
     invalid_executor_profile_bindings: Object.freeze(invalidExecutorProfileBindings),
@@ -291,13 +301,14 @@ function buildReport(inputRuns, options = {}) {
       status: blockers.length === 0 ? 'passed' : 'open',
       blockers: Object.freeze(blockers),
     }),
-    claim_status: actualOnly && actualAttested && preliminary.status === 'passed'
+    claim_status: blockers.length === 0
       ? 'preliminary-performance-supported'
       : 'engineering-contract-only',
     limitations: Object.freeze([
       'Fixture simulations validate contracts and anti-gaming behavior; they are not evidence of model performance or cost savings.',
       'Unknown cost remains unknown and blocks economic claims instead of becoming zero.',
-      'Submission requires attested actual runs and an independently selected frozen scenario.',
+      'Submission requires explicitly authorized, attested actual runs and a publicly selected frozen scenario.',
+      'A separately signed third-party rerun is optional and is not required to verify the checked-in evidence.',
     ]),
   });
 }

@@ -91,6 +91,11 @@ const {
   validateBeaconSelectionRecord,
   validateExternalSelectionRequest,
 } = require('../core/optimizer/external-selection');
+const {
+  expectedQuota,
+  matrixAuthorizationDigest,
+  validateMatrixAuthorization,
+} = require('../core/optimizer/matrix-authorization');
 
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK = path.join(ROOT, 'benchmarks', 'optimizer-proof');
@@ -126,6 +131,11 @@ function main() {
   const executors = loadExecutors(path.join(BENCHMARK, 'executors.json'));
   validateBenchmarkShape(scenarios, executors);
   const freeze = loadFreeze(path.join(BENCHMARK, 'freeze.json'), scenarios, executors);
+  const matrixAuthorization = validateMatrixAuthorization(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'matrix-authorization.json'), 'utf8')),
+    freeze,
+    scenarios,
+  );
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'calibration-plan.json'), 'utf8')),
     calibrationScenarios,
@@ -181,6 +191,17 @@ function main() {
   assert.deepStrictEqual(selectionRequest.holdout_scenario_ids, freeze.holdout_scenario_ids);
   assert.strictEqual(selectionRequest.beacon.round, 6333716);
   assert.strictEqual(selectionRequest.beacon.round_time, '2026-07-30T20:15:00.000Z');
+  assert.strictEqual(matrixAuthorization.approval_status, 'pending');
+  assert.deepStrictEqual(matrixAuthorization.quota_budget, {
+    max_cli_runs: 120,
+    max_model_calls: 162,
+    max_model_runtime_minutes: 7230,
+  });
+  assert.deepStrictEqual(expectedQuota(freeze, scenarios), matrixAuthorization.quota_budget);
+  assert.match(
+    matrixAuthorizationDigest(matrixAuthorization, freeze, scenarios),
+    /^sha256:[0-9a-f]{64}$/,
+  );
   const beaconSignature = 'ab'.repeat(96);
   const beacon = {
     round: selectionRequest.beacon.round,
@@ -502,9 +523,10 @@ function main() {
   for (const blocker of [
     'ACTUAL_RUNS_REQUIRED',
     'ACTUAL_RUNS_UNATTESTED',
-    'EXTERNAL_REPRODUCTION_REQUIRED',
+    'MATRIX_QUOTA_NOT_APPROVED',
   ]) assert(report.submission_gate.blockers.includes(blocker), `missing blocker ${blocker}`);
   assert.strictEqual(report.submission_gate.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'), false);
+  assert.strictEqual(report.submission_gate.blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'), false);
 
   const unknownRuns = fixtureRuns.map((run, index) => (
     index === fixtureRuns.findIndex((item) => item.holdout && item.policy_id === 'adaptive')
@@ -882,6 +904,14 @@ function main() {
     external_scenario: selectedExternalScenario,
     attestation_public_key: publicPem,
   }, scenarios, boundExecutors);
+  const approvedMatrixAuthorization = validateMatrixAuthorization({
+    ...matrixAuthorization,
+    executor_set_id: preReproductionFreeze.executor_set_id,
+    approval_status: 'approved',
+    quota_acknowledged: true,
+    approved_by: 'test-operator',
+    approved_at: '2000-01-01T00:00:00.000Z',
+  }, preReproductionFreeze, scenarios);
   const profileById = new Map(boundExecutors.map((profile) => [profile.profile_id, profile]));
   const actualRuns = fixtureRuns.map((run) => attestRun({
     ...run,
@@ -918,10 +948,20 @@ function main() {
       preReproductionFreeze,
     ),
   }, scenarios, boundExecutors);
+  const autonomousReport = buildReport(actualRuns, {
+    scenarios,
+    executors: boundExecutors,
+    freeze: preReproductionFreeze,
+    matrixAuthorization: approvedMatrixAuthorization,
+  });
+  assert.strictEqual(autonomousReport.submission_gate.status, 'passed');
+  assert.strictEqual(autonomousReport.external_reproduction_verified, false);
+  assert.strictEqual(autonomousReport.matrix_quota_authorization_verified, true);
   const actualReport = buildReport(actualRuns, {
     scenarios,
     executors: boundExecutors,
     freeze: boundFreeze,
+    matrixAuthorization: approvedMatrixAuthorization,
     externalReproduction,
   });
   assert.strictEqual(actualReport.submission_gate.status, 'passed');
@@ -933,6 +973,7 @@ function main() {
     scenarios,
     executors: boundExecutors,
     freeze: boundFreeze,
+    matrixAuthorization: approvedMatrixAuthorization,
     externalReproduction,
   });
   assert.strictEqual(tamperedReport.actual_run_attestation_verified, false);
@@ -1009,7 +1050,9 @@ function main() {
   assert.strictEqual(new Set(matrixOutput.runs.map((run) => run.run_key)).size, 120);
   assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'), false);
   assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'), false);
-  assert(matrixOutput.submission_blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'));
+  assert(matrixOutput.blockers.includes('MATRIX_QUOTA_NOT_APPROVED'));
+  assert.strictEqual(matrixOutput.authorization_status, 'pending');
+  assert.deepStrictEqual(matrixOutput.quota_budget, matrixAuthorization.quota_budget);
   const actualBlocked = invoke([
     'run',
     '--scenario', scenarios[0].id,
@@ -1017,9 +1060,10 @@ function main() {
     '--repetition', '1',
     '--adapter', __filename,
     '--output', path.join(os.tmpdir(), 'must-not-write-optimizer-run.json'),
+    '--signing-key', __filename,
   ]);
   assert.notStrictEqual(actualBlocked.status, 0);
-  assert.match(actualBlocked.stderr, /run requires --signing-key/);
+  assert.match(actualBlocked.stderr, /explicitly approved subscription quota/);
   const reproductionOutput = path.join(
     os.tmpdir(),
     `must-not-write-optimizer-reproduction-${process.pid}.json`,

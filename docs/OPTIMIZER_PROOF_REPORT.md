@@ -47,7 +47,7 @@ math fixture. It is not evidence that real models save money.
 | Diagnostic pilot | Completed 2/2 identity and receipt gates; raw record failed; Claude's 22-test pass was an artifact-gate false negative |
 | Holdout selector | `citadel-short-executor-proof`, selected by precommitted drand round 6333716; three relays agreed and the BLS signature verified |
 | Local run-attestation public key | Frozen; private key stored outside the repository |
-| Independent reproduction | Not collected |
+| Clean hosted verification | Beacon selection passed on GitHub-hosted runner; matrix bundle verification awaits the unrun matrix |
 | Model calls made across calibration attempts | 6 total; 4 in the completed record |
 | Model calls made in diagnostic pilot | 2 total; no rerun |
 

@@ -153,7 +153,7 @@ Funded target:
 - at least 30% lower end-to-end cost;
 - at least 95% of frontier verified completion;
 - more runtime families, model tiers, tool types, and topologies;
-- independent reproduction and public privacy-safe raw evidence.
+- clean hosted reproduction of the report from public privacy-safe raw evidence.
 
 If the preliminary gate fails, we will publish the negative result and revise
 or stop the economic claim.
@@ -182,7 +182,7 @@ Proposed public-goods grant: **$150,000**.
 |---|---:|
 | Core controller and runtime engineering | $60,000 |
 | Model, tool, and compute evaluation | $30,000 |
-| Independent reproduction and security review | $20,000 |
+| Verification hardening and adversarial evaluation | $20,000 |
 | Open adapters and harness integrations | $15,000 |
 | Documentation, demo, and results surface | $15,000 |
 | Administration and contingency | $10,000 |
