@@ -146,6 +146,7 @@ node scripts/optimizer-benchmark.js pilot-plan
 node scripts/optimizer-benchmark.js pilot
 node scripts/optimizer-benchmark.js selection-request
 node scripts/optimizer-benchmark.js select-holdout --output <external-selection.json>
+node scripts/optimizer-drand-verify.js --input <external-selection.json>
 node scripts/optimizer-benchmark.js reproduction-plan
 node scripts/optimizer-benchmark.js matrix-plan
 node scripts/test-optimizer.js

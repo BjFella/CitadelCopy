@@ -51,6 +51,14 @@ method, record digest, round date, and public beacon URL.
 
 Relay agreement and the signature-to-randomness hash are checked locally. The
 request also pins the drand chain hash and public key so the BLS signature can
-be independently verified with the official drand client. A clean hosted
-verification must perform that check before the grant evidence is called
-independently verifiable.
+be independently verified with the official drand client:
+
+```bash
+npm install --no-save --package-lock=false --ignore-scripts drand-client@1.4.2
+node scripts/optimizer-drand-verify.js \
+  --input external-selection.json
+```
+
+The repository test workflow performs that pinned BLS verification on a clean
+GitHub-hosted runner as soon as the selection record is checked in. No person
+has to be recruited or trusted as the selector.
