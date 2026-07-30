@@ -115,11 +115,15 @@ vendor-reported `total_cost_usd`.
    repair touching both expected artifacts. The subscription-quota budget
    capped calibration at 4 runs and 160 aggregate model-runtime timeout
    minutes.
-3. **Diagnostic pilot**: a separately authorized, non-claim two-run check uses
-   the corrected scenario with one frontier profile from each runtime. It is
-   capped at 2 CLI runs and 80 aggregate model-runtime timeout minutes. It
-   exists only to demonstrate that the task-verifier evidence path can produce
-   a pass before the 120-cell matrix consumes quota.
+3. **Diagnostic pilot**: a separately authorized, non-claim two-run check
+   completed with one frontier profile from each runtime, capped at 2 CLI runs
+   and 80 aggregate model-runtime timeout minutes. Both identity and receipt
+   gates passed. Claude changed `index.js` and passed all 22 task tests but the
+   immutable record remained failed because the scenario also required an
+   unnecessary `test.js` edit. Codex made no patch and failed the verifier. A
+   zero-call forensic replay classifies the Claude result as an artifact-gate
+   false negative; the future matrix copy is re-frozen with only `index.js`
+   required. This is harness evidence, not comparative performance evidence.
 4. **Outside selection**: an independent maintainer selects one already frozen
    holdout before the local matrix starts.
 5. **Preliminary evidence**: complete frozen actual-run matrix and held-out
@@ -160,12 +164,12 @@ acknowledgement, and validates the signed record before writing a second
 candidate freeze. These workflows are prepared locally but have not been
 published, sent, selected, or run.
 
-The proof bundle carries both scenario sets: `inputs/calibration-scenarios/`
-reproduces the exact set used by the completed calibration, while
-`inputs/scenarios/` is the corrected set frozen for the actual matrix. It also
-includes and verifies `calibration-record.json` and
-`calibration-forensics.json`. It carries the pending or completed
-diagnostic-pilot plan and verifies the pilot record when one is bound.
+The proof bundle carries three scenario sets:
+`inputs/calibration-scenarios/` reproduces the exact set used by calibration,
+`inputs/diagnostic-pilot-scenarios/` preserves the exact pilot inputs, and
+`inputs/scenarios/` is the corrected set frozen for the actual matrix. It
+verifies the calibration record and forensics, the immutable pilot record and
+forensic replay, and every scenario-set identity.
 
 Model and pricing references:
 

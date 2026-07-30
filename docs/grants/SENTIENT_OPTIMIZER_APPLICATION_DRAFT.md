@@ -122,11 +122,18 @@ is re-frozen with a task-focused verifier that fails on the pinned queue bug and
 passes a bounded reference repair touching both expected artifacts. Future run
 records retain bounded, path- and secret-redacted verifier and patch receipts,
 and the standalone bundle verifies the completed calibration record, the
-forensic record, and both scenario sets.
+forensic record, and archived calibration scenario set.
 
-A two-run, frontier-only diagnostic pilot is prepared but not approved. It is
-explicitly excluded from performance evidence and exists to prove the corrected
-task-verifier path before the full matrix consumes subscription quota.
+A two-run, frontier-only diagnostic pilot then completed across Claude Opus 5
+and GPT-5.6 Sol. Both exact-model and execution-receipt gates passed. Claude
+changed `index.js` and passed all 22 task tests; Codex made no patch and failed
+the verifier. The immutable pilot record remains failed because the original
+manifest also required an unnecessary `test.js` edit. A digest-bound zero-call
+forensic replay preserves that false negative, archives the exact pilot
+scenario set, and narrows only the future matrix copy to `index.js`. The bundle
+verifies all three scenario sets, both raw records, and both forensic records.
+Pilot evidence remains explicitly excluded from comparative performance and
+savings claims.
 
 ## Evaluation
 

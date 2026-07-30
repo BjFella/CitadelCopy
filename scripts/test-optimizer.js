@@ -78,6 +78,9 @@ const {
   validateDiagnosticPilotRecord,
 } = require('../core/optimizer/diagnostic-pilot');
 const {
+  validateDiagnosticPilotForensics,
+} = require('../core/optimizer/diagnostic-pilot-forensics');
+const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
@@ -115,6 +118,10 @@ function knownCost(amount, source = 'test') {
 function main() {
   const scenarios = loadScenarios(path.join(BENCHMARK, 'scenarios'));
   const calibrationScenarios = loadScenarios(path.join(BENCHMARK, 'calibration-scenarios'));
+  const diagnosticPilotScenarios = loadScenarios(path.join(
+    BENCHMARK,
+    'diagnostic-pilot-scenarios',
+  ));
   const executors = loadExecutors(path.join(BENCHMARK, 'executors.json'));
   validateBenchmarkShape(scenarios, executors);
   const freeze = loadFreeze(path.join(BENCHMARK, 'freeze.json'), scenarios, executors);
@@ -130,8 +137,21 @@ function main() {
   );
   const diagnosticPilotPlan = validateDiagnosticPilotPlan(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'diagnostic-pilot-plan.json'), 'utf8')),
-    scenarios,
+    diagnosticPilotScenarios,
     executors,
+  );
+  const diagnosticPilotRecord = validateDiagnosticPilotRecord(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'diagnostic-pilot-record.json'), 'utf8')),
+    diagnosticPilotPlan,
+    diagnosticPilotScenarios,
+    executors,
+  );
+  const diagnosticPilotForensics = validateDiagnosticPilotForensics(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'diagnostic-pilot-forensics.json'), 'utf8')),
+    diagnosticPilotPlan,
+    diagnosticPilotRecord,
+    diagnosticPilotScenarios,
+    scenarios,
   );
   const truth = validateFixtureTruth(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'truth.json'), 'utf8')),
@@ -210,6 +230,19 @@ function main() {
     max_cli_runs: 2,
     max_model_runtime_minutes: 80,
   });
+  assert.strictEqual(diagnosticPilotPlan.approval_status, 'completed');
+  assert.strictEqual(digest(diagnosticPilotRecord), diagnosticPilotPlan.record_digest);
+  assert.strictEqual(
+    digest(diagnosticPilotForensics),
+    freeze.diagnostic_pilot_forensics_digest,
+  );
+  assert.strictEqual(diagnosticPilotForensics.model_calls_made, 0);
+  assert.strictEqual(diagnosticPilotForensics.claude_observation.replay_task_verified, true);
+  assert.strictEqual(diagnosticPilotForensics.codex_observation.replay_task_verified, false);
+  assert.notStrictEqual(
+    scenarioSetIdentity(diagnosticPilotScenarios),
+    scenarioSetIdentity(scenarios),
+  );
   assert.notStrictEqual(scenarioSetIdentity(calibrationScenarios), scenarioSetIdentity(scenarios));
   assert.strictEqual(
     scenarioSetIdentity(calibrationScenarios),
@@ -278,10 +311,14 @@ function main() {
   };
   assert.doesNotThrow(() => validateDiagnosticPilotPlan(
     approvedDiagnosticPilotPlan,
-    scenarios,
+    diagnosticPilotScenarios,
     executors,
   ));
-  const diagnosticCases = diagnosticPilotCases(approvedDiagnosticPilotPlan, scenarios, executors);
+  const diagnosticCases = diagnosticPilotCases(
+    approvedDiagnosticPilotPlan,
+    diagnosticPilotScenarios,
+    executors,
+  );
   assert.strictEqual(diagnosticCases.length, 2);
   assert.deepStrictEqual(
     new Set(diagnosticCases.map((item) => item.profile.runtime)),
@@ -289,7 +326,7 @@ function main() {
   );
   const diagnosticRuns = diagnosticCases.map(({ scenario, profile }) => ({
     ...calibrationRun,
-    scenario_set_id: scenarioSetIdentity(scenarios),
+    scenario_set_id: scenarioSetIdentity(diagnosticPilotScenarios),
     scenario_id: scenario.id,
     selected_profile_id: profile.profile_id,
     observed_profile_id: profile.profile_id,
@@ -312,7 +349,7 @@ function main() {
     schema: 1,
     kind: 'citadel_optimizer_diagnostic_pilot_record',
     authorization_digest: diagnosticPilotAuthorizationDigest(approvedDiagnosticPilotPlan),
-    scenario_set_id: scenarioSetIdentity(scenarios),
+    scenario_set_id: scenarioSetIdentity(diagnosticPilotScenarios),
     executor_set_id: executorSetIdentity(executors),
     access_basis: approvedDiagnosticPilotPlan.access_basis,
     quota_budget: approvedDiagnosticPilotPlan.quota_budget,
@@ -327,7 +364,7 @@ function main() {
   assert.doesNotThrow(() => validateDiagnosticPilotRecord(
     diagnosticRecord,
     approvedDiagnosticPilotPlan,
-    scenarios,
+    diagnosticPilotScenarios,
     executors,
   ));
   assert.throws(() => validateDiagnosticPilotRecord({
@@ -343,7 +380,7 @@ function main() {
         exit_code: 1,
       })),
     })),
-  }, approvedDiagnosticPilotPlan, scenarios, executors), /task-verifier pass/);
+  }, approvedDiagnosticPilotPlan, diagnosticPilotScenarios, executors), /task-verifier pass/);
   const calibrationRecord = {
     schema: 1,
     kind: 'citadel_optimizer_calibration_record',
@@ -692,11 +729,19 @@ function main() {
     assert.strictEqual(verifiedBundle.calibration_forensics_verified, true);
     assert.strictEqual(verifiedBundle.diagnostic_pilot_plan_verified, true);
     assert.strictEqual(verifiedBundle.diagnostic_pilot_record_verified, true);
+    assert.strictEqual(verifiedBundle.diagnostic_pilot_forensics_verified, true);
     const bundledCalibration = path.join(bundleDirectory, 'inputs', 'calibration-record.json');
     assert.strictEqual(fs.existsSync(bundledCalibration), true);
     assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'calibration-forensics.json')), true);
     assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-plan.json')), true);
     assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-record.json')), true);
+    assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-forensics.json')), true);
+    assert.strictEqual(fs.existsSync(path.join(
+      bundleDirectory,
+      'inputs',
+      'diagnostic-pilot-scenarios',
+      '10-p-limit-cleanup-pending.json',
+    )), true);
     assert.strictEqual(fs.existsSync(path.join(
       bundleDirectory,
       'inputs',

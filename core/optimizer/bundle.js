@@ -19,6 +19,9 @@ const {
   validateDiagnosticPilotRecord,
 } = require('./diagnostic-pilot');
 const {
+  validateDiagnosticPilotForensics,
+} = require('./diagnostic-pilot-forensics');
+const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('./external-reproduction');
@@ -88,6 +91,10 @@ function checkedInInputs(root) {
   const benchmarkRoot = path.join(root, 'benchmarks', 'optimizer-proof');
   const scenarioDirectory = path.join(benchmarkRoot, 'scenarios');
   const calibrationScenarioDirectory = path.join(benchmarkRoot, 'calibration-scenarios');
+  const diagnosticPilotScenarioDirectory = path.join(
+    benchmarkRoot,
+    'diagnostic-pilot-scenarios',
+  );
   const executorFile = path.join(benchmarkRoot, 'executors.json');
   const freezeFile = path.join(benchmarkRoot, 'freeze.json');
   const pricingFile = path.join(benchmarkRoot, 'pricing.json');
@@ -96,9 +103,14 @@ function checkedInInputs(root) {
   const calibrationForensicsFile = path.join(benchmarkRoot, 'calibration-forensics.json');
   const diagnosticPilotPlanFile = path.join(benchmarkRoot, 'diagnostic-pilot-plan.json');
   const diagnosticPilotRecordFile = path.join(benchmarkRoot, 'diagnostic-pilot-record.json');
+  const diagnosticPilotForensicsFile = path.join(
+    benchmarkRoot,
+    'diagnostic-pilot-forensics.json',
+  );
   const externalReproductionFile = path.join(benchmarkRoot, 'external-reproduction.json');
   const scenarios = loadScenarios(scenarioDirectory);
   const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
+  const diagnosticPilotScenarios = loadScenarios(diagnosticPilotScenarioDirectory);
   const executors = loadExecutors(executorFile);
   const freeze = loadFreeze(freezeFile, scenarios, executors);
   if (!realRegularFile(benchmarkRoot, calibrationPlanFile)) throw new Error('Frozen calibration plan is missing');
@@ -129,7 +141,7 @@ function checkedInInputs(root) {
   }
   const diagnosticPilotPlan = validateDiagnosticPilotPlan(
     JSON.parse(fs.readFileSync(diagnosticPilotPlanFile, 'utf8')),
-    scenarios,
+    diagnosticPilotScenarios,
     executors,
   );
   let diagnosticPilotRecord = null;
@@ -140,12 +152,28 @@ function checkedInInputs(root) {
     diagnosticPilotRecord = validateDiagnosticPilotRecord(
       JSON.parse(fs.readFileSync(diagnosticPilotRecordFile, 'utf8')),
       diagnosticPilotPlan,
-      scenarios,
+      diagnosticPilotScenarios,
       executors,
     );
     if (digest(diagnosticPilotRecord) !== diagnosticPilotPlan.record_digest) {
       throw new Error('Diagnostic pilot record digest mismatch');
     }
+  }
+  if (diagnosticPilotRecord === null) {
+    throw new Error('Diagnostic pilot forensics require a completed pilot record');
+  }
+  if (!realRegularFile(benchmarkRoot, diagnosticPilotForensicsFile)) {
+    throw new Error('Diagnostic pilot forensics are missing');
+  }
+  const diagnosticPilotForensics = validateDiagnosticPilotForensics(
+    JSON.parse(fs.readFileSync(diagnosticPilotForensicsFile, 'utf8')),
+    diagnosticPilotPlan,
+    diagnosticPilotRecord,
+    diagnosticPilotScenarios,
+    scenarios,
+  );
+  if (digest(diagnosticPilotForensics) !== freeze.diagnostic_pilot_forensics_digest) {
+    throw new Error('Diagnostic pilot forensics digest mismatch');
   }
   let calibrationRecord = null;
   if (freeze.calibration_record_digest !== null) {
@@ -186,6 +214,7 @@ function checkedInInputs(root) {
     benchmarkRoot,
     scenarioDirectory,
     calibrationScenarioDirectory,
+    diagnosticPilotScenarioDirectory,
     executorFile,
     freezeFile,
     pricingFile: freeze.pricing_snapshot_digest === null ? null : pricingFile,
@@ -198,6 +227,8 @@ function checkedInInputs(root) {
     diagnosticPilotPlan,
     diagnosticPilotRecordFile: diagnosticPilotRecord === null ? null : diagnosticPilotRecordFile,
     diagnosticPilotRecord,
+    diagnosticPilotForensicsFile,
+    diagnosticPilotForensics,
     externalReproductionFile: externalReproduction === null ? null : externalReproductionFile,
     externalReproduction,
     scenarios,
@@ -224,9 +255,10 @@ function bundleReadme(report) {
 Claim status: **${report.claim_status}**
 
 This directory contains frozen benchmark inputs, the archived calibration
-scenario set, the completed calibration and forensic records, the bounded
-diagnostic-pilot plan and any completed pilot record, raw run records, the
-derived report, and a content-addressed manifest.
+scenario set, the archived diagnostic-pilot scenario set, the completed
+calibration and forensic records, the bounded diagnostic-pilot plan, immutable
+pilot record and forensic replay, raw run records, the derived report, and a
+content-addressed manifest.
 
 Verify from a Citadel checkout:
 
@@ -264,6 +296,10 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
   if (inputs.diagnosticPilotRecordFile !== null) {
     copyFile(inputs.diagnosticPilotRecordFile, path.join(output, 'inputs', 'diagnostic-pilot-record.json'));
   }
+  copyFile(
+    inputs.diagnosticPilotForensicsFile,
+    path.join(output, 'inputs', 'diagnostic-pilot-forensics.json'),
+  );
   if (inputs.pricingFile !== null) {
     copyFile(inputs.pricingFile, path.join(output, 'inputs', 'pricing.json'));
   }
@@ -282,6 +318,12 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
       path.join(output, 'inputs', 'calibration-scenarios', name),
     );
   }
+  for (const name of fs.readdirSync(inputs.diagnosticPilotScenarioDirectory).filter((item) => item.endsWith('.json')).sort()) {
+    copyFile(
+      path.join(inputs.diagnosticPilotScenarioDirectory, name),
+      path.join(output, 'inputs', 'diagnostic-pilot-scenarios', name),
+    );
+  }
   copyFile(rawPath, path.join(output, 'evidence', 'raw.jsonl'));
   copyFile(reportPath, path.join(output, 'evidence', 'report.json'));
   writeFile(path.join(output, 'README.md'), bundleReadme(expectedReport));
@@ -295,10 +337,13 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     'inputs/calibration-forensics.json',
     'inputs/diagnostic-pilot-plan.json',
     ...(inputs.diagnosticPilotRecordFile === null ? [] : ['inputs/diagnostic-pilot-record.json']),
+    'inputs/diagnostic-pilot-forensics.json',
     ...(inputs.pricingFile === null ? [] : ['inputs/pricing.json']),
     ...(inputs.externalReproductionFile === null ? [] : ['inputs/external-reproduction.json']),
     ...fs.readdirSync(path.join(output, 'inputs', 'calibration-scenarios')).sort()
       .map((name) => `inputs/calibration-scenarios/${name}`),
+    ...fs.readdirSync(path.join(output, 'inputs', 'diagnostic-pilot-scenarios')).sort()
+      .map((name) => `inputs/diagnostic-pilot-scenarios/${name}`),
     ...fs.readdirSync(path.join(output, 'inputs', 'scenarios')).sort()
       .map((name) => `inputs/scenarios/${name}`),
     'evidence/raw.jsonl',
@@ -379,9 +424,15 @@ function verifyBundle(bundleDirectory) {
   }
   const scenarioDirectory = path.join(root, 'inputs', 'scenarios');
   const calibrationScenarioDirectory = path.join(root, 'inputs', 'calibration-scenarios');
+  const diagnosticPilotScenarioDirectory = path.join(
+    root,
+    'inputs',
+    'diagnostic-pilot-scenarios',
+  );
   const executors = loadExecutors(path.join(root, 'inputs', 'executors.json'));
   const scenarios = loadScenarios(scenarioDirectory);
   const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
+  const diagnosticPilotScenarios = loadScenarios(diagnosticPilotScenarioDirectory);
   const freeze = loadFreeze(path.join(root, 'inputs', 'freeze.json'), scenarios, executors);
   const calibrationPlan = validateCalibrationPlan(
     JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'calibration-plan.json'), 'utf8')),
@@ -408,7 +459,7 @@ function verifyBundle(bundleDirectory) {
   }
   const diagnosticPilotPlan = validateDiagnosticPilotPlan(
     JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'diagnostic-pilot-plan.json'), 'utf8')),
-    scenarios,
+    diagnosticPilotScenarios,
     executors,
   );
   let diagnosticPilotRecord = null;
@@ -420,12 +471,33 @@ function verifyBundle(bundleDirectory) {
     diagnosticPilotRecord = validateDiagnosticPilotRecord(
       JSON.parse(fs.readFileSync(diagnosticPilotRecordFile, 'utf8')),
       diagnosticPilotPlan,
-      scenarios,
+      diagnosticPilotScenarios,
       executors,
     );
     if (digest(diagnosticPilotRecord) !== diagnosticPilotPlan.record_digest) {
       throw new Error('Bundle diagnostic pilot record digest mismatch');
     }
+  }
+  if (diagnosticPilotRecord === null) {
+    throw new Error('Bundle diagnostic pilot forensics require a completed pilot record');
+  }
+  const diagnosticPilotForensicsFile = path.join(
+    root,
+    'inputs',
+    'diagnostic-pilot-forensics.json',
+  );
+  if (!realRegularFile(root, diagnosticPilotForensicsFile)) {
+    throw new Error('Bundle diagnostic pilot forensics are missing');
+  }
+  const diagnosticPilotForensics = validateDiagnosticPilotForensics(
+    JSON.parse(fs.readFileSync(diagnosticPilotForensicsFile, 'utf8')),
+    diagnosticPilotPlan,
+    diagnosticPilotRecord,
+    diagnosticPilotScenarios,
+    scenarios,
+  );
+  if (digest(diagnosticPilotForensics) !== freeze.diagnostic_pilot_forensics_digest) {
+    throw new Error('Bundle diagnostic pilot forensics digest mismatch');
   }
   if (freeze.calibration_record_digest !== null) {
     const calibrationRecordFile = path.join(root, 'inputs', 'calibration-record.json');
@@ -487,6 +559,7 @@ function verifyBundle(bundleDirectory) {
     calibration_forensics_verified: true,
     diagnostic_pilot_plan_verified: true,
     diagnostic_pilot_record_verified: diagnosticPilotRecord !== null,
+    diagnostic_pilot_forensics_verified: true,
   });
 }
 

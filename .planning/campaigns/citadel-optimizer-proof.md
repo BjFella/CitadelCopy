@@ -37,7 +37,7 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Prepare machine-bound outside selection and independently signed
   reproduction workflows without publishing or consuming quota.
 - [x] Approve and run the bounded diagnostic pilot.
-- [ ] Forensically classify the pilot's artifact-gate false negative and
+- [x] Forensically classify the pilot's artifact-gate false negative and
   re-freeze the corrected actual matrix without rewriting the pilot record.
 - [ ] Collect outside holdout selection.
 - [ ] Run the attested actual matrix.

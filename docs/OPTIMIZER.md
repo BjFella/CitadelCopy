@@ -95,10 +95,11 @@ Implemented:
   record explaining why its task verifiers failed;
 - bounded, path- and secret-redacted verifier and patch receipts on every future actual-run
   verification attempt;
-- proof bundles that independently validate the completed calibration record,
-  forensics, and both frozen scenario sets;
-- a pending, fail-closed two-run frontier diagnostic plan capped at 80 aggregate
-  model-runtime timeout minutes and explicitly excluded from performance claims;
+- proof bundles that independently validate completed calibration and pilot
+  records, both forensic records, and all three frozen scenario sets;
+- a completed two-run frontier diagnostic capped at 80 aggregate
+  model-runtime timeout minutes, with its raw false negative preserved and a
+  zero-call artifact-gate replay explicitly excluded from performance claims;
 - a separate 120-run benchmark matrix;
 - fixture-only adversarial and anti-gaming tests;
 - a submission gate that refuses missing calibration, unattested runs,

@@ -4,8 +4,8 @@ Observed: 2026-07-30
 
 ## Answer
 
-The optimizer calibration is complete and digest-bound. The optimizer is not
-performance-proven and is not submission-ready.
+The optimizer calibration and diagnostic pilot are complete and digest-bound.
+The optimizer is not performance-proven and is not submission-ready.
 
 ## What passed locally
 
@@ -23,6 +23,8 @@ performance-proven and is not submission-ready.
   workspace cleanup
 - proof-bundle verification of the completed calibration record, its archived
   scenario set, and the no-model forensic record
+- proof-bundle verification of the completed diagnostic plan, immutable failed
+  record, archived pilot scenario set, and zero-call forensic replay
 - existing product-benchmark identity unchanged
 - existing executor-profile acceptance test unchanged and passing
 
@@ -42,10 +44,12 @@ math fixture. It is not evidence that real models save money.
 | Runtime adapter | Self-contained and bound by source digest |
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
 | Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
+| Diagnostic pilot | Completed 2/2 identity and receipt gates; raw record failed; Claude's 22-test pass was an artifact-gate false negative |
 | External scenario selector | Not collected |
 | Local run-attestation public key | Frozen; private key stored outside the repository |
 | Independent reproduction | Not collected |
 | Model calls made across calibration attempts | 6 total; 4 in the completed record |
+| Model calls made in diagnostic pilot | 2 total; no rerun |
 
 Citadel's Windows launcher prefers the reviewed npm entrypoint over an
 inaccessible Windows Store desktop executable. Calibration and the local
@@ -101,11 +105,24 @@ calibration scenario set preserves what actually ran; the corrected actual
 matrix has a new frozen scenario-set identity. The 0/4 calibration result is
 therefore not interpretable as model quality and supplies no savings evidence.
 
-The next quota-consuming gate is a pending two-run diagnostic pilot against the
-corrected verifier: one frontier Claude profile, one frontier Codex profile,
-and at most 80 aggregate model-runtime timeout minutes. It is explicitly
-non-claim evidence. The full matrix should not run until that pilot produces
-auditable task-verifier receipts.
+The authorized diagnostic pilot completed both frontier runs in 741,708 ms.
+Its normalized comparison total was `$2.191393`, not a subscription invoice.
+Both requested models matched their observed identities and both execution
+receipts verified. Claude changed `index.js` and all 22 AVA tests passed, while
+Codex made no patch and the verifier failed.
+
+The immutable pilot record remains failed with `NO_TASK_VERIFIER_PASS` because
+the manifest required both `index.js` and `test.js` to change. The pinned
+repository already contained the regression test, so this rejected a valid
+implementation and rewarded unnecessary test churn. The exact pilot scenario
+set and raw record are archived unchanged. A digest-bound, zero-call forensic
+replay narrows only the future matrix manifest to `index.js`; it classifies the
+Claude run as task-verified and leaves the Codex run failed. This proves the
+evidence path can carry a real verifier pass but supplies no savings claim.
+
+The next gate is publication of the frozen method followed by outside holdout
+selection. Both still require explicit approval. The full matrix remains
+separately quota-gated.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

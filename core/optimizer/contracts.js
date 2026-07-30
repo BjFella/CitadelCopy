@@ -229,6 +229,7 @@ const FREEZE_FIELDS = Object.freeze([
   'calibration_plan_digest',
   'calibration_record_digest',
   'calibration_forensics_digest',
+  'diagnostic_pilot_forensics_digest',
   'external_scenario',
   'external_reproduction_digest',
   'attestation_public_key',
@@ -737,6 +738,10 @@ function validateFreeze(value, scenarios, executors, source = 'freeze') {
   }
   if (value.calibration_forensics_digest !== null && !DIGEST.test(value.calibration_forensics_digest)) {
     throw new Error(`${source}.calibration_forensics_digest is invalid`);
+  }
+  if (value.diagnostic_pilot_forensics_digest !== null
+    && !DIGEST.test(value.diagnostic_pilot_forensics_digest)) {
+    throw new Error(`${source}.diagnostic_pilot_forensics_digest is invalid`);
   }
   if (value.external_reproduction_digest !== null && !DIGEST.test(value.external_reproduction_digest)) {
     throw new Error(`${source}.external_reproduction_digest is invalid`);

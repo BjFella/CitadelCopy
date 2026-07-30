@@ -44,6 +44,9 @@ const {
   validateDiagnosticPilotRecord,
 } = require('../core/optimizer/diagnostic-pilot');
 const {
+  validateDiagnosticPilotForensics,
+} = require('../core/optimizer/diagnostic-pilot-forensics');
+const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
@@ -56,6 +59,10 @@ const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK_ROOT = path.join(ROOT, 'benchmarks', 'optimizer-proof');
 const SCENARIO_DIRECTORY = path.join(BENCHMARK_ROOT, 'scenarios');
 const CALIBRATION_SCENARIO_DIRECTORY = path.join(BENCHMARK_ROOT, 'calibration-scenarios');
+const DIAGNOSTIC_PILOT_SCENARIO_DIRECTORY = path.join(
+  BENCHMARK_ROOT,
+  'diagnostic-pilot-scenarios',
+);
 const EXECUTOR_FILE = path.join(BENCHMARK_ROOT, 'executors.json');
 const FREEZE_FILE = path.join(BENCHMARK_ROOT, 'freeze.json');
 const FIXTURE_TRUTH_FILE = path.join(BENCHMARK_ROOT, 'fixtures', 'truth.json');
@@ -65,6 +72,10 @@ const CALIBRATION_RECORD_FILE = path.join(BENCHMARK_ROOT, 'calibration-record.js
 const CALIBRATION_FORENSICS_FILE = path.join(BENCHMARK_ROOT, 'calibration-forensics.json');
 const DIAGNOSTIC_PILOT_PLAN_FILE = path.join(BENCHMARK_ROOT, 'diagnostic-pilot-plan.json');
 const DIAGNOSTIC_PILOT_RECORD_FILE = path.join(BENCHMARK_ROOT, 'diagnostic-pilot-record.json');
+const DIAGNOSTIC_PILOT_FORENSICS_FILE = path.join(
+  BENCHMARK_ROOT,
+  'diagnostic-pilot-forensics.json',
+);
 const EXTERNAL_REPRODUCTION_FILE = path.join(BENCHMARK_ROOT, 'external-reproduction.json');
 
 function args(argv) {
@@ -98,6 +109,7 @@ function readJsonl(file) {
 function checkedInBenchmark() {
   const scenarios = loadScenarios(SCENARIO_DIRECTORY);
   const calibrationScenarios = loadScenarios(CALIBRATION_SCENARIO_DIRECTORY);
+  const diagnosticPilotScenarios = loadScenarios(DIAGNOSTIC_PILOT_SCENARIO_DIRECTORY);
   const executors = loadExecutors(EXECUTOR_FILE);
   validateBenchmarkShape(scenarios, executors);
   const freeze = loadFreeze(FREEZE_FILE, scenarios, executors);
@@ -124,7 +136,7 @@ function checkedInBenchmark() {
   }
   const diagnosticPilotPlan = validateDiagnosticPilotPlan(
     JSON.parse(fs.readFileSync(DIAGNOSTIC_PILOT_PLAN_FILE, 'utf8')),
-    scenarios,
+    diagnosticPilotScenarios,
     executors,
   );
   let diagnosticPilotRecord = null;
@@ -135,12 +147,25 @@ function checkedInBenchmark() {
     diagnosticPilotRecord = validateDiagnosticPilotRecord(
       JSON.parse(fs.readFileSync(DIAGNOSTIC_PILOT_RECORD_FILE, 'utf8')),
       diagnosticPilotPlan,
-      scenarios,
+      diagnosticPilotScenarios,
       executors,
     );
     if (digest(diagnosticPilotRecord) !== diagnosticPilotPlan.record_digest) {
       throw new Error('Diagnostic pilot record digest mismatch');
     }
+  }
+  if (diagnosticPilotRecord === null) {
+    throw new Error('Diagnostic pilot forensics require a completed pilot record');
+  }
+  const diagnosticPilotForensics = validateDiagnosticPilotForensics(
+    JSON.parse(fs.readFileSync(DIAGNOSTIC_PILOT_FORENSICS_FILE, 'utf8')),
+    diagnosticPilotPlan,
+    diagnosticPilotRecord,
+    diagnosticPilotScenarios,
+    scenarios,
+  );
+  if (digest(diagnosticPilotForensics) !== freeze.diagnostic_pilot_forensics_digest) {
+    throw new Error('Diagnostic pilot forensics digest mismatch');
   }
   let calibrationRecord = null;
   if (freeze.calibration_record_digest !== null) {
@@ -177,6 +202,7 @@ function checkedInBenchmark() {
   return {
     scenarios,
     calibrationScenarios,
+    diagnosticPilotScenarios,
     executors,
     freeze,
     fixtureTruth,
@@ -186,6 +212,7 @@ function checkedInBenchmark() {
     calibrationForensics,
     diagnosticPilotPlan,
     diagnosticPilotRecord,
+    diagnosticPilotForensics,
     externalReproduction,
   };
 }
@@ -260,6 +287,7 @@ function doctor(benchmark) {
     calibration_scenario_set_id: scenarioSetIdentity(benchmark.calibrationScenarios),
     diagnostic_pilot_approval_status: benchmark.diagnosticPilotPlan.approval_status,
     diagnostic_pilot_record_present: benchmark.diagnosticPilotRecord !== null,
+    diagnostic_pilot_forensics_digest: benchmark.freeze.diagnostic_pilot_forensics_digest,
     blockers,
   };
 }
@@ -451,14 +479,14 @@ function main() {
     if (blocking.length) throw new Error(`Diagnostic pilot readiness failed: ${blocking.join(', ')}`);
     const cases = diagnosticPilotCases(
       benchmark.diagnosticPilotPlan,
-      benchmark.scenarios,
+      benchmark.diagnosticPilotScenarios,
       benchmark.executors,
     );
     const record = {
       schema: 1,
       kind: 'citadel_optimizer_diagnostic_pilot_record',
       authorization_digest: diagnosticPilotAuthorizationDigest(benchmark.diagnosticPilotPlan),
-      scenario_set_id: benchmark.freeze.scenario_set_id,
+      scenario_set_id: benchmark.diagnosticPilotPlan.scenario_set_id,
       executor_set_id: benchmark.freeze.executor_set_id,
       access_basis: benchmark.diagnosticPilotPlan.access_basis,
       quota_budget: benchmark.diagnosticPilotPlan.quota_budget,
@@ -480,7 +508,7 @@ function main() {
     for (const item of cases) {
       const run = runScenario({
         scenario: item.scenario,
-        scenarios: benchmark.scenarios,
+        scenarios: benchmark.diagnosticPilotScenarios,
         executors: [item.profile],
         policyId: benchmark.diagnosticPilotPlan.policy_id,
         repetition: 1,
@@ -506,7 +534,7 @@ function main() {
       writeJson(DIAGNOSTIC_PILOT_RECORD_FILE, validateDiagnosticPilotRecord(
         record,
         benchmark.diagnosticPilotPlan,
-        benchmark.scenarios,
+        benchmark.diagnosticPilotScenarios,
         benchmark.executors,
       ));
       process.stdout.write(`${JSON.stringify({

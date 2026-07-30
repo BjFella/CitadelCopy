@@ -34,6 +34,15 @@ task tests executed. The actual matrix was therefore re-frozen with a
 task-focused AVA verifier. That verifier fails on the pinned queue bug and
 passes a reference repair touching both expected artifacts.
 
+The authorized two-run diagnostic then completed against one frontier profile
+per runtime. Both model-identity and execution-receipt gates passed. Claude
+changed `index.js` and all 22 task tests passed, but the original pilot record
+correctly remained failed because the scenario also required an unnecessary
+`test.js` edit. Codex made no patch and its verifier failed. The immutable pilot
+scenario set and failed record are archived; a zero-call forensic replay binds
+the false-negative classification. The future matrix narrows only that
+scenario's expected artifact list to `index.js`.
+
 ## Evidence levels
 
 `fixture-simulation` validates schemas, policy determinism, report math,
@@ -82,11 +91,11 @@ node scripts/test-optimizer.js
 `--fixture-probe` is visibly synthetic. A real adaptive plan requires
 `--repository <checked-out-path>`.
 
-`pilot-plan` makes no model calls. The checked-in plan is pending and caps the
-diagnostic at 2 frontier-profile CLI runs and 80 aggregate model-runtime
-timeout minutes. `pilot` remains fail-closed until Seth explicitly approves
-that subscription-quota envelope. The fixed record path prevents accidentally
-starting a second pilot over an interrupted or completed record.
+`pilot-plan` makes no model calls. The completed plan capped the diagnostic at
+2 frontier-profile CLI runs and 80 aggregate model-runtime timeout minutes.
+The fixed record path and completed status prevent a duplicate pilot. Its raw
+failed result, archived inputs, and zero-call forensic replay are all
+digest-bound and remain excluded from performance claims.
 
 `selection-request`, `freeze-selection`, `reproduction-plan`,
 `verify-reproduction`, and `freeze-reproduction` make no model calls. The
@@ -99,6 +108,8 @@ and refuses to overwrite its output. See
 ## Frozen identities
 
 - Scenario set:
+  `optimizer-scenarios-sha256:602e496906f3a293203750602234ba88a55a86b9e4f54f32239264098dcebe5b`
+- Archived diagnostic-pilot scenario set:
   `optimizer-scenarios-sha256:1269928412c49b9405293a0cbf814d6e62ab50988579f0fbdb1353b4c17df2b2`
 - Archived calibration scenario set:
   `optimizer-scenarios-sha256:d9e0a9eab6c005ae8fdabbc69696397cecab2a0f45009b88357c989818103a7a`

@@ -103,7 +103,7 @@ function validateCalibrationForensics(value, calibrationScenarios, currentScenar
     throw new Error('Calibration forensics task-focused baseline is invalid');
   }
   if (!exactFields(value.reference_repair, REFERENCE_REPAIR_FIELDS)
-    || canonical(value.reference_repair.changed_artifacts) !== canonical(current.expected_artifacts)
+    || canonical(value.reference_repair.changed_artifacts) !== canonical(archived.expected_artifacts)
     || !DIGEST.test(value.reference_repair.patch_digest)
     || canonical(value.reference_repair.verification_command) !== canonical(current.verification_command)
     || value.reference_repair.exit_code !== 0
