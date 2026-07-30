@@ -2,9 +2,7 @@
   "schema": 1,
   "kind": "citadel_optimizer_calibration_plan",
   "scenario_ids": [
-    "citadel-long-cost-provenance",
-    "p-limit-context-cancel",
-    "nanoid-safety-random-boundary"
+    "p-limit-cleanup-pending"
   ],
   "profile_ids": [
     "codex-utility",
@@ -13,12 +11,12 @@
     "codex-frontier"
   ],
   "runs_per_pair": 1,
-  "total_runs": 12,
+  "total_runs": 4,
   "no_holdouts": true,
   "access_basis": "subscription",
   "quota_budget": {
-    "max_cli_runs": 12,
-    "max_model_runtime_minutes": 620
+    "max_cli_runs": 4,
+    "max_model_runtime_minutes": 160
   },
   "approval_status": "approved",
   "quota_acknowledged": true,

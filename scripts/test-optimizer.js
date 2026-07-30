@@ -117,11 +117,11 @@ function main() {
   assert.strictEqual(new Set(scenarios.map((scenario) => scenario.repository)).size, 3);
   assert.strictEqual(new Set(executors.map((executor) => executor.runtime)).size, 2);
   assert.deepStrictEqual([...validateExecutorBindings(executors)], []);
-  assert.strictEqual(calibrationPlan.total_runs, 12);
+  assert.strictEqual(calibrationPlan.total_runs, 4);
   assert.strictEqual(calibrationPlan.access_basis, 'subscription');
   assert.deepStrictEqual(calibrationPlan.quota_budget, {
-    max_cli_runs: 12,
-    max_model_runtime_minutes: 620,
+    max_cli_runs: 4,
+    max_model_runtime_minutes: 160,
   });
   assert.strictEqual(calibrationPlan.approval_status, 'approved');
   assert.strictEqual(calibrationPlan.quota_acknowledged, true);
@@ -154,7 +154,7 @@ function main() {
   };
   assert.doesNotThrow(() => validateCalibrationPlan(approvedCalibrationPlan, scenarios, executors));
   const calibrationCaseList = calibrationCases(calibrationPlan, scenarios, executors);
-  assert.strictEqual(calibrationCaseList.length, 12);
+  assert.strictEqual(calibrationCaseList.length, 4);
   assert.strictEqual(calibrationCaseList[0].scenario.id, calibrationPlan.scenario_ids[0]);
   assert.strictEqual(calibrationCaseList[0].profile.profile_id, calibrationPlan.profile_ids[0]);
   const calibrationRun = {
@@ -183,7 +183,7 @@ function main() {
     started_at: '2026-07-30T00:00:00.000Z',
     completed_at: null,
     status: 'running',
-    planned_run_count: 12,
+    planned_run_count: 4,
     completed_run_count: 1,
     stop_reason: null,
     runs: [calibrationObservation(calibrationRun, calibrationCaseList[0].profile)],
@@ -420,6 +420,48 @@ function main() {
     assert.strictEqual(verifyRunAttestation(signed, keys.publicKey), true);
     assert.strictEqual(verifyRunAttestation({ ...signed, duration_ms: signed.duration_ms + 1 }, keys.publicKey), false);
 
+    const claudeRepository = path.join(temp, 'claude-repository');
+    const claudeHome = path.join(temp, 'claude-home');
+    const claudeSessionId = '1777fd1c-78e6-4b90-8c6b-a067acc6c931';
+    const claudeSessionDirectory = path.join(
+      claudeHome,
+      '.claude',
+      'projects',
+      'fixture-project',
+    );
+    fs.mkdirSync(claudeRepository, { recursive: true });
+    fs.mkdirSync(claudeSessionDirectory, { recursive: true });
+    fs.writeFileSync(
+      path.join(claudeSessionDirectory, `${claudeSessionId}.jsonl`),
+      `${JSON.stringify({
+        type: 'assistant',
+        cwd: claudeRepository,
+        sessionId: claudeSessionId,
+        message: { model: 'claude-sonnet-5' },
+      })}\n`,
+    );
+    const claudeReceipt = JSON.stringify({
+      session_id: claudeSessionId,
+      total_cost_usd: 0.25,
+      usage: {
+        input_tokens: 100,
+        cache_read_input_tokens: 25,
+        output_tokens: 50,
+      },
+    });
+    const claudeFromSession = runtimeAdapter.claudeObservation(
+      claudeReceipt,
+      claudeRepository,
+      { USERPROFILE: claudeHome },
+    );
+    assert.strictEqual(claudeFromSession.model, 'claude-sonnet-5');
+    assert.strictEqual(claudeFromSession.source, 'claude-json+session-jsonl');
+    assert.strictEqual(runtimeAdapter.claudeObservation(
+      claudeReceipt,
+      path.join(temp, 'different-repository'),
+      { USERPROFILE: claudeHome },
+    ).model, null);
+
     const raw = path.join(temp, 'fixture.jsonl');
     const aggregate = path.join(temp, 'report.json');
     const fixtureCli = invoke(['fixture', '--output', raw]);
@@ -593,7 +635,7 @@ function main() {
   assert.strictEqual(calibrationCli.status, 0, calibrationCli.stderr);
   const calibrationOutput = JSON.parse(calibrationCli.stdout);
   assert.strictEqual(calibrationOutput.no_model_calls_made, true);
-  assert.strictEqual(calibrationOutput.plan.total_runs, 12);
+  assert.strictEqual(calibrationOutput.plan.total_runs, 4);
   assert.strictEqual(calibrationOutput.plan.approval_status, 'approved');
   assert(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'));
   const matrixCli = invoke(['matrix-plan']);

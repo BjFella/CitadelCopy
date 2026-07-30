@@ -102,10 +102,10 @@ vendor-reported `total_cost_usd`.
 
 1. **Contract proof**: local unit tests, deterministic policies, frozen
    identities, anti-tamper tests.
-2. **Calibration**: 12 approved, non-holdout CLI runs (3 scenarios × 4 frozen
-   profiles) used to prove account access, observed model identity, and cost
-   sources. The checked-in subscription-quota budget caps this at 12 runs and
-   620 aggregate model-runtime timeout minutes.
+2. **Calibration**: 4 approved, non-holdout CLI runs (one short scenario × 4
+   frozen profiles) used to prove account access, observed model identity, and
+   cost sources. The checked-in subscription-quota budget caps this at 4 runs
+   and 160 aggregate model-runtime timeout minutes.
 3. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
 4. **Independent reproduction**: outside selection, outside run, public key,

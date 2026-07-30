@@ -22,7 +22,7 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Bind exact models and their executor profile digests.
 - [x] Freeze an official-list-price normalization snapshot for Codex telemetry.
 - [x] Establish a supported automated Codex launch path.
-- [x] Add a frozen 12-run calibration plan and complete 120-run matrix plan.
+- [x] Add a frozen calibration plan and complete 120-run matrix plan.
 - [x] Separate local run signing from cryptographically verified outside reproduction.
 - [x] Pass the complete no-model Citadel test suite.
 - [x] Approve the bounded subscription-quota calibration.

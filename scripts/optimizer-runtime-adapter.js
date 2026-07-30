@@ -172,24 +172,6 @@ function usageOf(value) {
   return { input_tokens: input, cached_input_tokens: cached, output_tokens: output };
 }
 
-function claudeObservation(stdout) {
-  let payload;
-  try { payload = JSON.parse(stdout); } catch (_error) { return null; }
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const usageModels = payload.modelUsage && typeof payload.modelUsage === 'object'
-    ? Object.keys(payload.modelUsage) : [];
-  const model = typeof payload.model === 'string' && MODEL_PATTERN.test(payload.model) ? payload.model
-    : usageModels.length === 1 && MODEL_PATTERN.test(usageModels[0]) ? usageModels[0] : null;
-  const amount = Number(payload.total_cost_usd);
-  return {
-    model,
-    usage: usageOf(payload.usage),
-    vendor_cost_usd: Number.isFinite(amount) && amount >= 0 ? amount : null,
-    source: 'claude-json',
-    trusted: true,
-  };
-}
-
 function containedRealFile(root, candidate) {
   try {
     if (fs.lstatSync(candidate).isSymbolicLink()) return null;
@@ -201,6 +183,97 @@ function containedRealFile(root, candidate) {
   } catch (_error) {
     return null;
   }
+}
+
+function findClaudeSessionFile(sessionId, env = process.env) {
+  if (!THREAD_PATTERN.test(sessionId)) return null;
+  const claudeRoot = env.CLAUDE_CONFIG_DIR
+    || ((env.USERPROFILE || env.HOME) ? path.join(env.USERPROFILE || env.HOME, '.claude') : null);
+  if (!claudeRoot) return null;
+  const projects = path.resolve(claudeRoot, 'projects');
+  try {
+    if (!fs.statSync(projects).isDirectory() || fs.lstatSync(projects).isSymbolicLink()) return null;
+  } catch (_error) {
+    return null;
+  }
+  const target = `${sessionId}.jsonl`.toLowerCase();
+  const stack = [projects];
+  let scanned = 0;
+  let match = null;
+  while (stack.length) {
+    const directory = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(directory, { withFileTypes: true }); } catch (_error) { return null; }
+    for (const entry of entries) {
+      scanned += 1;
+      if (scanned > 20000) return null;
+      if (entry.isSymbolicLink()) continue;
+      const candidate = path.join(directory, entry.name);
+      if (entry.isDirectory()) stack.push(candidate);
+      else if (entry.isFile() && entry.name.toLowerCase() === target) {
+        const contained = containedRealFile(projects, candidate);
+        if (!contained || match !== null) return null;
+        match = contained;
+      }
+    }
+  }
+  return match;
+}
+
+function claudeSessionModel(sessionId, repositoryPath, env = process.env) {
+  const file = findClaudeSessionFile(sessionId, env);
+  if (!file) return null;
+  let expected;
+  try { expected = fs.realpathSync(repositoryPath); } catch (_error) { return null; }
+  let descriptor;
+  try {
+    descriptor = fs.openSync(file, 'r');
+    const size = Math.min(fs.fstatSync(descriptor).size, 4 * 1024 * 1024);
+    const buffer = Buffer.alloc(size);
+    const bytes = fs.readSync(descriptor, buffer, 0, size, 0);
+    const models = new Set();
+    for (const line of buffer.subarray(0, bytes).toString('utf8').split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      let event;
+      try { event = JSON.parse(line); } catch (_error) { continue; }
+      if (!event || event.type !== 'assistant' || !event.message) continue;
+      if (typeof event.cwd !== 'string' || typeof event.message.model !== 'string') continue;
+      let eventCwd;
+      try { eventCwd = fs.realpathSync(event.cwd); } catch (_error) { continue; }
+      if (eventCwd === expected && MODEL_PATTERN.test(event.message.model)) {
+        models.add(event.message.model);
+      }
+    }
+    return models.size === 1 ? [...models][0] : null;
+  } catch (_error) {
+    return null;
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+}
+
+function claudeObservation(stdout, repositoryPath, env = process.env) {
+  let payload;
+  try { payload = JSON.parse(stdout); } catch (_error) { return null; }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const usageModels = payload.modelUsage && typeof payload.modelUsage === 'object'
+    ? Object.keys(payload.modelUsage) : [];
+  let model = typeof payload.model === 'string' && MODEL_PATTERN.test(payload.model) ? payload.model
+    : usageModels.length === 1 && MODEL_PATTERN.test(usageModels[0]) ? usageModels[0] : null;
+  let source = 'claude-json';
+  const sessionId = payload.session_id || payload.sessionId;
+  if (model === null && THREAD_PATTERN.test(sessionId || '')) {
+    model = claudeSessionModel(sessionId, repositoryPath, env);
+    if (model !== null) source = 'claude-json+session-jsonl';
+  }
+  const amount = Number(payload.total_cost_usd);
+  return {
+    model,
+    usage: usageOf(payload.usage),
+    vendor_cost_usd: Number.isFinite(amount) && amount >= 0 ? amount : null,
+    source,
+    trusted: true,
+  };
 }
 
 function findCodexSessionFile(threadId, env = process.env) {
@@ -428,7 +501,7 @@ function executeAdapter(input, options = {}) {
     env: options.env || process.env,
   });
   const observation = input.profile.runtime === 'claude'
-    ? claudeObservation(result.stdout || '')
+    ? claudeObservation(result.stdout || '', input.repository_path, options.env || process.env)
     : codexObservation(result.stdout || '', input.repository_path, options.env || process.env);
   const observedModel = observation ? observation.model : null;
   const modelProof = observedModel === null ? 'unknown'
@@ -465,10 +538,12 @@ if (require.main === module) {
 
 module.exports = Object.freeze({
   claudeObservation,
+  claudeSessionModel,
   codexObservation,
   costForObservation,
   executeAdapter,
   invocationFor,
+  findClaudeSessionFile,
   safeInput,
   validatePricing,
 });

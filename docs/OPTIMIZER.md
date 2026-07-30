@@ -74,7 +74,7 @@ must show that both sources are usable and comparable before any economic
 claim.
 
 The current calibration access basis is `subscription`. Its authorization
-contract caps execution at 12 CLI runs and 620 aggregate model-runtime timeout
+contract caps execution at 4 CLI runs and 160 aggregate model-runtime timeout
 minutes. It does not ask the user for a dollar ceiling.
 
 ## Current implementation
@@ -90,7 +90,7 @@ Implemented:
 - a self-contained Claude/Codex adapter bound by source digest;
 - exact public model IDs and canonical Operation Fork profile digests;
 - a digest-bound official-list-price normalization for Codex token telemetry;
-- a 12-run, non-holdout calibration plan that remains approval-gated;
+- a 4-run, non-holdout calibration plan that remains approval-gated;
 - a separate 120-run benchmark matrix;
 - fixture-only adversarial and anti-gaming tests;
 - a submission gate that refuses missing calibration, unattested runs,

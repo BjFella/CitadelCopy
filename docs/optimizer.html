@@ -576,7 +576,7 @@
           <ul>
             <li>Measured cost reduction across live model runs.</li>
             <li>Frontier completion retained on held-out tasks.</li>
-            <li>Approved 12-run calibration across the frozen profiles.</li>
+            <li>Approved 4-run smoke calibration across the frozen profiles.</li>
             <li>Observed account access, model identity, and cost provenance.</li>
             <li>Outside scenario selection and reproduction.</li>
             <li>Usefulness beyond the three frozen repositories.</li>
@@ -601,7 +601,7 @@
         </p>
       </div>
       <div class="blockers">
-        <div class="blocker"><b>CALIBRATION_REQUIRED</b><span>The 12-run non-holdout plan and subscription quota are authorized, but no completed calibration record exists yet.</span></div>
+        <div class="blocker"><b>CALIBRATION_REQUIRED</b><span>The first attempt stopped on missing Claude model provenance. A corrected 4-run smoke plan is authorized, but no completed record exists yet.</span></div>
         <div class="blocker"><b>ACTUAL_RUNS_REQUIRED</b><span>The 120-run matrix has not executed, so the fixture cannot support a savings claim.</span></div>
         <div class="blocker"><b>EXTERNAL_SCENARIO_NOT_SELECTED</b><span>An outside maintainer has not selected a frozen holdout.</span></div>
         <div class="blocker"><b>EXTERNAL_REPRODUCTION_REQUIRED</b><span>No separately signed reproduction of the outside-selected holdout exists.</span></div>

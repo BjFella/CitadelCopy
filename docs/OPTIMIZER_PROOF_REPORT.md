@@ -37,7 +37,7 @@ math fixture. It is not evidence that real models save money.
 | Executor profile digests | Bound to canonical Operation Fork profiles |
 | Runtime adapter | Self-contained and bound by source digest |
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
-| Calibration | 12-run non-holdout plan frozen and subscription quota authorized; no runs made |
+| Calibration | First attempt stopped after 2/12 on missing Claude model provenance; revised 4-run smoke plan authorized |
 | External scenario selector | Not collected |
 | Local run-attestation public key | Not frozen |
 | Independent reproduction | Not collected |
@@ -67,14 +67,17 @@ Unsafe current claims:
 
 ## Next evidence, not next feature
 
-The next gate is the frozen 12-run subscription-backed calibration across three
-non-holdout scenarios and all four profiles. It verifies authenticated access
-to the frozen models, checks observed identity and cost provenance, and tests
-whether the telemetry supports a common normalized-cost comparison. Approval
-authorizes at most 12 CLI runs and 620 aggregate model-runtime timeout minutes
-from the subscription quota. It does not require or imply a dollar spend
-ceiling. Seth authorized that bounded quota on 2026-07-30; execution remains
-pending until a calibration record is produced.
+The first calibration attempt stopped after two calls because Claude's final
+summary omitted model identity. Its local session stream retained the exact
+model, so the adapter now binds the final session ID to that stream and rejects
+mixed or mismatched session evidence.
+
+The revised gate is a frozen 4-run subscription-backed smoke calibration: one
+short non-holdout scenario across all four profiles. It verifies authenticated
+access, observed identity, and cost provenance without spending long tasks on
+what is not a performance benchmark. The cap is 4 CLI runs and 160 aggregate
+model-runtime timeout minutes. Together with the two stopped-attempt calls,
+this remains below Seth's original 12-call authorization.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

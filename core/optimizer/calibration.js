@@ -69,7 +69,7 @@ function validateCalibrationPlan(value, scenarios, executors, source = 'calibrat
     throw new Error(`${source} identity or fields are invalid`);
   }
   if (!Array.isArray(value.scenario_ids)
-    || value.scenario_ids.length < 3
+    || value.scenario_ids.length < 1
     || new Set(value.scenario_ids).size !== value.scenario_ids.length) {
     throw new Error(`${source}.scenario_ids is invalid`);
   }
