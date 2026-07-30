@@ -4,6 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { platformInvocation } = require('../forks/launcher');
 const { digest, scenarioSetIdentity, validateScenario } = require('./contract');
 
 const FIXTURE_START = Date.parse('2026-01-01T00:00:00.000Z');
@@ -60,7 +61,11 @@ function safeEnvironment(extra = {}) {
 }
 
 function execute(argv, cwd, timeoutMs, env = safeEnvironment()) {
-  const result = spawnSync(argv[0], argv.slice(1), {
+  const invocation = platformInvocation({
+    command: argv[0],
+    args: argv.slice(1),
+  }, { env });
+  const result = spawnSync(invocation.command, invocation.args, {
     cwd,
     env,
     encoding: 'utf8',

@@ -72,6 +72,11 @@ summary omitted model identity. Its local session stream retained the exact
 model, so the adapter now binds the final session ID to that stream and rejects
 mixed or mismatched session evidence.
 
+A second start stopped before any model call because Windows could not launch
+the frozen `npm.cmd` setup through `spawnSync` with `shell: false`. The benchmark
+runner now resolves reviewed `npm`, `npx`, and `corepack` shims to their
+JavaScript entrypoints and still avoids a command interpreter.
+
 The revised gate is a frozen 4-run subscription-backed smoke calibration: one
 short non-holdout scenario across all four profiles. It verifies authenticated
 access, observed identity, and cost provenance without spending long tasks on

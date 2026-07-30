@@ -407,6 +407,14 @@ assert.deepEqual(shim.args, [
   'C:\\Program Files\\nodejs\\node_modules\\@openai\\codex\\bin\\codex.js',
   ...invocation.args,
 ]);
+assert.equal(
+  forks.nodeEntrypoint('npm', 'C:\\Program Files\\nodejs\\npm.cmd'),
+  'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+);
+assert.equal(
+  forks.nodeEntrypoint('corepack', 'C:\\Program Files\\nodejs\\corepack.cmd'),
+  'C:\\Program Files\\nodejs\\node_modules\\corepack\\dist\\corepack.js',
+);
 const direct = forks.platformInvocation(invocation, {
   platform: 'win32', env: {}, resolve: () => 'C:\\tools\\codex.exe',
 });

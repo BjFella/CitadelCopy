@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Windows cannot CreateProcess a .cmd/.bat shim directly. Citadel resolves
-// supported npm shims to their JavaScript entrypoint and launches them through
-// Node, preserving literal argv without a command interpreter.
+// supported Node-package shims to their JavaScript entrypoint and launches
+// them through Node, preserving literal argv without a command interpreter.
 const DIRECT_EXTENSIONS = Object.freeze(['.exe', '.com']);
 const SHIM_EXTENSIONS = Object.freeze(['.cmd', '.bat']);
 
@@ -56,6 +56,9 @@ function nodeEntrypoint(command, resolved) {
   const root = path.dirname(resolved);
   if (command === 'codex') return path.join(root, 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
   if (command === 'claude') return path.join(root, 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+  if (command === 'npm') return path.join(root, 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (command === 'npx') return path.join(root, 'node_modules', 'npm', 'bin', 'npx-cli.js');
+  if (command === 'corepack') return path.join(root, 'node_modules', 'corepack', 'dist', 'corepack.js');
   return null;
 }
 

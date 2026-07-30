@@ -23,6 +23,7 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Freeze an official-list-price normalization snapshot for Codex telemetry.
 - [x] Establish a supported automated Codex launch path.
 - [x] Add a frozen calibration plan and complete 120-run matrix plan.
+- [x] Preserve failed calibration attempts and repair discovered receipt/setup seams.
 - [x] Separate local run signing from cryptographically verified outside reproduction.
 - [x] Pass the complete no-model Citadel test suite.
 - [x] Approve the bounded subscription-quota calibration.
