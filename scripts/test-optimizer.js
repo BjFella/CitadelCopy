@@ -98,6 +98,11 @@ const {
   validateMatrixAuthorization,
 } = require('../core/optimizer/matrix-authorization');
 const { validateAttestationRotation } = require('../core/optimizer/attestation-rotation');
+const {
+  args: matrixRunArgs,
+  contained: matrixOutputContained,
+  runFileName,
+} = require('./optimizer-matrix-run');
 
 const ROOT = path.resolve(__dirname, '..');
 const BENCHMARK = path.join(ROOT, 'benchmarks', 'optimizer-proof');
@@ -224,6 +229,22 @@ function main() {
     /explicitly approved subscription quota/,
   );
   assert.doesNotThrow(() => assertMatrixAuthorized(matrixAuthorization, freeze, scenarios));
+  assert.deepStrictEqual(matrixRunArgs([
+    '--output-dir', 'runs',
+    '--signing-key', 'key.pem',
+    '--dry-run',
+  ]), {
+    'output-dir': 'runs',
+    'signing-key': 'key.pem',
+    'dry-run': true,
+  });
+  assert.strictEqual(matrixOutputContained(BENCHMARK, path.join(BENCHMARK, 'actual-runs')), true);
+  assert.strictEqual(matrixOutputContained(BENCHMARK, path.dirname(BENCHMARK)), false);
+  assert.strictEqual(runFileName({
+    scenario_id: 'citadel-short-executor-proof',
+    policy_id: 'adaptive',
+    repetition: 1,
+  }, 1), '001-citadel-short-executor-proof-adaptive-1.json');
   const beaconSignature = 'ab'.repeat(96);
   const beacon = {
     round: selectionRequest.beacon.round,

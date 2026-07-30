@@ -74,6 +74,8 @@ node scripts/optimizer-benchmark.js selection-request
 node scripts/optimizer-benchmark.js select-holdout \
   --output <external-selection.json>
 node scripts/optimizer-benchmark.js matrix-plan
+node scripts/optimizer-matrix-run.js --dry-run
+node scripts/optimizer-matrix-run.js
 node scripts/optimizer-benchmark.js plan \
   --scenario p-limit-short-clear-queue \
   --policy adaptive \
@@ -104,6 +106,9 @@ authorization at `2026-07-30T20:44:02.628Z`; it caps the frozen matrix at 120
 CLI cells, 162 model attempts, and 7,230 aggregate timeout-minutes. The timeout
 figure is a fail-safe ceiling, not expected duration or a dollar estimate.
 No matrix run predates that approval.
+`optimizer-matrix-run.js` writes an intent before each cell, validates every
+signed result, resumes completed cells, and refuses to retry an ambiguous cell
+automatically. This prevents a crash from silently spending quota twice.
 
 `selection-request`, `select-holdout`, `freeze-selection`, `reproduction-plan`,
 `verify-reproduction`, and `freeze-reproduction` make no model calls. The

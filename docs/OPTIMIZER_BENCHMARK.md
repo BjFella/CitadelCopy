@@ -152,6 +152,8 @@ node scripts/optimizer-benchmark.js select-holdout --output <external-selection.
 node scripts/optimizer-drand-verify.js --input <external-selection.json>
 node scripts/optimizer-benchmark.js reproduction-plan
 node scripts/optimizer-benchmark.js matrix-plan
+node scripts/optimizer-matrix-run.js --dry-run
+node scripts/optimizer-matrix-run.js
 node scripts/test-optimizer.js
 node scripts/optimizer-proof-bundle.js verify <bundle-directory>
 ```
@@ -167,6 +169,10 @@ The approved authorization caps the matrix at 120 CLI cells, 162 model attempts,
 and 7,230 aggregate timeout-minutes. The timeout figure is the sum of every
 per-attempt fail-safe timeout; it is not expected elapsed time, usage-based
 billing, or a claim about subscription cost.
+
+The resumable matrix driver writes a durable intent before each cell, validates
+the signed output before marking it complete, skips verified completed cells,
+and halts on an ambiguous cell instead of silently retrying quota after a crash.
 
 The no-model selection tooling emits a digest-bound request, commits to a
 future drand round, requires three identical relay responses, derives exactly

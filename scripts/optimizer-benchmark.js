@@ -797,6 +797,10 @@ async function main() {
     assertActualReady(benchmark.freeze, benchmark.executors);
     const scenario = benchmark.scenarios.find((item) => item.id === options.scenario);
     if (!scenario) throw new Error(`Unknown scenario: ${options.scenario}`);
+    const output = path.resolve(options.output);
+    if (fs.existsSync(output)) throw new Error('actual run output already exists');
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.accessSync(path.dirname(output), fs.constants.W_OK);
     const privateKey = privateKeyForRun(options['signing-key'], benchmark.freeze);
     const unsigned = runScenario({
       scenario,
@@ -808,8 +812,8 @@ async function main() {
       pricingSnapshot: benchmark.pricingSnapshot,
     });
     const signed = attestRun(unsigned, privateKey);
-    writeJson(options.output, signed);
-    process.stdout.write(`Wrote attested actual optimizer run to ${options.output}\n`);
+    writeJson(output, signed);
+    process.stdout.write(`Wrote attested actual optimizer run to ${output}\n`);
     return;
   }
 
