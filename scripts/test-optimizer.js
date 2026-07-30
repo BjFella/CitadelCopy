@@ -123,8 +123,9 @@ function main() {
     max_cli_runs: 4,
     max_model_runtime_minutes: 160,
   });
-  assert.strictEqual(calibrationPlan.approval_status, 'approved');
+  assert.strictEqual(calibrationPlan.approval_status, 'completed');
   assert.strictEqual(calibrationPlan.quota_acknowledged, true);
+  assert.strictEqual(calibrationPlan.record_digest, freeze.calibration_record_digest);
   assert.strictEqual(Object.hasOwn(calibrationPlan, 'approved_spend_usd'), false);
   assert.throws(() => validateCalibrationPlan({
     ...calibrationPlan,
@@ -143,6 +144,7 @@ function main() {
     quota_acknowledged: false,
     approved_by: null,
     approved_at: null,
+    record_digest: null,
   };
   assert.doesNotThrow(() => validateCalibrationPlan(pendingCalibrationPlan, scenarios, executors));
   const approvedCalibrationPlan = {
@@ -151,6 +153,7 @@ function main() {
     quota_acknowledged: true,
     approved_by: 'Seth Gammon',
     approved_at: '2026-07-30T00:00:00.000Z',
+    record_digest: null,
   };
   assert.doesNotThrow(() => validateCalibrationPlan(approvedCalibrationPlan, scenarios, executors));
   const calibrationCaseList = calibrationCases(calibrationPlan, scenarios, executors);
@@ -263,7 +266,6 @@ function main() {
   for (const blocker of [
     'ACTUAL_RUNS_REQUIRED',
     'ACTUAL_RUNS_UNATTESTED',
-    'CALIBRATION_REQUIRED',
     'EXTERNAL_SCENARIO_NOT_SELECTED',
     'EXTERNAL_REPRODUCTION_REQUIRED',
   ]) assert(report.submission_gate.blockers.includes(blocker), `missing blocker ${blocker}`);
@@ -636,8 +638,8 @@ function main() {
   const calibrationOutput = JSON.parse(calibrationCli.stdout);
   assert.strictEqual(calibrationOutput.no_model_calls_made, true);
   assert.strictEqual(calibrationOutput.plan.total_runs, 4);
-  assert.strictEqual(calibrationOutput.plan.approval_status, 'approved');
-  assert(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'));
+  assert.strictEqual(calibrationOutput.plan.approval_status, 'completed');
+  assert.strictEqual(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'), false);
   const matrixCli = invoke(['matrix-plan']);
   assert.strictEqual(matrixCli.status, 0, matrixCli.stderr);
   const matrixOutput = JSON.parse(matrixCli.stdout);

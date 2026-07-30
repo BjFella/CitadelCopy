@@ -4,7 +4,7 @@ Observed: 2026-07-30
 
 ## Answer
 
-The optimizer proof system is engineering-ready for calibration. It is not
+The optimizer calibration is complete and digest-bound. The optimizer is not
 performance-proven and is not submission-ready.
 
 ## What passed locally
@@ -37,7 +37,7 @@ math fixture. It is not evidence that real models save money.
 | Executor profile digests | Bound to canonical Operation Fork profiles |
 | Runtime adapter | Self-contained and bound by source digest |
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
-| Calibration | First attempt stopped after 2/12 on missing Claude model provenance; revised 4-run smoke plan authorized |
+| Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
 | External scenario selector | Not collected |
 | Local run-attestation public key | Not frozen |
 | Independent reproduction | Not collected |
@@ -77,12 +77,16 @@ the frozen `npm.cmd` setup through `spawnSync` with `shell: false`. The benchmar
 runner now resolves reviewed `npm`, `npx`, and `corepack` shims to their
 JavaScript entrypoints and still avoids a command interpreter.
 
-The revised gate is a frozen 4-run subscription-backed smoke calibration: one
-short non-holdout scenario across all four profiles. It verifies authenticated
-access, observed identity, and cost provenance without spending long tasks on
-what is not a performance benchmark. The cap is 4 CLI runs and 160 aggregate
-model-runtime timeout minutes. Together with the two stopped-attempt calls,
-this remains below Seth's original 12-call authorization.
+The revised 4-run subscription-backed calibration completed across all four
+profiles. Every requested model matched the observed model, every receipt
+verified, and every cost source was known. The normalized comparison total was
+`$3.534060`, not a subscription invoice. Aggregate elapsed runtime was
+1,439,995 ms.
+
+All four task verifiers failed. That does not invalidate the access and
+telemetry calibration, but it means these runs provide no task-quality or
+savings evidence. The next gate is therefore the attested preliminary matrix,
+not a stronger public claim.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

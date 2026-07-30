@@ -69,9 +69,9 @@ cost. This deliberately differs from the older product benchmark's directional
 The current Codex pricing snapshot uses official OpenAI API list prices as a
 normalization basis, not as a claim about the user's invoice or subscription
 marginal cost. It binds both the ordinary and over-272K-token price rules.
-Claude's machine-readable `total_cost_usd` remains vendor-reported. Calibration
-must show that both sources are usable and comparable before any economic
-claim.
+Claude's machine-readable `total_cost_usd` remains vendor-reported. The
+completed calibration shows that both sources are observable; comparability and
+economic benefit still require the frozen benchmark.
 
 The current calibration access basis is `subscription`. Its authorization
 contract caps execution at 4 CLI runs and 160 aggregate model-runtime timeout
@@ -90,7 +90,7 @@ Implemented:
 - a self-contained Claude/Codex adapter bound by source digest;
 - exact public model IDs and canonical Operation Fork profile digests;
 - a digest-bound official-list-price normalization for Codex token telemetry;
-- a 4-run, non-holdout calibration plan that remains approval-gated;
+- a completed, digest-bound 4-run non-holdout calibration record;
 - a separate 120-run benchmark matrix;
 - fixture-only adversarial and anti-gaming tests;
 - a submission gate that refuses missing calibration, unattested runs,
@@ -100,8 +100,6 @@ Not yet proven:
 
 - any real cost reduction;
 - parity with frontier verified completion;
-- authenticated access to every frozen model;
-- subscription-backed task execution and real normalized-cost observation;
 - externally reproduced results;
 - usefulness outside the three frozen repositories.
 

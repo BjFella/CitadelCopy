@@ -21,9 +21,10 @@ policies and must not rewrite, reinterpret, or reuse that frozen result.
 
 The checked-in executor set binds exact public model IDs, the reviewed
 self-contained runtime adapter, and the canonical Operation Fork executor
-profile for each runtime/model pair. Calibration must still prove that the
-authenticated accounts can launch those exact IDs and that runtime telemetry
-reports the same identity.
+profile for each runtime/model pair. The completed 4-run calibration proves
+that the authenticated accounts can launch those exact IDs and that runtime
+telemetry reports the same identity and a known normalized cost source. It does
+not prove task quality or savings: all four calibration task verifiers failed.
 
 ## Evidence levels
 

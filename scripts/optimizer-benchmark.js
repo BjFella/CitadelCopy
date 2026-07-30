@@ -47,6 +47,7 @@ const FREEZE_FILE = path.join(BENCHMARK_ROOT, 'freeze.json');
 const FIXTURE_TRUTH_FILE = path.join(BENCHMARK_ROOT, 'fixtures', 'truth.json');
 const PRICING_FILE = path.join(BENCHMARK_ROOT, 'pricing.json');
 const CALIBRATION_PLAN_FILE = path.join(BENCHMARK_ROOT, 'calibration-plan.json');
+const CALIBRATION_RECORD_FILE = path.join(BENCHMARK_ROOT, 'calibration-record.json');
 const EXTERNAL_REPRODUCTION_FILE = path.join(BENCHMARK_ROOT, 'external-reproduction.json');
 
 function args(argv) {
@@ -91,6 +92,22 @@ function checkedInBenchmark() {
   if (digest(calibrationPlan) !== freeze.calibration_plan_digest) {
     throw new Error('Frozen calibration plan digest mismatch');
   }
+  if (calibrationPlan.record_digest !== freeze.calibration_record_digest) {
+    throw new Error('Calibration plan and freeze record digests differ');
+  }
+  let calibrationRecord = null;
+  if (freeze.calibration_record_digest !== null) {
+    if (!fs.existsSync(CALIBRATION_RECORD_FILE)) throw new Error('Frozen calibration record is missing');
+    calibrationRecord = validateCalibrationRecord(
+      JSON.parse(fs.readFileSync(CALIBRATION_RECORD_FILE, 'utf8')),
+      calibrationPlan,
+      scenarios,
+      executors,
+    );
+    if (digest(calibrationRecord) !== freeze.calibration_record_digest) {
+      throw new Error('Frozen calibration record digest mismatch');
+    }
+  }
   let pricingSnapshot = null;
   if (freeze.pricing_snapshot_digest !== null) {
     if (!fs.existsSync(PRICING_FILE)) throw new Error('Frozen pricing snapshot is missing');
@@ -117,6 +134,7 @@ function checkedInBenchmark() {
     fixtureTruth,
     pricingSnapshot,
     calibrationPlan,
+    calibrationRecord,
     externalReproduction,
   };
 }

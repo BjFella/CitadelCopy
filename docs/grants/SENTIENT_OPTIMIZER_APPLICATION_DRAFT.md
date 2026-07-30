@@ -101,8 +101,10 @@ Already implemented:
 
 Current fixture simulations validate report math only. They are not model
 performance evidence. Exact model IDs, canonical executor digests, the runtime
-adapter, and a list-price normalization are frozen; subscription-backed
-calibration, outside selection, and independent reproduction remain open.
+adapter, and a list-price normalization are frozen. A four-profile
+subscription-backed calibration verified exact model identity, receipts, and
+known cost sources, while all four task verifiers failed. Outside selection,
+the preliminary matrix, and independent reproduction remain open.
 The list-price normalization is a common comparison unit, not a claim that
 Seth's subscription is billed per run.
 
@@ -129,9 +131,9 @@ or stop the economic claim.
 
 ## Open-source deliverables by evidence gate
 
-1. **Execution-ready**: validate the frozen model bindings, runtime adapter,
-   and cost sources through an approved, bounded subscription-quota
-   calibration, then publish its run/runtime envelope.
+1. **Execution-ready**: completed. Frozen model bindings, runtime adapter, and
+   cost sources passed a bounded subscription-quota calibration; the
+   run/runtime envelope and 0/4 task-verifier result are recorded.
 2. **Preliminary proof**: complete attested matrix, held-out comparison, raw
    records, limitations, and one-command verifier.
 3. **Independent proof**: outside-selected scenario, external reproduction,
@@ -180,8 +182,6 @@ credits from Sentient could reduce the cash evaluation line.
 
 Do not submit until:
 
-- the frozen calibration quota is explicitly authorized and the runs are
-  measured;
 - the actual preliminary matrix closes or honestly fails;
 - an outside maintainer selects and reproduces a scenario;
 - the demo and results page link to actual proof rather than fixtures;
