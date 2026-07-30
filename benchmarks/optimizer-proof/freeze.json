@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "frozen_at": "2026-07-29",
+  "scenario_count": 10,
+  "scenario_set_id": "optimizer-scenarios-sha256:d9e0a9eab6c005ae8fdabbc69696397cecab2a0f45009b88357c989818103a7a",
+  "executor_set_id": "optimizer-executors-sha256:00f184d107a29f367a1cbfabea7ec01e1893692398f30afcdad2bcb400ded750",
+  "metric_set_id": "optimizer-metrics-sha256:bedffbda2b18d725610b0f294a8273ef908237fd957bf9e51a5af4885b123e4f",
+  "policies": ["always-frontier", "always-cheap", "prompt-only", "adaptive"],
+  "repetitions": 3,
+  "holdout_scenario_ids": [
+    "citadel-short-executor-proof",
+    "p-limit-short-clear-queue",
+    "nanoid-size-consistency",
+    "citadel-safety-model-proof"
+  ],
+  "selection_policy": "Scenario manifests, metrics, policy definitions, repetitions, and holdouts are frozen before actual runs. An outside maintainer must select one frozen holdout after the runner is public.",
+  "pricing_snapshot_digest": "sha256:25b513c37e29469432a02426ef9fee93c190489cfada0548ae6c3376ec4b5ae1",
+  "calibration_plan_digest": "sha256:d51d0a5209e382d7f6841ae5072b1607bd73f06b8df0cc4eaf0df00dac3b86d2",
+  "calibration_record_digest": null,
+  "external_scenario": null,
+  "external_reproduction_digest": null,
+  "attestation_public_key": null
+}

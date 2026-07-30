@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Citadel Optimizer: the engineering proof surface for outcome-aware economic routing across open agent stacks." />
+  <title>Citadel Optimizer | Proof before claims</title>
+  <style>
+    :root {
+      --bg: #091018;
+      --surface: #111b27;
+      --surface-2: #172434;
+      --border: #2b4157;
+      --text: #eff7ff;
+      --muted: #98aabd;
+      --cyan: #28dbff;
+      --blue: #6aa7ff;
+      --green: #58d68d;
+      --amber: #ffbf69;
+      --red: #ff7b72;
+      --mono: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color-scheme: dark;
+      background: var(--bg);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(40, 219, 255, 0.12), transparent 34rem),
+        radial-gradient(circle at 88% 10%, rgba(106, 167, 255, 0.1), transparent 30rem),
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, auto, 42px 42px, 42px 42px, auto;
+    }
+
+    a { color: inherit; }
+
+    :focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(43, 65, 87, 0.75);
+      background: rgba(9, 16, 24, 0.82);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand {
+      color: var(--cyan);
+      font: 800 14px/1 var(--mono);
+      letter-spacing: 0.22em;
+      text-decoration: none;
+    }
+
+    .nav-state {
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 191, 105, 0.45);
+      border-radius: 999px;
+      color: var(--amber);
+      background: rgba(255, 191, 105, 0.08);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      margin-left: auto;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+      gap: 52px;
+      align-items: end;
+      padding: 92px 0 54px;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font: 700 11px/1.2 var(--mono);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 18px 0;
+      font-size: clamp(48px, 7vw, 84px);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.65;
+    }
+
+    .hero-copy strong { color: var(--text); }
+
+    .claim-card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(23, 36, 52, 0.95), rgba(11, 20, 30, 0.92));
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    .claim-label {
+      color: var(--amber);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .claim-card p {
+      margin: 14px 0 20px;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .claim-card code {
+      display: block;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font: 12px/1.6 var(--mono);
+      overflow-wrap: anywhere;
+    }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(17, 27, 39, 0.84);
+    }
+
+    .proof-stat {
+      min-height: 116px;
+      padding: 22px;
+    }
+
+    .proof-stat + .proof-stat { border-left: 1px solid var(--border); }
+    .proof-stat strong { display: block; font-size: 30px; margin-bottom: 9px; }
+    .proof-stat span { color: var(--muted); font: 12px/1.5 var(--mono); }
+
+    section { padding: 78px 0; }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+      gap: 48px;
+      align-items: start;
+      margin-bottom: 34px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(31px, 4vw, 48px);
+      letter-spacing: -0.04em;
+      line-height: 1.06;
+    }
+
+    .section-heading p {
+      max-width: 680px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .policy-lab {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .policy-tabs {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .policy-tab {
+      width: 100%;
+      padding: 15px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      background: rgba(17, 27, 39, 0.76);
+      font: 650 13px/1.2 var(--mono);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .policy-tab[aria-selected="true"] {
+      border-color: rgba(40, 219, 255, 0.65);
+      color: var(--cyan);
+      background: rgba(40, 219, 255, 0.08);
+    }
+
+    .route-panel {
+      min-height: 350px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: linear-gradient(140deg, rgba(17, 27, 39, 0.96), rgba(9, 16, 24, 0.95));
+    }
+
+    .route-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .tag {
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font: 10px/1 var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .route-title {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    .route-description {
+      margin: 0 0 30px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .route-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .route-step {
+      position: relative;
+      min-height: 124px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .route-step::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -18px;
+      transform: translateY(-50%);
+      z-index: 2;
+      color: var(--cyan);
+      font-family: var(--mono);
+    }
+
+    .route-step:last-child::after { display: none; }
+    .route-step small { color: var(--cyan); font: 10px/1 var(--mono); }
+    .route-step strong { display: block; margin: 13px 0 6px; font-size: 14px; }
+    .route-step span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .truth-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .truth-card {
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(17, 27, 39, 0.8);
+    }
+
+    .truth-card h3 { margin: 0 0 16px; font-size: 18px; }
+    .truth-card p { color: var(--muted); line-height: 1.65; }
+
+    .truth-card ul {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      margin: 20px 0 0;
+      list-style: none;
+    }
+
+    .truth-card li {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .truth-card li::before { content: "◆"; color: var(--green); font-size: 9px; margin-top: 5px; }
+    .truth-card.blocked li::before { color: var(--amber); }
+
+    .fixture-callout {
+      margin-top: 18px;
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 191, 105, 0.38);
+      border-radius: 12px;
+      color: var(--amber);
+      background: rgba(255, 191, 105, 0.07);
+      font: 12px/1.65 var(--mono);
+    }
+
+    .blockers {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .blocker {
+      min-height: 150px;
+      padding: 18px;
+      border: 1px solid rgba(255, 191, 105, 0.3);
+      border-radius: 12px;
+      background: rgba(255, 191, 105, 0.045);
+    }
+
+    .blocker b {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--amber);
+      font: 11px/1.35 var(--mono);
+    }
+
+    .blocker span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .closing {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      align-items: stretch;
+      padding-bottom: 100px;
+    }
+
+    .closing-card {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+    }
+
+    .closing-card p { color: var(--muted); line-height: 1.7; }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--surface-2);
+      font: 650 12px/1 var(--mono);
+      text-decoration: none;
+    }
+
+    .button.primary {
+      border-color: rgba(40, 219, 255, 0.55);
+      color: var(--cyan);
+      background: rgba(40, 219, 255, 0.08);
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font: 11px/1.6 var(--mono);
+    }
+
+    @media (max-width: 900px) {
+      .hero, .section-heading, .closing { grid-template-columns: 1fr; }
+      .hero { gap: 30px; padding-top: 64px; }
+      .proof-strip { grid-template-columns: 1fr 1fr; }
+      .proof-stat:nth-child(3) { border-left: 0; border-top: 1px solid var(--border); }
+      .proof-stat:nth-child(4) { border-top: 1px solid var(--border); }
+      .policy-lab { grid-template-columns: 1fr; }
+      .policy-tabs { grid-template-columns: repeat(2, 1fr); }
+      .route-flow { grid-template-columns: 1fr 1fr; }
+      .route-step:nth-child(2)::after { display: none; }
+      .blockers { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .shell { width: min(100% - 24px, 1160px); }
+      .nav-links a:not(:last-child) { display: none; }
+      h1 { font-size: 48px; }
+      .proof-strip, .truth-grid, .route-flow, .blockers { grid-template-columns: 1fr; }
+      .proof-stat + .proof-stat { border-left: 0; border-top: 1px solid var(--border); }
+      .policy-tabs { grid-template-columns: 1fr; }
+      .route-step::after { display: none; }
+      section { padding: 58px 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="shell nav-inner">
+      <a class="brand" href="index.html">CITADEL</a>
+      <span class="nav-state">Engineering contract only</span>
+      <div class="nav-links">
+        <a href="#policies">Policies</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#blockers">Blockers</a>
+        <a href="https://github.com/SethGammon/Citadel">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Outcome-aware economic routing</div>
+        <h1>Spend less. Prove the work still counts.</h1>
+        <p class="hero-copy">
+          Citadel Optimizer chooses and revises the path through models,
+          agents, topology, tools, retries, and stopping. <strong>Receipts and
+          verifiers prevent cheap failure from masquerading as savings.</strong>
+        </p>
+      </div>
+      <aside class="claim-card" aria-label="Current claim boundary">
+        <div class="claim-label">Current claim boundary</div>
+        <p>The controller and proof contract are implemented. Real savings are not yet proven.</p>
+        <code>status: engineering-contract-only<br />actual-run: blocked<br />model calls made: 0</code>
+      </aside>
+    </header>
+
+    <div class="proof-strip" aria-label="Frozen benchmark shape">
+      <div class="proof-stat"><strong>10</strong><span>frozen scenarios</span></div>
+      <div class="proof-stat"><strong>3</strong><span>public repositories</span></div>
+      <div class="proof-stat"><strong>4</strong><span>economic policies</span></div>
+      <div class="proof-stat"><strong>120</strong><span>actual runs when approved</span></div>
+    </div>
+
+    <section id="policies">
+      <div class="section-heading">
+        <h2>The route is the product.</h2>
+        <p>
+          The benchmark holds task and verification constant while changing
+          the economic policy. Explore the same Nano ID task under each policy.
+          The adaptive view uses a deterministic fixture probe here so the UI
+          remains a demo, not a hidden model call.
+        </p>
+      </div>
+
+      <div class="policy-lab">
+        <div class="policy-tabs" role="tablist" aria-label="Optimizer policies">
+          <button class="policy-tab" role="tab" aria-selected="false" data-policy="frontier">Always frontier</button>
+          <button class="policy-tab" role="tab" aria-selected="false" data-policy="cheap">Always cheap</button>
+          <button class="policy-tab" role="tab" aria-selected="false" data-policy="prompt">Prompt only</button>
+          <button class="policy-tab" role="tab" aria-selected="true" data-policy="adaptive">Adaptive</button>
+        </div>
+
+        <article class="route-panel" aria-live="polite">
+          <div class="route-meta">
+            <span class="tag">nanoid-size-consistency</span>
+            <span class="tag" id="route-tier">frontier tier</span>
+            <span class="tag" id="route-topology">single agent</span>
+          </div>
+          <h3 class="route-title" id="route-title">Probe, then reserve frontier capacity</h3>
+          <p class="route-description" id="route-description">
+            Repository evidence shows the change spans secure, browser, non-secure,
+            tests, types, and docs. The cheap path is not plausible enough, so the
+            controller chooses frontier before a failed attempt.
+          </p>
+          <div class="route-flow">
+            <div class="route-step">
+              <small>01 / INPUT</small>
+              <strong>Frozen task</strong>
+              <span>Same commit, verifier, tools, and attempt limit.</span>
+            </div>
+            <div class="route-step">
+              <small>02 / SIGNAL</small>
+              <strong id="flow-signal">Bounded probe</strong>
+              <span id="flow-signal-copy">Six task-relevant files; strong tests; cross-cutting scope.</span>
+            </div>
+            <div class="route-step">
+              <small>03 / ROUTE</small>
+              <strong id="flow-route">Frontier profile</strong>
+              <span id="flow-route-copy">Prediction source is visibly a policy assumption.</span>
+            </div>
+            <div class="route-step">
+              <small>04 / CONTROL</small>
+              <strong id="flow-control">Verify or stop</strong>
+              <span id="flow-control-copy">No completion means no successful economic result.</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <div class="section-heading">
+        <h2>Two ledgers: what exists, what is proven.</h2>
+        <p>
+          Citadel keeps implementation maturity separate from performance
+          evidence. That boundary is the difference between a credible grant
+          application and a polished repo making claims it cannot defend.
+        </p>
+      </div>
+
+      <div class="truth-grid">
+        <article class="truth-card">
+          <h3>Implemented and locally verified</h3>
+          <ul>
+            <li>Strict cost provenance with unknown never coerced to zero.</li>
+            <li>Prompt-only and adaptive policy contracts.</li>
+            <li>Bounded read-only repository reconnaissance.</li>
+            <li>Continue, escalate, split, and stop decisions.</li>
+            <li>Holdout rejection during capability learning.</li>
+            <li>Signed-run tamper rejection and adversarial gates.</li>
+          </ul>
+        </article>
+        <article class="truth-card blocked">
+          <h3>Still requires real-world evidence</h3>
+          <ul>
+            <li>Measured cost reduction across live model runs.</li>
+            <li>Frontier completion retained on held-out tasks.</li>
+            <li>Approved 12-run calibration across the frozen profiles.</li>
+            <li>Observed account access, model identity, and cost provenance.</li>
+            <li>Outside scenario selection and reproduction.</li>
+            <li>Usefulness beyond the three frozen repositories.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="fixture-callout">
+        Fixture math exercises a 23.2507% held-out median-cost reduction with no
+        simulated completion loss. This validates report behavior only. It is
+        not a result, benchmark score, or grant claim.
+      </div>
+    </section>
+
+    <section id="blockers">
+      <div class="section-heading">
+        <h2>The gate stays shut until reality catches up.</h2>
+        <p>
+          The actual-run command checks these conditions before any paid
+          execution. A fixture, manual edit, or relabeled record cannot bypass
+          them.
+        </p>
+      </div>
+      <div class="blockers">
+        <div class="blocker"><b>CALIBRATION_REQUIRED</b><span>The 12-run non-holdout plan is frozen, but no spend is approved and no model call has been made.</span></div>
+        <div class="blocker"><b>ACTUAL_RUNS_REQUIRED</b><span>The 120-run matrix has not executed, so the fixture cannot support a savings claim.</span></div>
+        <div class="blocker"><b>EXTERNAL_SCENARIO_NOT_SELECTED</b><span>An outside maintainer has not selected a frozen holdout.</span></div>
+        <div class="blocker"><b>EXTERNAL_REPRODUCTION_REQUIRED</b><span>No separately signed reproduction of the outside-selected holdout exists.</span></div>
+        <div class="blocker"><b>ATTESTATION_KEY_NOT_FROZEN</b><span>No local run-signing public key exists, so actual matrix evidence cannot be attested.</span></div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div class="closing-card">
+        <div class="eyebrow">The grant thesis</div>
+        <h2>Make open agents cheap by default without grading their own homework.</h2>
+        <p>
+          This directly targets Sentient Foundation's Token and Economic
+          Optimization for Agents request. The proposal is not that Citadel is
+          already best in class. The proposal is a falsifiable controller,
+          open benchmark, and proof discipline that can show whether whole-operation
+          optimization works.
+        </p>
+        <div class="links">
+          <a class="button primary" href="OPTIMIZER_BENCHMARK.md">Read the method</a>
+          <a class="button" href="OPTIMIZER_PROOF_REPORT.md">Current proof report</a>
+          <a class="button" href="https://sentient.foundation/product-requests">Sentient request</a>
+        </div>
+      </div>
+      <div class="closing-card">
+        <div class="claim-label">Funded target</div>
+        <p><strong style="color:var(--text);font-size:34px;">≥30%</strong><br />lower end-to-end cost</p>
+        <p><strong style="color:var(--text);font-size:34px;">≥95%</strong><br />of frontier verified completion</p>
+        <p style="font-family:var(--mono);font-size:12px;">Target, not current result.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      Citadel Optimizer proof surface · observed 2026-07-29 · official Claude and Codex CLIs launch · no model calls were made to produce the displayed fixture.
+    </div>
+  </footer>
+
+  <script>
+    const policies = {
+      frontier: {
+        tier: "frontier tier",
+        topology: "single agent",
+        title: "Use frontier capacity for every task",
+        description: "The strongest frozen tier runs regardless of task shape. This is the completion baseline and the cost ceiling the optimizer must beat.",
+        signal: "No probe",
+        signalCopy: "Repository evidence does not affect the decision.",
+        route: "Frontier profile",
+        routeCopy: "Strongest frozen capability tier by policy.",
+        control: "Verify or fail",
+        controlCopy: "Known failures remain in the cost ledger."
+      },
+      cheap: {
+        tier: "utility tier",
+        topology: "single agent",
+        title: "Choose the cheapest tier and hope",
+        description: "This policy exposes fake efficiency. Low spend does not count when the frozen verifier rejects the result.",
+        signal: "No probe",
+        signalCopy: "Cost tier is selected without task evidence.",
+        route: "Utility profile",
+        routeCopy: "Lowest assumed cost, even when capability is implausible.",
+        control: "Failure still costs",
+        controlCopy: "A failed cheap run remains in total spend."
+      },
+      prompt: {
+        tier: "workhorse tier",
+        topology: "single agent",
+        title: "Route from the task description alone",
+        description: "Prompt-only routing sees a tidy request, not the six-file implementation surface. It selects workhorse capacity and misses hidden repository complexity.",
+        signal: "Task text only",
+        signalCopy: "No repository facts enter the decision.",
+        route: "Workhorse profile",
+        routeCopy: "Cheapest profile above the prompt-only threshold.",
+        control: "Verifier catches miss",
+        controlCopy: "Lower cost cannot offset a rejected outcome."
+      },
+      adaptive: {
+        tier: "frontier tier",
+        topology: "single agent",
+        title: "Probe, then reserve frontier capacity",
+        description: "Repository evidence shows the change spans secure, browser, non-secure, tests, types, and docs. The cheap path is not plausible enough, so the controller chooses frontier before a failed attempt.",
+        signal: "Bounded probe",
+        signalCopy: "Six task-relevant files; strong tests; cross-cutting scope.",
+        route: "Frontier profile",
+        routeCopy: "Prediction source is visibly a policy assumption.",
+        control: "Verify or stop",
+        controlCopy: "No completion means no successful economic result."
+      }
+    };
+
+    const tabs = [...document.querySelectorAll(".policy-tab")];
+    const fields = {
+      tier: document.querySelector("#route-tier"),
+      topology: document.querySelector("#route-topology"),
+      title: document.querySelector("#route-title"),
+      description: document.querySelector("#route-description"),
+      signal: document.querySelector("#flow-signal"),
+      signalCopy: document.querySelector("#flow-signal-copy"),
+      route: document.querySelector("#flow-route"),
+      routeCopy: document.querySelector("#flow-route-copy"),
+      control: document.querySelector("#flow-control"),
+      controlCopy: document.querySelector("#flow-control-copy")
+    };
+
+    for (const tab of tabs) {
+      tab.addEventListener("click", () => {
+        const policy = policies[tab.dataset.policy];
+        for (const item of tabs) item.setAttribute("aria-selected", String(item === tab));
+        for (const [key, node] of Object.entries(fields)) node.textContent = policy[key];
+      });
+    }
+  </script>
+</body>
+</html>

@@ -13,12 +13,35 @@ function pathEntries(env) {
   return String(env.PATH || env.Path || '').split(path.delimiter).filter(Boolean);
 }
 
+function candidateDirectories(command, env) {
+  const directories = [];
+  // The Windows Store desktop bundle can expose an executable path that is
+  // visible but not launchable as a CLI. Prefer the official npm shim for the
+  // two supported runtimes when it exists under the conventional user npm
+  // directory. The shim is still converted to a reviewed JavaScript entrypoint
+  // below and never launched through a command interpreter.
+  if (['codex', 'claude'].includes(command)
+    && typeof env.APPDATA === 'string'
+    && path.isAbsolute(env.APPDATA)
+    && !/[\r\n\0]/.test(env.APPDATA)) {
+    directories.push(path.join(env.APPDATA, 'npm'));
+  }
+  directories.push(...pathEntries(env));
+  const seen = new Set();
+  return directories.filter((directory) => {
+    const key = process.platform === 'win32' ? directory.toLowerCase() : directory;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function findOnPath(command, env) {
   if (command.includes('/') || command.includes('\\') || path.isAbsolute(command)) {
     return fs.existsSync(command) ? command : null;
   }
   const extensions = [...DIRECT_EXTENSIONS, ...SHIM_EXTENSIONS];
-  for (const directory of pathEntries(env)) {
+  for (const directory of candidateDirectories(command, env)) {
     for (const extension of extensions) {
       const candidate = path.join(directory, `${command}${extension}`);
       try {
@@ -66,5 +89,5 @@ function platformInvocation(invocation, options = {}) {
 }
 
 module.exports = Object.freeze({
-  findOnPath, nodeEntrypoint, platformInvocation,
+  candidateDirectories, findOnPath, nodeEntrypoint, platformInvocation,
 });

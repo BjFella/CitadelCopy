@@ -1,0 +1,522 @@
+#!/usr/bin/env node
+'use strict';
+
+const assert = require('assert');
+const crypto = require('crypto');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const {
+  digest,
+  executorSetIdentity,
+  loadExecutors,
+  loadFreeze,
+  loadScenarios,
+  metricSetIdentity,
+  scenarioSetIdentity,
+  unknownCost,
+  validateBenchmarkShape,
+  validateCost,
+  validateDecision,
+  validateExecutorProfile,
+  validateFreeze,
+  validateRun,
+  validateScenario,
+} = require('../core/optimizer/contracts');
+const {
+  learnCapabilityProfiles,
+  planningProfile,
+} = require('../core/optimizer/capability-profiles');
+const {
+  FIXTURE_PRICING_DIGEST,
+  generateFixtureRuns,
+  validateFixtureTruth,
+} = require('../core/optimizer/fixture');
+const { fixtureProbe, probeWorkspace } = require('../core/optimizer/probe');
+const {
+  deriveTokenCost,
+  pricingSnapshotDigest,
+  validatePricingSnapshot,
+  validateUsage,
+} = require('../core/optimizer/pricing');
+const { nextAdaptiveAction, route } = require('../core/optimizer/policy');
+const {
+  attestRun,
+  buildReport,
+  verifyRunAttestation,
+} = require('../core/optimizer/report');
+const {
+  FAILURE_CODES,
+  adapterSourceDigest,
+  changedArtifacts,
+  runScenario,
+  sumAttemptCosts,
+  validateAdapterOutput,
+} = require('../core/optimizer/runner');
+const { buildBundle, verifyBundle } = require('../core/optimizer/bundle');
+const runtimeAdapter = require('./optimizer-runtime-adapter');
+const {
+  boundExecutorProfileDigest,
+  validateExecutorBindings,
+} = require('../core/optimizer/executor-binding');
+const { validateCalibrationPlan } = require('../core/optimizer/calibration');
+const {
+  externalReproductionDigest,
+  validateExternalReproduction,
+} = require('../core/optimizer/external-reproduction');
+
+const ROOT = path.resolve(__dirname, '..');
+const BENCHMARK = path.join(ROOT, 'benchmarks', 'optimizer-proof');
+const CLI = path.join(__dirname, 'optimizer-benchmark.js');
+
+function invoke(argv) {
+  return spawnSync(process.execPath, [CLI, ...argv], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 30000,
+  });
+}
+
+function knownCost(amount, source = 'test') {
+  return validateCost({
+    status: 'known',
+    amount_usd: amount,
+    provenance: 'vendor_reported',
+    source,
+    source_ref: 'test-record',
+    pricing_snapshot_digest: null,
+    components: [{ kind: 'model', amount_usd: amount, source }],
+  });
+}
+
+function main() {
+  const scenarios = loadScenarios(path.join(BENCHMARK, 'scenarios'));
+  const executors = loadExecutors(path.join(BENCHMARK, 'executors.json'));
+  validateBenchmarkShape(scenarios, executors);
+  const freeze = loadFreeze(path.join(BENCHMARK, 'freeze.json'), scenarios, executors);
+  const calibrationPlan = validateCalibrationPlan(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'calibration-plan.json'), 'utf8')),
+    scenarios,
+    executors,
+  );
+  const truth = validateFixtureTruth(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'truth.json'), 'utf8')),
+    scenarios,
+  );
+  const publicIndex = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
+  const optimizerPage = fs.readFileSync(path.join(ROOT, 'docs', 'optimizer.html'), 'utf8');
+
+  assert.strictEqual(scenarios.length, 10);
+  assert.strictEqual(new Set(scenarios.map((scenario) => scenario.repository)).size, 3);
+  assert.strictEqual(new Set(executors.map((executor) => executor.runtime)).size, 2);
+  assert.deepStrictEqual([...validateExecutorBindings(executors)], []);
+  assert.strictEqual(calibrationPlan.total_runs, 12);
+  assert(executors.every((executor) => executor.executor_profile_digest === boundExecutorProfileDigest(executor)));
+  assert.strictEqual(freeze.scenario_set_id, scenarioSetIdentity(scenarios));
+  assert.strictEqual(freeze.executor_set_id, executorSetIdentity(executors));
+  assert.strictEqual(freeze.metric_set_id, metricSetIdentity());
+  assert.deepStrictEqual(freeze.holdout_scenario_ids, scenarios.filter((scenario) => scenario.holdout).map((scenario) => scenario.id));
+  assert.strictEqual(FIXTURE_PRICING_DIGEST, digest(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'pricing-assumptions.json'), 'utf8')),
+  ));
+  assert(publicIndex.includes('href="optimizer.html">Optimizer Proof</a>'));
+  assert(optimizerPage.includes('Engineering contract only'));
+  assert(optimizerPage.includes('Real savings are not yet proven'));
+  assert(optimizerPage.includes('Fixture math exercises a 23.2507%'));
+  assert.strictEqual((optimizerPage.match(/class="policy-tab"/g) || []).length, 4);
+
+  assert.throws(() => validateScenario({ ...scenarios[0], pinned_ref: 'main' }), /full commit SHA/);
+  assert.throws(() => validateScenario({ ...scenarios[0], unexpected: true }), /exactly match/);
+  assert.throws(() => validateScenario({ ...scenarios[0], expected_artifacts: ['../escape'] }), /escapes/);
+  assert.throws(() => validateFreeze({ ...freeze, scenario_set_id: 'optimizer-scenarios-sha256:forged' }, scenarios, executors), /mismatch/);
+  assert.throws(() => validateCost({
+    ...unknownCost(),
+    amount_usd: 0,
+  }), /unknown cost cannot carry/);
+  assert.throws(() => validateCost({
+    status: 'known',
+    amount_usd: 1,
+    provenance: 'price_derived',
+    source: 'test',
+    source_ref: 'test',
+    pricing_snapshot_digest: null,
+    components: [],
+  }), /pricing snapshot/);
+  assert.throws(() => validateCost({
+    status: 'known',
+    amount_usd: 2,
+    provenance: 'vendor_reported',
+    source: 'test',
+    source_ref: 'test',
+    pricing_snapshot_digest: null,
+    components: [{ kind: 'model', amount_usd: 1, source: 'test' }],
+  }), /do not sum/);
+
+  const fixtureRuns = generateFixtureRuns(scenarios, executors, truth, freeze.repetitions);
+  assert.strictEqual(fixtureRuns.length, 120);
+  fixtureRuns.forEach(validateRun);
+  const report = buildReport(fixtureRuns, { scenarios, executors, freeze });
+  assert.strictEqual(report.engineering_gate.status, 'passed');
+  assert.strictEqual(report.preliminary_performance_gate.status, 'passed',
+    'fixture math should exercise a passing threshold while remaining non-claim evidence');
+  assert(report.preliminary_performance_gate.median_cost_reduction_vs_frontier >= 0.20);
+  assert.strictEqual(report.claim_status, 'engineering-contract-only');
+  assert.strictEqual(report.submission_gate.status, 'open');
+  for (const blocker of [
+    'ACTUAL_RUNS_REQUIRED',
+    'ACTUAL_RUNS_UNATTESTED',
+    'CALIBRATION_REQUIRED',
+    'EXTERNAL_SCENARIO_NOT_SELECTED',
+    'EXTERNAL_REPRODUCTION_REQUIRED',
+  ]) assert(report.submission_gate.blockers.includes(blocker), `missing blocker ${blocker}`);
+
+  const unknownRuns = fixtureRuns.map((run, index) => (
+    index === fixtureRuns.findIndex((item) => item.holdout && item.policy_id === 'adaptive')
+      ? { ...run, cost: unknownCost('test', 'telemetry_missing') }
+      : run
+  ));
+  const unknownReport = buildReport(unknownRuns, { scenarios, executors, freeze });
+  assert.strictEqual(unknownReport.preliminary_performance_gate.status, 'open');
+  assert.strictEqual(unknownReport.held_out.adaptive.median_cost_usd, null);
+  assert.strictEqual(unknownReport.preliminary_performance_gate.unknown_cost_excluded_from_savings, false);
+
+  const adversarialIndex = fixtureRuns.findIndex((run) => run.adversarial_result === 'detected');
+  const falsePassRuns = fixtureRuns.map((run, index) => (
+    index === adversarialIndex ? { ...run, adversarial_result: 'false_pass' } : run
+  ));
+  const falsePassReport = buildReport(falsePassRuns, { scenarios, executors, freeze });
+  assert.strictEqual(falsePassReport.engineering_gate.status, 'failed');
+  assert.strictEqual(falsePassReport.engineering_gate.adversarial_false_passes, 1);
+  assert(falsePassReport.submission_gate.blockers.includes('ADVERSARIAL_FALSE_PASS'));
+
+  const pLimitShort = scenarios.find((scenario) => scenario.id === 'p-limit-short-clear-queue');
+  const pLimitTruth = truth.scenarios.find((entry) => entry.scenario_id === pLimitShort.id);
+  const shortProbe = fixtureProbe(pLimitShort, pLimitTruth.probe_facts);
+  const shortAdaptive = route({
+    scenario: pLimitShort,
+    executors,
+    policyId: 'adaptive',
+    probe: shortProbe,
+  });
+  assert.strictEqual(shortAdaptive.selected_profile_id, 'claude-workhorse');
+  assert.strictEqual(shortAdaptive.prediction_source, 'policy_assumption');
+  const nanoid = scenarios.find((scenario) => scenario.id === 'nanoid-size-consistency');
+  const nanoTruth = truth.scenarios.find((entry) => entry.scenario_id === nanoid.id);
+  const nanoAdaptive = route({
+    scenario: nanoid,
+    executors,
+    policyId: 'adaptive',
+    probe: fixtureProbe(nanoid, nanoTruth.probe_facts),
+  });
+  assert(['claude-frontier', 'codex-frontier'].includes(nanoAdaptive.selected_profile_id));
+  assert.throws(() => validateDecision({ ...shortAdaptive, predicted_cost_usd: 0 }), /does not bind/);
+  const escalation = nextAdaptiveAction(shortAdaptive, {
+    verification_status: 'failed',
+    progress_status: 'stalled',
+    attempts: 1,
+    budget_remaining_usd: null,
+  }, executors);
+  assert.strictEqual(escalation.action, 'escalate');
+  assert(['claude-frontier', 'codex-frontier'].includes(escalation.target_profile_id));
+  assert.strictEqual(nextAdaptiveAction(shortAdaptive, {
+    verification_status: 'passed',
+    progress_status: 'progress',
+    attempts: 1,
+    budget_remaining_usd: null,
+  }, executors).action, 'stop');
+
+  const training = fixtureRuns.filter((run) => !run.holdout);
+  const learned = learnCapabilityProfiles(executors, training);
+  assert(learned.some((profile) => profile.priors.source === 'training_evidence'));
+  assert(learned.filter((profile) => profile.priors.source === 'training_evidence')
+    .every((profile) => planningProfile(profile).source === 'training_evidence'));
+  assert.throws(() => learnCapabilityProfiles(executors, fixtureRuns), /Held-out runs cannot calibrate/);
+
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-optimizer-test-'));
+  try {
+    const probeRoot = path.join(temp, 'probe');
+    fs.mkdirSync(path.join(probeRoot, 'test'), { recursive: true });
+    fs.writeFileSync(path.join(probeRoot, 'package.json'), JSON.stringify({
+      scripts: { test: 'node test.js', lint: 'eslint .' },
+    }));
+    fs.writeFileSync(path.join(probeRoot, 'index.js'), 'export default 1;\n');
+    fs.writeFileSync(path.join(probeRoot, 'test', 'clear-queue.test.js'), 'test("clear queue", () => {});\n');
+    const probed = probeWorkspace(probeRoot, pLimitShort, { observedAt: '2026-01-02T00:00:00.000Z' });
+    assert.strictEqual(probed.status, 'complete');
+    assert.strictEqual(probed.facts.has_tests, true);
+    assert(probed.facts.test_commands.includes('npm run test'));
+    assert.strictEqual(probed.signals.scope, 'localized');
+
+    const expectedProfile = executors.find((profile) => profile.profile_id === shortAdaptive.selected_profile_id);
+    const adapterOutput = {
+      schema: 1,
+      profile_id: expectedProfile.profile_id,
+      requested_model: expectedProfile.model,
+      observed_model: expectedProfile.model,
+      model_proof_status: 'passed',
+      receipt_status: 'verified',
+      cost: knownCost(0.5),
+      human_interventions: 0,
+      progress_status: 'progress',
+    };
+    assert.deepStrictEqual(validateAdapterOutput(adapterOutput, expectedProfile), adapterOutput);
+    assert.throws(() => validateAdapterOutput({
+      ...adapterOutput,
+      observed_model: 'substituted-model',
+    }, expectedProfile), /ADAPTER_OUTPUT_INVALID/);
+  assert.strictEqual(sumAttemptCosts([knownCost(0.5), knownCost(0.25)]).amount_usd, 0.75);
+    assert.strictEqual(sumAttemptCosts([knownCost(0.5), unknownCost()]).status, 'unknown');
+    assert.deepStrictEqual(changedArtifacts(probeRoot, pLimitShort, () => ({
+      status: 0,
+      stdout: 'test.js\n',
+    }), 1000), { passed: true, paths: ['test.js'] });
+
+    const adapterFile = path.join(temp, 'adapter.js');
+    fs.writeFileSync(adapterFile, '// mock adapter file\n');
+    const mockExecutors = executors.map((profile) => ({
+      ...profile,
+      adapter_digest: adapterSourceDigest(adapterFile),
+    }));
+    function fakeExecute(argv) {
+      const ok = { status: 0, stdout: '', stderr: '', error: null, timed_out: false };
+      if (argv[0] === 'git' && argv[1] === 'clone') {
+        const workspace = argv.at(-1);
+        fs.mkdirSync(workspace, { recursive: true });
+        fs.writeFileSync(path.join(workspace, 'package.json'), '{"scripts":{"test":"node test.js"}}\n');
+        fs.writeFileSync(path.join(workspace, 'test.js'), '// target\n');
+        return ok;
+      }
+      if (argv[0] === process.execPath && path.resolve(argv[1] || '') === path.resolve(adapterFile)) {
+        const input = JSON.parse(fs.readFileSync(argv[2], 'utf8'));
+        fs.writeFileSync(input.output_path, JSON.stringify({
+          schema: 1,
+          profile_id: input.profile.profile_id,
+          requested_model: input.profile.model,
+          observed_model: input.profile.model,
+          model_proof_status: 'passed',
+          receipt_status: 'verified',
+          cost: knownCost(0.5),
+          human_interventions: 0,
+          progress_status: 'progress',
+        }));
+        return ok;
+      }
+      if (argv[0] === 'git' && argv[1] === 'diff') return { ...ok, stdout: 'test.js\n' };
+      return ok;
+    }
+    const unsigned = runScenario({
+      scenario: pLimitShort,
+      scenarios,
+      executors: mockExecutors,
+      policyId: 'adaptive',
+      repetition: 1,
+      adapterFile,
+      executeCommand: fakeExecute,
+      observedAt: '2026-01-03T00:00:00.000Z',
+    });
+    assert.strictEqual(unsigned.outcome, 'passed');
+    assert.strictEqual(unsigned.verified, true);
+    assert.strictEqual(unsigned.cost.status, 'known');
+    const keys = crypto.generateKeyPairSync('ed25519');
+    const signed = attestRun(unsigned, keys.privateKey);
+    assert.strictEqual(verifyRunAttestation(signed, keys.publicKey), true);
+    assert.strictEqual(verifyRunAttestation({ ...signed, duration_ms: signed.duration_ms + 1 }, keys.publicKey), false);
+
+    const raw = path.join(temp, 'fixture.jsonl');
+    const aggregate = path.join(temp, 'report.json');
+    const fixtureCli = invoke(['fixture', '--output', raw]);
+    assert.strictEqual(fixtureCli.status, 0, fixtureCli.stderr);
+    assert.strictEqual(fs.readFileSync(raw, 'utf8').trim().split(/\r?\n/).length, 120);
+    const reportCli = invoke(['report', '--input', raw, '--output', aggregate]);
+    assert.strictEqual(reportCli.status, 0, reportCli.stderr);
+    assert.strictEqual(JSON.parse(fs.readFileSync(aggregate, 'utf8')).claim_status, 'engineering-contract-only');
+    const bundleDirectory = path.join(temp, 'bundle');
+    const bundle = buildBundle({
+      root: ROOT,
+      rawFile: raw,
+      reportFile: aggregate,
+      outputDirectory: bundleDirectory,
+    });
+    const verifiedBundle = verifyBundle(bundleDirectory);
+    assert.strictEqual(verifiedBundle.valid, true);
+    assert.strictEqual(verifiedBundle.bundle_id, bundle.manifest.bundle_id);
+    assert.strictEqual(verifiedBundle.report_reproduced, true);
+    fs.appendFileSync(path.join(bundleDirectory, 'README.md'), '\ntampered\n');
+    assert.throws(() => verifyBundle(bundleDirectory), /digest mismatch/);
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+
+  const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
+  const pricingSnapshot = validatePricingSnapshot({
+    schema: 1,
+    currency: 'USD',
+    observed_at: '2026-07-29',
+    source_url: 'https://example.com/pricing',
+    billing_basis: 'official_api_list_price',
+    models: [
+      {
+        provider: 'openai',
+        model: 'codex-utility-exact',
+        input_per_million_usd: 1,
+        cached_input_per_million_usd: 0.1,
+        output_per_million_usd: 4,
+        standard_input_limit_tokens: 272000,
+        over_limit_input_multiplier: 2,
+        over_limit_output_multiplier: 1.5,
+      },
+      {
+        provider: 'openai',
+        model: 'codex-frontier-exact',
+        input_per_million_usd: 2,
+        cached_input_per_million_usd: 0.2,
+        output_per_million_usd: 8,
+        standard_input_limit_tokens: 272000,
+        over_limit_input_multiplier: 2,
+        over_limit_output_multiplier: 1.5,
+      },
+    ],
+  });
+  assert.throws(() => validateUsage({
+    input_tokens: 1,
+    cached_input_tokens: 2,
+    output_tokens: 0,
+  }), /exceeds/);
+  const derived = deriveTokenCost(pricingSnapshot, 'openai', 'codex-utility-exact', {
+    input_tokens: 1000,
+    cached_input_tokens: 500,
+    output_tokens: 100,
+  });
+  assert.strictEqual(derived.provenance, 'price_derived');
+  assert.strictEqual(derived.amount_usd, 0.00095);
+  assert.strictEqual(derived.pricing_snapshot_digest, pricingSnapshotDigest(pricingSnapshot));
+  const adapterCodex = runtimeAdapter.codexObservation([
+    JSON.stringify({ type: 'thread.started', thread_id: '019f5e9b-f6e6-7031-a377-7aeb4de3daea' }),
+    JSON.stringify({
+      type: 'turn.completed',
+      usage: { input_tokens: 1000, cached_input_tokens: 500, output_tokens: 100 },
+    }),
+  ].join('\n'), ROOT, {});
+  assert.deepStrictEqual(adapterCodex.usage, {
+    input_tokens: 1000,
+    cached_input_tokens: 500,
+    output_tokens: 100,
+  });
+  const adapterDerived = runtimeAdapter.costForObservation(
+    { runtime: 'codex', provider: 'openai', model: 'codex-utility-exact' },
+    adapterCodex,
+    pricingSnapshot,
+  );
+  assert.strictEqual(adapterDerived.amount_usd, 0.00095);
+  assert.strictEqual(adapterDerived.pricing_snapshot_digest, pricingSnapshotDigest(pricingSnapshot));
+  const adapterPath = path.join(ROOT, 'scripts', 'optimizer-runtime-adapter.js');
+  const frozenAdapterDigest = adapterSourceDigest(adapterPath);
+  assert(executors.every((profile) => profile.adapter_digest === frozenAdapterDigest));
+  const crlfAdapter = path.join(os.tmpdir(), `optimizer-adapter-crlf-${process.pid}.js`);
+  fs.writeFileSync(crlfAdapter, fs.readFileSync(adapterPath, 'utf8').replace(/\r?\n/g, '\r\n'));
+  assert.strictEqual(adapterSourceDigest(crlfAdapter), frozenAdapterDigest);
+  fs.rmSync(crlfAdapter, { force: true });
+  const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+  const boundExecutors = executors.map((profile, index) => {
+    const candidate = {
+      ...profile,
+      model: `${profile.runtime}-${profile.tier}-exact`,
+      executor_profile_digest: null,
+      adapter_digest: `sha256:${String(index + 11).padStart(64, '0')}`,
+    };
+    return validateExecutorProfile({
+      ...candidate,
+      executor_profile_digest: boundExecutorProfileDigest(candidate),
+    });
+  });
+  const selectedExternalScenario = {
+    scenario_id: freeze.holdout_scenario_ids[0],
+    selected_by: 'independent-maintainer',
+    selected_at: '2026-07-29',
+    selection_source: 'https://example.com/optimizer-selection',
+  };
+  const preReproductionFreeze = validateFreeze({
+    ...freeze,
+    executor_set_id: executorSetIdentity(boundExecutors),
+    pricing_snapshot_digest: pricingSnapshotDigest(pricingSnapshot),
+    calibration_record_digest: `sha256:${'9'.repeat(64)}`,
+    external_scenario: selectedExternalScenario,
+    attestation_public_key: publicPem,
+  }, scenarios, boundExecutors);
+  const profileById = new Map(boundExecutors.map((profile) => [profile.profile_id, profile]));
+  const actualRuns = fixtureRuns.map((run) => attestRun({
+    ...run,
+    requested_model: profileById.get(run.selected_profile_id).model,
+    observed_model: profileById.get(run.observed_profile_id).model,
+    cost: knownCost(run.cost.amount_usd, 'actual-test'),
+  }, privateKey));
+  const externalReproduction = validateExternalReproduction({
+    schema: 1,
+    kind: 'citadel_optimizer_external_reproduction',
+    scenario_id: selectedExternalScenario.scenario_id,
+    reproduced_by: 'independent-maintainer',
+    reproduction_source: 'https://example.com/optimizer-reproduction',
+    public_key: publicPem,
+    run: actualRuns.find((run) => run.scenario_id === selectedExternalScenario.scenario_id),
+  }, preReproductionFreeze);
+  const boundFreeze = validateFreeze({
+    ...preReproductionFreeze,
+    external_reproduction_digest: externalReproductionDigest(
+      externalReproduction,
+      preReproductionFreeze,
+    ),
+  }, scenarios, boundExecutors);
+  const actualReport = buildReport(actualRuns, {
+    scenarios,
+    executors: boundExecutors,
+    freeze: boundFreeze,
+    externalReproduction,
+  });
+  assert.strictEqual(actualReport.submission_gate.status, 'passed');
+  assert.strictEqual(actualReport.claim_status, 'preliminary-performance-supported');
+  const tamperedActual = actualRuns.map((run, index) => (
+    index === 0 ? { ...run, cost: knownCost(0, 'tampered') } : run
+  ));
+  const tamperedReport = buildReport(tamperedActual, {
+    scenarios,
+    executors: boundExecutors,
+    freeze: boundFreeze,
+    externalReproduction,
+  });
+  assert.strictEqual(tamperedReport.actual_run_attestation_verified, false);
+  assert(tamperedReport.submission_gate.blockers.includes('ACTUAL_RUNS_UNATTESTED'));
+
+  const validateCli = invoke(['validate']);
+  assert.strictEqual(validateCli.status, 0, validateCli.stderr);
+  const validation = JSON.parse(validateCli.stdout);
+  assert.strictEqual(validation.valid, true);
+  assert.strictEqual(validation.actual_run_status, 'blocked');
+  const calibrationCli = invoke(['calibration-plan']);
+  assert.strictEqual(calibrationCli.status, 0, calibrationCli.stderr);
+  const calibrationOutput = JSON.parse(calibrationCli.stdout);
+  assert.strictEqual(calibrationOutput.no_model_calls_made, true);
+  assert.strictEqual(calibrationOutput.plan.total_runs, 12);
+  assert(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'));
+  const matrixCli = invoke(['matrix-plan']);
+  assert.strictEqual(matrixCli.status, 0, matrixCli.stderr);
+  const matrixOutput = JSON.parse(matrixCli.stdout);
+  assert.strictEqual(matrixOutput.no_model_calls_made, true);
+  assert.strictEqual(matrixOutput.run_count, 120);
+  assert.strictEqual(new Set(matrixOutput.runs.map((run) => run.run_key)).size, 120);
+  const actualBlocked = invoke([
+    'run',
+    '--scenario', scenarios[0].id,
+    '--policy', 'adaptive',
+    '--repetition', '1',
+    '--adapter', __filename,
+    '--output', path.join(os.tmpdir(), 'must-not-write-optimizer-run.json'),
+    '--signing-key', __filename,
+  ]);
+  assert.notStrictEqual(actualBlocked.status, 0);
+  assert.match(actualBlocked.stderr, /frozen external scenario/);
+
+  process.stdout.write('Optimizer contracts, routing, runner, and proof tests passed.\n');
+}
+
+main();

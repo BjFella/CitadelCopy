@@ -1,0 +1,18 @@
+# Holdout policy
+
+Holdouts are declared in the frozen scenario manifests and repeated in
+`freeze.json`. They may be evaluated by a calibrated policy, but their outcomes
+must never be passed to `learnCapabilityProfiles()`.
+
+Before actual runs, an outside maintainer must select one of the already frozen
+holdouts after the runner and method are public. The selection source, date,
+and selector are frozen independently from the local matrix signer.
+
+Independent reproduction is a second gate. The reproducer supplies a
+privacy-safe actual run signed by their own Ed25519 key. Citadel verifies the
+run, selected scenario, signature, and content digest. A selector URL alone
+cannot satisfy the reproduction gate.
+
+Current outside selection: **not collected**.
+
+Current outside reproduction: **not collected**.

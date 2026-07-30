@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "scenarios": [
+    {
+      "scenario_id": "citadel-short-executor-proof",
+      "required_tier": "workhorse",
+      "base_frontier_cost_usd": 1.8,
+      "base_duration_ms": 120000,
+      "probe_facts": {
+        "file_count_scanned": 740,
+        "bytes_scanned": 1800000,
+        "languages": ["javascript", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm test"],
+        "candidate_files": ["scripts/test-executor-profiles.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "p-limit-short-clear-queue",
+      "required_tier": "workhorse",
+      "base_frontier_cost_usd": 1.2,
+      "base_duration_ms": 90000,
+      "probe_facts": {
+        "file_count_scanned": 10,
+        "bytes_scanned": 88000,
+        "languages": ["javascript", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm run test"],
+        "candidate_files": ["test.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "nanoid-size-consistency",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 3.2,
+      "base_duration_ms": 260000,
+      "probe_facts": {
+        "file_count_scanned": 39,
+        "bytes_scanned": 620000,
+        "languages": ["javascript", "markdown", "typescript"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["pnpm test"],
+        "candidate_files": ["index.js", "index.browser.js", "non-secure/index.js", "test/index.test.js", "test/non-secure.test.js", "index.d.ts"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "citadel-long-cost-provenance",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 4.8,
+      "base_duration_ms": 420000,
+      "probe_facts": {
+        "file_count_scanned": 970,
+        "bytes_scanned": 3500000,
+        "languages": ["javascript", "json", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm test"],
+        "candidate_files": ["core/forks/runtime.js", "core/forks/executor-profiles.js", "core/forks/contracts.js", "scripts/test-operation-fork-executors.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "p-limit-context-cancel",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 4,
+      "base_duration_ms": 360000,
+      "probe_facts": {
+        "file_count_scanned": 10,
+        "bytes_scanned": 88000,
+        "languages": ["javascript", "markdown", "typescript"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm run test"],
+        "candidate_files": ["index.js", "index.d.ts", "test.js", "readme.md"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "citadel-context-receipt-recovery",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 5,
+      "base_duration_ms": 440000,
+      "probe_facts": {
+        "file_count_scanned": 980,
+        "bytes_scanned": 3600000,
+        "languages": ["javascript", "json", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm test"],
+        "candidate_files": ["core/forks/orchestrator.js", "core/forks/store.js", "core/forks/executor-profiles.js", "scripts/test-operation-fork-executors.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "nanoid-parallel-runtime-audit",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 4.6,
+      "base_duration_ms": 390000,
+      "probe_facts": {
+        "file_count_scanned": 39,
+        "bytes_scanned": 620000,
+        "languages": ["javascript", "markdown", "typescript"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["pnpm test"],
+        "candidate_files": ["index.js", "index.browser.js", "non-secure/index.js", "test/index.test.js", "test/non-secure.test.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "citadel-safety-model-proof",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 2.8,
+      "base_duration_ms": 220000,
+      "probe_facts": {
+        "file_count_scanned": 760,
+        "bytes_scanned": 2100000,
+        "languages": ["javascript", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm test"],
+        "candidate_files": ["core/forks/executor-profiles.js", "scripts/test-executor-profiles.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "nanoid-safety-random-boundary",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 3.4,
+      "base_duration_ms": 280000,
+      "probe_facts": {
+        "file_count_scanned": 39,
+        "bytes_scanned": 620000,
+        "languages": ["javascript", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["pnpm test"],
+        "candidate_files": ["index.js", "index.browser.js", "test/index.test.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    },
+    {
+      "scenario_id": "p-limit-cleanup-pending",
+      "required_tier": "frontier",
+      "base_frontier_cost_usd": 3.6,
+      "base_duration_ms": 300000,
+      "probe_facts": {
+        "file_count_scanned": 10,
+        "bytes_scanned": 88000,
+        "languages": ["javascript", "markdown"],
+        "package_manifests": ["package.json"],
+        "test_commands": ["npm run test"],
+        "candidate_files": ["index.js", "test.js"],
+        "has_ci": true,
+        "has_tests": true
+      }
+    }
+  ]
+}

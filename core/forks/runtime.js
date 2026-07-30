@@ -53,6 +53,21 @@ function positiveNumber(value) {
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
+function tokenUsage(value) {
+  if (!value || typeof value !== 'object') return null;
+  const input = positiveNumber(Number(value.input_tokens));
+  const output = positiveNumber(Number(value.output_tokens));
+  const cached = value.cached_input_tokens === undefined
+    ? positiveNumber(Number(value.cache_read_input_tokens || 0))
+    : positiveNumber(Number(value.cached_input_tokens));
+  if (![input, cached, output].every(Number.isInteger) || cached > input) return null;
+  return {
+    input_tokens: input,
+    cached_input_tokens: cached,
+    output_tokens: output,
+  };
+}
+
 function claudeObservation(stdout) {
   let payload;
   try { payload = JSON.parse(stdout); } catch (_error) { return null; }
@@ -61,13 +76,15 @@ function claudeObservation(stdout) {
   const model = typeof payload.model === 'string' && payload.model ? payload.model
     : usage.length === 1 ? usage[0] : null;
   const cost = positiveNumber(payload.total_cost_usd);
-  const tokens = payload.usage && typeof payload.usage === 'object'
-    ? positiveNumber(Number(payload.usage.input_tokens) + Number(payload.usage.output_tokens)) : null;
+  const usageRecord = tokenUsage(payload.usage);
+  const tokens = usageRecord
+    ? usageRecord.input_tokens + usageRecord.output_tokens : null;
   return {
     model,
     cost: cost === null ? null : { amount: cost, unit: 'usd', source: 'claude-json' },
     duration_ms: positiveNumber(payload.duration_ms),
     tokens,
+    token_usage: usageRecord,
     source: 'claude-json',
   };
 }
@@ -155,6 +172,7 @@ function codexObservation(stdout, options = {}) {
   let model = null;
   let tokens = null;
   let threadId = null;
+  let usageRecord = null;
   for (const line of String(stdout || '').split(/\r?\n/)) {
     if (!line.trim()) continue;
     let event;
@@ -165,8 +183,11 @@ function codexObservation(stdout, options = {}) {
       && CODEX_THREAD_ID_PATTERN.test(event.thread_id)) threadId = event.thread_id;
     if (typeof body.model === 'string' && body.model) model = body.model;
     if (event.type === 'turn.completed' && event.usage && typeof event.usage === 'object') {
-      const total = positiveNumber(Number(event.usage.input_tokens) + Number(event.usage.output_tokens));
-      if (total !== null) tokens = total;
+      const parsedUsage = tokenUsage(event.usage);
+      if (parsedUsage !== null) {
+        usageRecord = parsedUsage;
+        tokens = parsedUsage.input_tokens + parsedUsage.output_tokens;
+      }
     }
     const usage = body.info && typeof body.info === 'object' ? body.info.total_token_usage : null;
     if (usage && typeof usage === 'object') {
@@ -180,7 +201,7 @@ function codexObservation(stdout, options = {}) {
     if (model !== null) source = 'codex-session-jsonl';
   }
   if (model === null && tokens === null) return null;
-  return { model, cost: null, duration_ms: null, tokens, source };
+  return { model, cost: null, duration_ms: null, tokens, token_usage: usageRecord, source };
 }
 
 /**

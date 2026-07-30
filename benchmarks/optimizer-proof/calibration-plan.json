@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "kind": "citadel_optimizer_calibration_plan",
+  "scenario_ids": [
+    "citadel-long-cost-provenance",
+    "p-limit-context-cancel",
+    "nanoid-safety-random-boundary"
+  ],
+  "profile_ids": [
+    "codex-utility",
+    "claude-workhorse",
+    "claude-frontier",
+    "codex-frontier"
+  ],
+  "runs_per_pair": 1,
+  "total_runs": 12,
+  "no_holdouts": true,
+  "approval_status": "pending",
+  "approved_spend_usd": null,
+  "approved_by": null,
+  "approved_at": null,
+  "record_digest": null
+}
