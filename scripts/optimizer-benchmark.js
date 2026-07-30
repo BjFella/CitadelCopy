@@ -27,7 +27,13 @@ const {
 } = require('../core/optimizer/pricing');
 const { platformInvocation } = require('../core/forks/launcher');
 const { validateExecutorBindings } = require('../core/optimizer/executor-binding');
-const { validateCalibrationPlan } = require('../core/optimizer/calibration');
+const {
+  calibrationAuthorizationDigest,
+  calibrationCases,
+  calibrationObservation,
+  validateCalibrationPlan,
+  validateCalibrationRecord,
+} = require('../core/optimizer/calibration');
 const {
   externalReproductionDigest,
   validateExternalReproduction,
@@ -231,6 +237,93 @@ function main() {
       plan: benchmark.calibrationPlan,
       blockers: doctor(benchmark).blockers,
     }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'calibrate') {
+    if (!options.output) throw new Error('calibrate requires --output');
+    if (benchmark.calibrationPlan.approval_status !== 'approved'
+      || benchmark.calibrationPlan.quota_acknowledged !== true) {
+      throw new Error('Calibration requires an explicitly approved subscription quota');
+    }
+    const readiness = doctor(benchmark);
+    const allowedBlockers = new Set([
+      'CALIBRATION_REQUIRED',
+      'EXTERNAL_SCENARIO_NOT_SELECTED',
+      'EXTERNAL_REPRODUCTION_REQUIRED',
+      'ATTESTATION_KEY_NOT_FROZEN',
+    ]);
+    const blocking = readiness.blockers.filter((blocker) => !allowedBlockers.has(blocker));
+    if (blocking.length) throw new Error(`Calibration readiness failed: ${blocking.join(', ')}`);
+    const output = path.resolve(options.output);
+    if (fs.existsSync(output)) throw new Error('Calibration output already exists');
+    const adapterFile = path.join(ROOT, 'scripts', 'optimizer-runtime-adapter.js');
+    const cases = calibrationCases(
+      benchmark.calibrationPlan,
+      benchmark.scenarios,
+      benchmark.executors,
+    );
+    const record = {
+      schema: 1,
+      kind: 'citadel_optimizer_calibration_record',
+      authorization_digest: calibrationAuthorizationDigest(benchmark.calibrationPlan),
+      scenario_set_id: benchmark.freeze.scenario_set_id,
+      executor_set_id: benchmark.freeze.executor_set_id,
+      access_basis: benchmark.calibrationPlan.access_basis,
+      quota_budget: benchmark.calibrationPlan.quota_budget,
+      started_at: new Date().toISOString(),
+      completed_at: null,
+      status: 'running',
+      planned_run_count: benchmark.calibrationPlan.total_runs,
+      completed_run_count: 0,
+      stop_reason: null,
+      runs: [],
+    };
+    writeJson(output, validateCalibrationRecord(
+      record,
+      benchmark.calibrationPlan,
+      benchmark.scenarios,
+      benchmark.executors,
+    ));
+    for (const item of cases) {
+      const run = runScenario({
+        scenario: item.scenario,
+        scenarios: benchmark.scenarios,
+        executors: [item.profile],
+        policyId: 'prompt-only',
+        repetition: 1,
+        adapterFile,
+        pricingSnapshot: benchmark.pricingSnapshot,
+      });
+      const observation = calibrationObservation(run, item.profile);
+      record.runs.push(observation);
+      record.completed_run_count = record.runs.length;
+      if (observation.evidence_status !== 'passed') {
+        record.status = 'failed';
+        record.completed_at = new Date().toISOString();
+        record.stop_reason = 'CALIBRATION_EVIDENCE_FAILED';
+      } else if (record.completed_run_count === record.planned_run_count) {
+        record.status = 'passed';
+        record.completed_at = new Date().toISOString();
+      }
+      writeJson(output, validateCalibrationRecord(
+        record,
+        benchmark.calibrationPlan,
+        benchmark.scenarios,
+        benchmark.executors,
+      ));
+      process.stdout.write(`${JSON.stringify({
+        calibration_case: `${item.scenario.id}/${item.profile.profile_id}`,
+        evidence_status: observation.evidence_status,
+        completed_run_count: record.completed_run_count,
+        planned_run_count: record.planned_run_count,
+      })}\n`);
+      if (record.status === 'failed') {
+        process.exitCode = 2;
+        return;
+      }
+    }
+    process.stdout.write(`Calibration passed; record written to ${output}\n`);
     return;
   }
 

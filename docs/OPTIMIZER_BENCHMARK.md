@@ -105,7 +105,7 @@ vendor-reported `total_cost_usd`.
 2. **Calibration**: 12 approved, non-holdout CLI runs (3 scenarios × 4 frozen
    profiles) used to prove account access, observed model identity, and cost
    sources. The checked-in subscription-quota budget caps this at 12 runs and
-   620 aggregate runtime minutes.
+   620 aggregate model-runtime timeout minutes.
 3. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
 4. **Independent reproduction**: outside selection, outside run, public key,
@@ -120,6 +120,7 @@ There is no calendar promise. Progress advances when an evidence gate closes.
 node scripts/optimizer-benchmark.js validate
 node scripts/optimizer-benchmark.js doctor
 node scripts/optimizer-benchmark.js calibration-plan
+node scripts/optimizer-benchmark.js calibrate --output benchmarks/optimizer-proof/calibration-record.json
 node scripts/optimizer-benchmark.js matrix-plan
 node scripts/test-optimizer.js
 node scripts/optimizer-proof-bundle.js verify <bundle-directory>

@@ -71,8 +71,9 @@ The next gate is the frozen 12-run subscription-backed calibration across three
 non-holdout scenarios and all four profiles. It verifies authenticated access
 to the frozen models, checks observed identity and cost provenance, and tests
 whether the telemetry supports a common normalized-cost comparison. Approval
-authorizes at most 12 CLI runs and 620 aggregate runtime minutes from the
-subscription quota. It does not require or imply a dollar spend ceiling.
+authorizes at most 12 CLI runs and 620 aggregate model-runtime timeout minutes
+from the subscription quota. It does not require or imply a dollar spend
+ceiling.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

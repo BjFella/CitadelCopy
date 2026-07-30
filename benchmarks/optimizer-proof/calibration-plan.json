@@ -18,7 +18,7 @@
   "access_basis": "subscription",
   "quota_budget": {
     "max_cli_runs": 12,
-    "max_runtime_minutes": 620
+    "max_model_runtime_minutes": 620
   },
   "approval_status": "pending",
   "quota_acknowledged": false,

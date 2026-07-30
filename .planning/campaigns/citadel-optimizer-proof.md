@@ -35,5 +35,5 @@ multi-step agent cost without lowering independently verified completion.
 
 Consuming subscription quota, external outreach, publishing, and grant
 submission require Seth's explicit approval. The calibration approval is
-bounded by CLI run count and runtime minutes; it does not require a dollar
-spend ceiling.
+bounded by CLI run count and model-runtime timeout minutes; it does not require
+a dollar spend ceiling.

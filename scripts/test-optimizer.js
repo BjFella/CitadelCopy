@@ -60,7 +60,13 @@ const {
   boundExecutorProfileDigest,
   validateExecutorBindings,
 } = require('../core/optimizer/executor-binding');
-const { validateCalibrationPlan } = require('../core/optimizer/calibration');
+const {
+  calibrationAuthorizationDigest,
+  calibrationCases,
+  calibrationObservation,
+  validateCalibrationPlan,
+  validateCalibrationRecord,
+} = require('../core/optimizer/calibration');
 const {
   externalReproductionDigest,
   validateExternalReproduction,
@@ -115,7 +121,7 @@ function main() {
   assert.strictEqual(calibrationPlan.access_basis, 'subscription');
   assert.deepStrictEqual(calibrationPlan.quota_budget, {
     max_cli_runs: 12,
-    max_runtime_minutes: 620,
+    max_model_runtime_minutes: 620,
   });
   assert.strictEqual(calibrationPlan.quota_acknowledged, false);
   assert.strictEqual(Object.hasOwn(calibrationPlan, 'approved_spend_usd'), false);
@@ -130,13 +136,64 @@ function main() {
     approved_by: 'Seth Gammon',
     approved_at: '2026-07-30T00:00:00.000Z',
   }, scenarios, executors), /quota acknowledgement/);
-  assert.doesNotThrow(() => validateCalibrationPlan({
+  const approvedCalibrationPlan = {
     ...calibrationPlan,
     approval_status: 'approved',
     quota_acknowledged: true,
     approved_by: 'Seth Gammon',
     approved_at: '2026-07-30T00:00:00.000Z',
-  }, scenarios, executors));
+  };
+  assert.doesNotThrow(() => validateCalibrationPlan(approvedCalibrationPlan, scenarios, executors));
+  const calibrationCaseList = calibrationCases(calibrationPlan, scenarios, executors);
+  assert.strictEqual(calibrationCaseList.length, 12);
+  assert.strictEqual(calibrationCaseList[0].scenario.id, calibrationPlan.scenario_ids[0]);
+  assert.strictEqual(calibrationCaseList[0].profile.profile_id, calibrationPlan.profile_ids[0]);
+  const calibrationRun = {
+    ...generateFixtureRuns(scenarios, executors, truth, 3)[0],
+    evidence_kind: 'actual-run',
+    scenario_id: calibrationCaseList[0].scenario.id,
+    selected_profile_id: calibrationCaseList[0].profile.profile_id,
+    observed_profile_id: calibrationCaseList[0].profile.profile_id,
+    requested_model: calibrationCaseList[0].profile.model,
+    observed_model: calibrationCaseList[0].profile.model,
+    model_proof_status: 'passed',
+    receipt_status: 'verified',
+    cost: knownCost(0.01),
+    outcome: 'passed',
+    verified: true,
+    attestation: null,
+  };
+  const calibrationRecord = {
+    schema: 1,
+    kind: 'citadel_optimizer_calibration_record',
+    authorization_digest: calibrationAuthorizationDigest(approvedCalibrationPlan),
+    scenario_set_id: scenarioSetIdentity(scenarios),
+    executor_set_id: executorSetIdentity(executors),
+    access_basis: approvedCalibrationPlan.access_basis,
+    quota_budget: approvedCalibrationPlan.quota_budget,
+    started_at: '2026-07-30T00:00:00.000Z',
+    completed_at: null,
+    status: 'running',
+    planned_run_count: 12,
+    completed_run_count: 1,
+    stop_reason: null,
+    runs: [calibrationObservation(calibrationRun, calibrationCaseList[0].profile)],
+  };
+  assert.doesNotThrow(() => validateCalibrationRecord(
+    calibrationRecord,
+    approvedCalibrationPlan,
+    scenarios,
+    executors,
+  ));
+  assert.throws(() => validateCalibrationRecord({
+    ...calibrationRecord,
+    quota_budget: { ...calibrationRecord.quota_budget, max_cli_runs: 13 },
+  }, approvedCalibrationPlan, scenarios, executors), /frozen authorization/);
+  assert.throws(() => validateCalibrationRecord({
+    ...calibrationRecord,
+    status: 'passed',
+    completed_at: '2026-07-30T00:01:00.000Z',
+  }, approvedCalibrationPlan, scenarios, executors), /every frozen calibration case/);
   assert(executors.every((executor) => executor.executor_profile_digest === boundExecutorProfileDigest(executor)));
   assert.strictEqual(freeze.scenario_set_id, scenarioSetIdentity(scenarios));
   assert.strictEqual(freeze.executor_set_id, executorSetIdentity(executors));
@@ -523,6 +580,17 @@ function main() {
   assert.strictEqual(calibrationOutput.no_model_calls_made, true);
   assert.strictEqual(calibrationOutput.plan.total_runs, 12);
   assert(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'));
+  const unauthorizedCalibrationOutput = path.join(
+    os.tmpdir(),
+    `must-not-write-optimizer-calibration-${process.pid}.json`,
+  );
+  const unauthorizedCalibration = invoke([
+    'calibrate',
+    '--output', unauthorizedCalibrationOutput,
+  ]);
+  assert.notStrictEqual(unauthorizedCalibration.status, 0);
+  assert.match(unauthorizedCalibration.stderr, /explicitly approved subscription quota/);
+  assert.strictEqual(fs.existsSync(unauthorizedCalibrationOutput), false);
   const matrixCli = invoke(['matrix-plan']);
   assert.strictEqual(matrixCli.status, 0, matrixCli.stderr);
   const matrixOutput = JSON.parse(matrixCli.stdout);

@@ -15,7 +15,7 @@
   ],
   "selection_policy": "Scenario manifests, metrics, policy definitions, repetitions, and holdouts are frozen before actual runs. An outside maintainer must select one frozen holdout after the runner is public.",
   "pricing_snapshot_digest": "sha256:25b513c37e29469432a02426ef9fee93c190489cfada0548ae6c3376ec4b5ae1",
-  "calibration_plan_digest": "sha256:10466cf61e62dc0f3b9bc1c452b5c39d79d718e2e99cfe544806e1a617aae6f2",
+  "calibration_plan_digest": "sha256:902492252cb7b14fddaa95cca191d397394e22d6cc790a4b9c08d0bc38fdf852",
   "calibration_record_digest": null,
   "external_scenario": null,
   "external_reproduction_digest": null,

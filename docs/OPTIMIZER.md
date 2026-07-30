@@ -74,8 +74,8 @@ must show that both sources are usable and comparable before any economic
 claim.
 
 The current calibration access basis is `subscription`. Its authorization
-contract caps execution at 12 CLI runs and 620 aggregate runtime minutes. It
-does not ask the user for a dollar ceiling.
+contract caps execution at 12 CLI runs and 620 aggregate model-runtime timeout
+minutes. It does not ask the user for a dollar ceiling.
 
 ## Current implementation
 
