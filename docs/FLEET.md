@@ -18,13 +18,17 @@ Wave 1: 2-3 agents run in parallel (worktree-isolated)
   │
   ← Collect results from all agents
   ← Compress each output to ~500-token discovery brief
-  ← Merge branches into main
+  ← Stage passed branches on a temporary integration branch
   │
 Wave 2: 2-3 agents, informed by Wave 1 discoveries
   │
-  ← Collect, compress, merge
+  ← Collect, compress, stage passed candidates
   │
 Wave N: Continue until work queue empty
+  ↓
+Full-project gates on the integration subject
+  ↓
+Merge only a current, completely covered passed decision
 ```
 
 ### Discovery Relay
@@ -111,27 +115,29 @@ Parallel agents access shared `.planning/` state. Each resource has a declared m
 | `.planning/coordination/claims/*.json` | lock-on-write | Each agent owns its own claim file (named by instance ID). No sharing; no conflicts. |
 
 An agent that violates its resource's strategy may silently corrupt shared state.
-When in doubt, use append-only and let Fleet merge after the wave completes.
+When in doubt, use append-only and let Fleet stage governed merge candidates
+after the wave completes.
 Before spawning a wave, the coordinator reminds each agent which paths it may
 write to and the strategy for each; agents that attempt to modify lock-on-write
 resources they don't own are blocked via scope claim verification.
 
 ## Consistency Voting
 
-For high-stakes Fleet decisions, spawn 3 Phase Validators and require 2/3 agreement:
+For high-stakes Fleet control decisions, spawn three Phase Validators. Their
+votes are advisory and cannot override required evidence, checkpoints, human
+gates, or a binding Arbiter block:
 
 **When to vote:**
-- A wave completes partially (some agents succeeded, some failed) and the next wave's scope depends on the outcome
-- A failed validation merge would affect other agents' branches
+- Choosing among safe repair/retry paths for mixed wave results
 - An abort decision would discard multiple agents' work
 
 **How to vote:**
 1. Spawn 3 Phase Validator agents with identical context
 2. Each agent independently examines the evidence and returns a verdict (`proceed` / `abort` / `retry`)
-3. Tally: majority verdict wins; timeout counts as `proceed` (never blocks indefinitely)
+3. Require two explicit, parseable agreements for an otherwise-authorized control decision; timeout, malformed output, and absent votes are `unknown`/abstain
 4. Log the vote and outcome to `telemetry/agent-runs.jsonl`
 
-**Vote prompt template** (used by `/fleet` for completion approval, merge-after-fail, and abort decisions):
+**Vote prompt template** (used by `/fleet` for repair-path and abort decisions):
 
 ```
 Vote prompt: "Fleet session {slug}, Wave {N}. The proposed decision is: {decision}.
@@ -139,11 +145,11 @@ Vote prompt: "Fleet session {slug}, Wave {N}. The proposed decision is: {decisio
              Should we proceed? Respond with JSON: {verdict: 'proceed'|'block', reason: '...'}"
 ```
 
-Tally rules for the proceed/block form: 3/3 proceed → proceed; 2/3 proceed →
-proceed and log the dissenting reason; 2/3 block → block and escalate to the
-user with the reasons; 3/3 block → block. A timed-out voter counts as `proceed`
-(conservative — validator failure must never park the fleet). Skip voting when
-the decision is clearly safe (all waves complete, all validators pass).
+Tally rules for the proceed/block form: 3/3 proceed or 2/3 explicit proceed may
+select an otherwise-safe control path; 2/3 or 3/3 block holds it. Missing quorum
+joins the Fleet session's single human escalation. Underlying required evidence
+must independently be current, subject-bound, `passed`, and complete before any
+dependency unlock, terminal success, or merge.
 
 ## Coordination
 
@@ -195,10 +201,12 @@ Timeouts are configurable in `harness.json` (values in milliseconds):
 }
 ```
 
-On timeout, the coordinator logs an `agent-timeout` event, extracts a partial
-HANDOFF if one is present, retries once with a simplified prompt (Wave 1
-critical scope only), and otherwise skips the agent. A timeout never blocks
-the wave; the session file records `Status: timed out` for that agent.
+On timeout, the coordinator logs `unknown/AGENT_TIMEOUT`, extracts a partial
+HANDOFF if one is present, and retries once with a simplified prompt when safe.
+The timed-out task and its dependents remain held; dependency-independent
+reversible tasks may continue. After retry exhaustion the subject joins one
+deduplicated Fleet human escalation. The session file records
+`Status: timed out`.
 
 ## Speculative Mode
 
@@ -249,18 +257,26 @@ winner, and the merge timestamp.
 ## Quick Mode
 
 `/fleet --quick [task1]; [task2]; [task3]` is the lightweight parallel mode
-for solo devs: 2+ semicolon-separated tasks, single wave, auto-merge, no
-session file.
+for solo devs: 2+ semicolon-separated tasks and a single wave. It uses the same
+evidence, retry, dependency-hold, Arbiter, full-project verification, escalation,
+and governed merge semantics as standard Fleet.
 
 | Property | Standard Fleet | Quick Mode |
 |---|---|---|
 | Min streams | 3 | 2 |
 | Min complexity | 4 | 3 |
 | Waves | Multi-wave with discovery relay | Single wave only |
-| Session file | Written to `.planning/fleet/` | Skipped — results reported inline |
+| Durable state | Full session file in `.planning/fleet/` | Minimal receipt in `.planning/fleet/quick/{run-id}.json` |
 | Discovery briefs | Compressed to `.planning/fleet/briefs/` | Skipped |
-| Merge | Per-wave confirmation | Auto-merge if no conflicts |
+| Merge | Governed integration after full-project gates | Same governed integration after full-project gates |
 | Scope claim | Written to coordination/ | Skipped |
+
+The Quick receipt is created before validation and records task IDs,
+subject/worktree/base digests, attempts, truth status, coverage, reason codes,
+evidence references, dependency holds, decisions, one escalation ID, merge
+disposition, and timestamps. Missing, stale, malformed, or incomplete evidence
+is `unknown`; `partial` is progress metadata only. A clean or conflict-free
+branch is not merge evidence.
 
 **When /do routes to quick mode.** `/do` routes to `--quick` (not standard
 fleet) when the input contains "at the same time", "simultaneously",

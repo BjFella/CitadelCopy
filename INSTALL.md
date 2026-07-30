@@ -21,10 +21,12 @@ Install Citadel in this repository.
 
 Use https://github.com/SethGammon/Citadel as the source. If a local clone
 already exists, reuse it or update it. Detect whether this session is running
-in OpenAI Codex or Claude Code. From this project's root, run the matching
-Citadel installer and follow any printed plugin enable step.
+in OpenAI Codex or Claude Code. From this project's root, create a governed
+Citadel adoption plan for that runtime. Show me the exact footprint, unknown
+external registrations, plan digest, and confirmation token before applying
+anything. After I approve the saved plan, apply it and run adoption doctor.
 
-After Citadel is enabled in a fresh thread, run:
+After the adoption is healthy and Citadel is enabled in a fresh thread, run:
 
 /do setup --express
 
@@ -32,7 +34,12 @@ Use the current repository as the target project. Do not require placeholder
 path edits.
 ```
 
-That prompt is intentionally path-free. The agent should clone or update Citadel, choose the correct runtime installer, and use the repository it is already running in as the target. Follow any plugin enable step the installer prints, start a fresh session if the runtime asks for one, then run `/do setup --express`.
+That prompt is intentionally path-free. The agent should clone or update
+Citadel, choose the runtime projection, use the repository already open as the
+target, and stop at the reviewable adoption plan. Only the saved plan and exact
+confirmation token may be applied. Follow any external plugin-enable step the
+receipt still reports as unknown, start a fresh session if required, then run
+`/do setup --express`.
 
 ## Manual Install
 
@@ -50,7 +57,45 @@ If `~/Citadel` already exists, update it instead:
 git -C ~/Citadel pull
 ```
 
-`scripts/install.js` is a dispatcher: `--runtime claude` runs `scripts/claude-install.js` and `--runtime codex` runs `scripts/codex-install.js`. The commands below use the dispatcher; the runtime-specific scripts accept the same flags if you prefer to call them directly.
+### Create the governed project adoption
+
+From the target repository, create a saved no-write plan:
+
+```bash
+node ~/Citadel/scripts/adopt.js plan ~/Citadel \
+  --target . \
+  --project-runtime codex \
+  --out citadel-adoption.plan.json \
+  --json
+```
+
+Use `--project-runtime claude` for Claude Code or
+`--project-runtime both` when both projections are intentional. Review the
+owned/shared footprint and every external registration whose removal evidence
+is `unknown`. Then apply the exact saved plan:
+
+```bash
+node ~/Citadel/scripts/adopt.js apply citadel-adoption.plan.json \
+  --confirm <plan-token> \
+  --json
+
+node ~/Citadel/scripts/adopt.js doctor --target . --json
+```
+
+Planning writes only when `--out` is explicitly requested. Apply rechecks the
+target, source, pre-images, and plan digest; a changed input is rejected.
+
+The runtime-specific scripts below are the one-major bootstrap compatibility
+adapters for marketplace/plugin registration. They are still useful where the
+runtime has no project-scoped registration API, but their external effects
+remain `unknown` until observed. Receipt-owned project files, update, rollback,
+restore, and leave use `scripts/adopt.js`.
+
+`scripts/install.js` is a dispatcher: `--runtime claude` runs
+`scripts/claude-install.js` and `--runtime codex` runs
+`scripts/codex-install.js`. The commands below use the dispatcher; the
+runtime-specific scripts accept the same flags if you prefer to call them
+directly.
 
 ### Claude Code
 
@@ -140,9 +185,15 @@ Start a fresh Claude Code or Codex thread in your project and run:
 
 `/do setup` (without flags) opens with a mode selection:
 
-- **Recommended** (~3 min): auto-detects your stack, installs hooks, runs a live demo on your actual code, and ends with a reference card showing every command and what is now protecting your session. This is the default.
-- **Full Tour** (~8 min): everything in Recommended plus a guided walkthrough of all five skill families. Good for your first time or when onboarding a teammate.
-- **Express** (~30 sec): zero questions. Detects your stack, installs hooks, registers skills, and exits. Good for quick starts on familiar stacks.
+- **Recommended**: detects the stack, previews Standard with Core +
+  Persistence, applies only after the setup approval, reconciles the effective
+  receipt, installs only bundle-owned hooks, and runs a bounded live demo.
+- **Full Tour**: everything in Recommended, then offers separate plan/apply
+  decisions for Parallel and Operations. Delivery remains off unless explicitly
+  selected and supported.
+- **Express**: zero questions after invocation. It applies the Standard Core +
+  Persistence baseline, reconciles the effective receipt, installs the bounded
+  hook projection, and exits.
 
 Run `/do setup --express` to skip mode selection entirely.
 
@@ -150,12 +201,18 @@ Run `/do setup --express` to skip mode selection entirely.
 
 In all modes, setup:
 
-1. **Installs or refreshes runtime hooks first**, before any questions. On Claude Code this writes resolved absolute hook paths into `.claude/settings.json`. On Codex, the runtime-specific compatibility files and translated hooks are expected to already exist and setup continues from there.
-2. **Detects your stack**: language, framework, package manager, test framework. Reads `tsconfig.json`, `package.json`, lock files. No questions if detection succeeds.
-3. **Generates runtime project config**, for example `.claude/harness.json` in the Claude path, along with the project-level Citadel state used by the harness.
-4. **Scaffolds `CLAUDE.md` and `AGENTS.md`**: creates them if missing, appends a Citadel section if they exist. Never overwrites existing content.
-5. **Optional integrations**: GitHub triage workflow plus MCP server config, if you want them.
-6. **Runs a live demo** on a recently changed file in your repo (Recommended and Full Tour modes).
+1. **Detects your stack and runtime capabilities** without writing project
+   state.
+2. **Builds the exact schema-v2 config plan** for Standard plus Core and
+   Persistence. Recommended shows the plan; Express treats its explicit mode
+   selection as approval of that bounded baseline.
+3. **Applies and reconciles authority** into `.claude/harness.json` and
+   `.citadel/effective-config.json`. Stale, malformed, or future receipts block
+   non-Core execution.
+4. **Installs only hooks owned by effective bundles**. A disabled skill or
+   direct route is blocked with its activation plan instead of executing.
+5. **Scaffolds project guidance without overwriting user content**.
+6. **Runs a bounded live demo** in Recommended and Full Tour modes.
 
 > **Why does the runtime-specific install still matter?**
 > Claude Code and Codex load Citadel differently. Claude relies on the plugin path and hook installation into `.claude/settings.json`. Codex can load Citadel as a plugin with bundled skills/hooks/MCP and can also use generated project artifacts like `AGENTS.md`, `.codex/config.toml`, and projected agents. After moving Citadel to a new location, refresh the runtime-specific install step and then re-run `/do setup`.
@@ -198,6 +255,18 @@ npm test
 
 Success is a zero exit code; the suite covers hooks, skill structure, and installer checks.
 
+To exercise the governed lifecycle exactly as a local user or adapter developer
+would—including real scratch Git repositories, plan/apply/leave/restore, an
+installed contracts tarball, NDJSON restart/replay, and proof suppression—run:
+
+```bash
+npm run test:governed-lifecycle
+```
+
+The resulting local proof is
+`.planning/verification/governed-lifecycle.json`. It deliberately does not
+stand in for an independently owned integration or a human cohort.
+
 To verify the complete deterministic first-use seam for both runtime preparations:
 
 ```bash
@@ -228,6 +297,34 @@ your-project/
 ```
 
 The harness logs agent events, hook timing, and discovery compression to `.planning/telemetry/` in JSONL format. Logs never leave your machine.
+
+## Update, rollback, restore, and leave
+
+All lifecycle mutations consume saved plans:
+
+```bash
+node ~/Citadel/scripts/adopt.js update plan ~/Citadel-v2 \
+  --migration migration.json --target . --out citadel-update.plan.json --json
+node ~/Citadel/scripts/adopt.js update apply citadel-update.plan.json \
+  --confirm <plan-token> --json
+
+node ~/Citadel/scripts/adopt.js rollback plan \
+  --target . --out citadel-rollback.plan.json --json
+
+node ~/Citadel/scripts/adopt.js leave plan \
+  --target . --out citadel-leave.plan.json --json
+node ~/Citadel/scripts/adopt.js leave apply citadel-leave.plan.json \
+  --confirm <plan-token> --json
+```
+
+Update switches immutable generations only after verification. Rollback uses
+the retained predecessor receipt and declared state migration compatibility.
+Leave creates a versioned portable archive, restores exact shared-file
+pre-images, deletes only unchanged owned material, and retains modified or
+ambiguous entries. `citadel uninstall` is a compatibility alias for the same
+leave plan/apply path. A legacy install without a receipt must first use
+`adopt import plan`; the emergency `unharness --legacy-apply` path is explicitly
+inexact and cannot support an exact-removal claim.
 
 ## Troubleshooting
 

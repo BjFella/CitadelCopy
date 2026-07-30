@@ -77,6 +77,7 @@ function buildRoutingTable(projectRoot) {
       name: skill.name,
       keywords: skill.triggerKeywords,
       description: skill.description,
+      productBundle: skill.productBundle,
     });
   }
 
@@ -86,7 +87,7 @@ function buildRoutingTable(projectRoot) {
 
   // Code-point comparison keeps the sort identical across machines and locales.
   skills.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  return { schemaVersion: 1, generated: GENERATED_NOTE, skills };
+  return { schemaVersion: 2, generated: GENERATED_NOTE, skills };
 }
 
 function routeFor(name) {
@@ -98,10 +99,10 @@ function renderJson(table, eol = '\n') {
 }
 
 function renderSkillTable(table) {
-  const lines = ['| Input Contains | Route To |', '|---|---|'];
+  const lines = ['| Input Contains | Route To | Product Bundle |', '|---|---|---|'];
   for (const skill of table.skills) {
     const keywords = skill.keywords.map((keyword) => `"${keyword}"`).join(', ');
-    lines.push(`| ${keywords} | \`${routeFor(skill.name)}\` |`);
+    lines.push(`| ${keywords} | \`${routeFor(skill.name)}\` | \`${skill.productBundle}\` |`);
   }
   return lines;
 }
@@ -116,7 +117,7 @@ function renderDemoData(table) {
     if (DEMO_TIER3_SKILLS.includes(skill.name)) continue;
     const pattern = `/\\b(${skill.keywords.map(escapeRegExp).join('|')})\\b/i`;
     const icon = DEMO_ICONS[skill.name] || DEMO_DEFAULT_ICON;
-    lines.push(`  { re: ${pattern}, skill: '/${skill.name}',`);
+    lines.push(`  { re: ${pattern}, skill: '/${skill.name}', bundle: '${skill.productBundle}',`);
     const publicDescription = skill.description.replace(/\u2014/g, ' - ');
     lines.push(`    desc: ${JSON.stringify(publicDescription)}, icon: '${icon}' },`);
   }

@@ -26,8 +26,10 @@ Install Citadel in this repository.
 
 Use https://github.com/SethGammon/Citadel as the source. If a local clone
 already exists, reuse it or update it. Detect whether this session is running
-in OpenAI Codex or Claude Code. From this project's root, run the matching
-Citadel installer and report any plugin-enable or restart step it prints.
+in OpenAI Codex or Claude Code. From this project's root, create a governed
+Citadel adoption plan for that runtime. Show me the exact footprint, unknown
+external registrations, plan digest, and confirmation token before applying
+anything. After I approve the saved plan, apply it and run adoption doctor.
 
 Use the current repository as the target. Do not require placeholder paths.
 ```
@@ -129,6 +131,7 @@ Portable operations are optional. They are for work that needs a stable contract
 | Run the same objective through isolated Claude Code and Codex branches | [Operation Fork](docs/OPERATION_FORK.md) |
 | Package a repeatable result with permissions, checks, and stopping conditions | [Outcome Packs](docs/PACKS.md) |
 | Inspect or control a running operation | [Mission Control](docs/DASHBOARD_SPEC.md) |
+| Adopt Citadel reversibly, activate only the needed product, or connect an external control plane | [Governed lifecycle](docs/GOVERNED_LIFECYCLE.md) |
 
 The underlying [Operations Protocol](docs/OPERATIONS_PROTOCOL.md) defines the runtime-neutral contracts for operations, attempts, intents, evidence, and receipts. Most users do not need those internals to use Citadel.
 
@@ -148,6 +151,7 @@ Read [Security](SECURITY.md), the [threat model](THREAT_MODEL.md), and [golden-p
 | Install or evaluate Citadel | [Installation](INSTALL.md), [Demo](DEMO.md), [Choosing Citadel](docs/CHOOSING_CITADEL.md) |
 | Operate day to day | [Campaigns](docs/CAMPAIGNS.md), [Fleet](docs/FLEET.md), [Hooks](docs/HOOKS.md), [Mission Control](docs/DASHBOARD_SPEC.md) |
 | Use portable operations | [Operation Fork](docs/OPERATION_FORK.md), [Outcome Packs](docs/PACKS.md), [Recovery](docs/OPERATION_RECOVERY.md) |
+| Govern adoption, activation, evidence, or external control | [Governed lifecycle](docs/GOVERNED_LIFECYCLE.md), [Real User Proof v2](docs/PRODUCT_PROOF_TRIAL.md) |
 | Integrate or verify | [CLI reference](docs/CLI.md), [Interoperability](docs/INTEROPERABILITY.md), [Reports](docs/REPORT_ARTIFACTS.md) |
 
 The complete reference is in [`docs/`](docs/).
@@ -197,7 +201,10 @@ Yes. The hooks and scripts run on Node.js, and the Codex installer includes Wind
 
 <br>
 
-Use `/unharness` to export useful state and remove Citadel-managed project files. [Installation](INSTALL.md) also documents the exact rollback paths.
+Use `/unharness` to create a receipt-owned leave plan, review the exact
+footprint, and apply it with the plan token. Legacy installs are inventoried
+first and cannot claim exact removal. [Installation](INSTALL.md) documents the
+rollback and compatibility paths.
 
 </details>
 

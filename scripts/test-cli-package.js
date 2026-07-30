@@ -65,7 +65,11 @@ assert.deepEqual(cli.detectRuntime(['--project-root', markerRoot], { env: {}, pr
 
 const help = invoke(['--help']);
 assert.equal(help.status, 0, help.stderr);
-for (const command of ['install', 'doctor', 'update', 'rollback', 'uninstall', 'pack', 'journey', 'receipt', 'fork']) {
+for (const command of [
+  'install', 'doctor', 'update', 'rollback', 'uninstall', 'pack', 'journey',
+  'receipt', 'fork', 'adopt', 'config', 'governance',
+  'control-plane', 'trial',
+]) {
   assert(help.stdout.includes(command), `root help missing ${command}`);
 }
 
@@ -75,6 +79,11 @@ assert.equal(JSON.parse(packList.stdout).packs.length, 3);
 assert.equal(invoke(['receipt', '--help']).status, 0);
 assert.equal(invoke(['journey', '--help']).status, 0);
 assert.equal(invoke(['fork', '--help']).status, 0);
+assert.equal(invoke(['adopt', '--help']).status, 0);
+assert.equal(invoke(['config', '--help']).status, 0);
+assert.equal(invoke(['governance', '--help']).status, 0);
+assert.equal(invoke(['control-plane', '--help']).status, 0);
+assert.equal(invoke(['trial', '--help']).status, 0);
 
 const installRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-install & literal-'));
 const install = invoke(['install', '--runtime', 'codex', '--project-root', installRoot, '--plugin-only', '--dry-run', '--json']);
@@ -93,9 +102,24 @@ assert.equal(JSON.parse(automatic.stdout).mode, 'plugin-only');
 const uninstallRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-uninstall-'));
 fs.mkdirSync(path.join(uninstallRoot, '.planning'));
 const uninstallPlan = invoke(['uninstall', uninstallRoot, '--dry-run', '--json']);
-assert.equal(uninstallPlan.status, 0, uninstallPlan.stderr);
-assert.equal(JSON.parse(uninstallPlan.stdout).will_remove_harness, true);
+assert.equal(uninstallPlan.status, 2, uninstallPlan.stderr);
+const leavePlan = JSON.parse(uninstallPlan.stdout);
+assert.equal(leavePlan.operation, 'leave');
+assert.equal(leavePlan.status, 'blocked');
+assert(leavePlan.blockers.some((entry) => entry.code === 'NOT_ADOPTED'));
 assert(fs.existsSync(path.join(uninstallRoot, '.planning')), 'dry-run uninstall must not mutate project');
+const legacyUpdate = invoke([
+  'update', '--archive', path.join(uninstallRoot, 'legacy-release.tar.gz'),
+  '--target', uninstallRoot, '--apply', '--json',
+]);
+assert.equal(legacyUpdate.status, 64);
+assert.match(JSON.parse(legacyUpdate.stdout).message, /receipt-owned/);
+const legacyRollback = invoke([
+  'rollback', path.join(uninstallRoot, 'legacy-backup'),
+  '--target', uninstallRoot, '--apply', '--json',
+]);
+assert.equal(legacyRollback.status, 64);
+assert.match(JSON.parse(legacyRollback.stdout).message, /receipt-owned/);
 
 const doctorCapture = captureIo();
 const doctor = cli.doctorReport(['--runtime', 'codex'], { env: {}, probe: () => false });
@@ -123,6 +147,13 @@ const names = new Set(entries.map((entry) => entry.name));
 for (const required of [
   'package/bin/citadel.js', 'package/core/cli/package-cli.js', 'package/scripts/install.js',
   'package/core/forks/index.js', 'package/scripts/operation-fork.js',
+  'package/core/adoption/index.js', 'package/scripts/adopt.js',
+  'package/core/config/index.js', 'package/scripts/citadel-config.js',
+  'package/core/governance/index.js', 'package/scripts/governance-gate.js',
+  'package/core/control-plane/index.js', 'package/scripts/control-plane-stdio.js',
+  'package/core/product-proof/index.js', 'package/scripts/product-proof-trial.js',
+  'package/schemas/harness-config-v2.schema.json',
+  'package/skills/unharness/SKILL.md',
   'package/skills/do/SKILL.md', 'package/.planning/_templates/campaign.md',
 ]) assert(names.has(required), `packed archive missing ${required}`);
 for (const forbidden of [

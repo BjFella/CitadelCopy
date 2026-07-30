@@ -171,7 +171,7 @@ function cohortReport(envelopes) {
   const setupRate = rate(count(installed, 'setup_completed'), installed.length);
   const handoffRate = rate(count(installed, 'verified_handoff'), installed.length);
   const resumeRate = rate(count(installed, 'resume_completed'), installed.length);
-  const returnRate = rate(count(eligible, 'return_session'), eligible.length);
+  const legacySessionReturnRate = rate(count(eligible, 'return_session'), eligible.length);
   const failedAttempts = attempted.filter((item) => item.journey.install_failed || item.journey.route_failed).length;
   const failureRate = rate(failedAttempts, attempted.length);
   const enoughShared = current.length >= TARGETS.shared_installations;
@@ -186,7 +186,14 @@ function cohortReport(envelopes) {
     setup_rate: gate(setupRate, TARGETS.setup_rate, 'min', enoughShared),
     verified_handoff_rate: gate(handoffRate, TARGETS.verified_handoff_rate, 'min', enoughShared),
     resume_rate: gate(resumeRate, TARGETS.resume_rate, 'min', enoughShared),
-    seven_day_return_rate: gate(returnRate, TARGETS.seven_day_return_rate, 'min', enoughMature),
+    seven_day_return_rate: {
+      state: 'unknown',
+      value: null,
+      target: TARGETS.seven_day_return_rate,
+      direction: 'min',
+      reason: 'schema-1 return_session records a session reopen, not a meaningful verified task',
+      legacy_session_return_rate: legacySessionReturnRate,
+    },
     install_or_route_failure_rate: gate(failureRate, TARGETS.install_or_route_failure_rate_max, 'max', enoughShared),
   };
   gates.seven_day_return_rate.eligible_count = eligible.length;
@@ -208,7 +215,8 @@ function cohortReport(envelopes) {
       setup_rate: setupRate,
       verified_handoff_rate: handoffRate,
       resume_rate: resumeRate,
-      seven_day_return_rate: returnRate,
+      seven_day_return_rate: null,
+      legacy_session_return_rate: legacySessionReturnRate,
       install_or_route_failure_rate: failureRate,
     },
     targets: TARGETS,
@@ -216,7 +224,8 @@ function cohortReport(envelopes) {
     limitations: [
       'This is a voluntary shared cohort, not every clone or installation.',
       'Install failures that cannot run the share command are underrepresented.',
-      'Seven-day return uses only installations observed for at least seven days.',
+      'Schema-1 return_session is reported only as a legacy session-return diagnostic and cannot satisfy meaningful D7 retention.',
+      'Meaningful D7 retention requires a verified task completion on days 7-13 through Real User Proof v2.',
     ],
   };
 }

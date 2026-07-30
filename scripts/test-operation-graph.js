@@ -18,7 +18,12 @@ const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
 assert.deepEqual(operations.validateOperationGraph(graph), [], 'Research Fleet graph should validate');
 assert.equal(publicContracts.operations.GRAPH_VERSION, '0.1', 'graph contract should be public');
-assert.equal(publicContracts.operations.createGraphState, operations.createGraphState, 'scheduler should be public');
+assert.equal(typeof publicContracts.operations.createGraphState, 'function', 'scheduler should be public');
+assert.deepEqual(
+  publicContracts.operations.createGraphState(graph),
+  operations.createGraphState(graph),
+  'standalone public scheduler should preserve core behavior',
+);
 assert.deepEqual(
   schema.required.slice().sort(),
   ['graph_version', 'kind', 'graph_id', 'operation_spec_digest', 'entry_node_ids', 'nodes', 'edges', 'joins', 'limits', 'created_at'].sort(),

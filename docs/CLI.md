@@ -3,16 +3,30 @@
 Citadel can be invoked from a local checkout today and is structured for a conventional package-registry install once the package is published:
 
 ```sh
-npx citadel@latest install
+npx citadel@latest adopt plan /path/to/Citadel --target .
 ```
 
 Until registry publication is verified, run the same entrypoint from a checkout:
 
 ```sh
-node bin/citadel.js install
+node bin/citadel.js adopt plan /path/to/Citadel --target .
 ```
 
-## Install
+## Governed adoption
+
+The public project-lifecycle surface is `citadel adopt`. Plan commands are
+read-only unless `--out` is explicitly requested. Apply commands consume the
+exact saved plan and confirmation token.
+
+```sh
+citadel adopt plan /path/to/Citadel --target . \
+  --project-runtime codex --out citadel-adoption.plan.json --json
+citadel adopt apply citadel-adoption.plan.json --confirm TOKEN --json
+citadel adopt doctor --target . --json
+```
+
+`citadel install` remains a one-major runtime-package compatibility adapter.
+It is not the authority for footprint ownership, update, rollback, or exit.
 
 `citadel install` selects a runtime in this order:
 
@@ -28,19 +42,57 @@ citadel install --runtime codex --dry-run --json
 citadel install --runtime claude --project-root /path/to/project
 ```
 
-Arguments are passed to the existing runtime installer as an argv array. The CLI does not interpolate a shell command.
+Arguments are passed to the existing runtime installer as an argv array. The
+CLI does not interpolate a shell command. Project owners should still create a
+governed adoption receipt before relying on exact update or leave.
 
 ## Maintenance
 
 ```sh
 citadel doctor --json
-citadel update --archive citadel-v1.2.0.tar.gz --target /path/to/Citadel
-citadel update --archive citadel-v1.2.0.tar.gz --target /path/to/Citadel --apply
-citadel rollback /path/to/.citadel-backups/backup --target /path/to/Citadel --apply
+citadel update plan /path/to/Citadel-v2 --migration migration.json \
+  --target . --out citadel-update.plan.json --json
+citadel update apply citadel-update.plan.json --confirm TOKEN --json
+citadel rollback plan --target . --out citadel-rollback.plan.json --json
+citadel rollback apply citadel-rollback.plan.json --confirm TOKEN --json
 citadel uninstall /path/to/project --dry-run --json
+citadel uninstall --apply --plan citadel-leave.plan.json --confirm TOKEN --json
 ```
 
-Updates remain plan-only until `--apply` is supplied. Uninstall exports durable project state before removing the harness. Use `--export-only` to keep the harness in place.
+`update` and `rollback` accept only `plan|apply` and route through the adoption
+core. The lower-level release-archive script is not exposed as a public package
+mutation route. `uninstall` is a compatibility alias for receipt-owned leave:
+its default is a no-write plan, and apply requires a saved leave plan. Legacy
+installs first use `citadel adopt import plan`; unknown ownership never becomes
+a successful removal.
+
+## Config, governance, control plane, and product proof
+
+```sh
+citadel config show --project-root . --json
+citadel config enable parallel --project-root .          # plan only
+citadel config enable parallel --project-root . --apply
+
+citadel governance evaluate --input gate.json --project-root .
+citadel governance authorize --project-root . \
+  --subject-kind fleet-task --subject-id session-1-task-4 \
+  --subject-digest sha256:<digest> --subject-generation 1 \
+  --disposition merge
+
+citadel control-plane conformance
+citadel control-plane stdio --state state.json \
+  --authority-keys authority-keys.json --proof-private-key proof.pem \
+  --proof-key-id proof-key-1 --proof-issuer-id citadel-installation \
+  --installation-id installation-1
+
+citadel trial plan --spec trial.json
+npm run test:governed-lifecycle
+```
+
+Every product surface consumes the same effective config receipt. Disabled,
+unavailable, stale, or malformed authority blocks execution with a bounded
+activation plan. Governance authorization is read-only; work-queue status,
+transport success, or dashboard projection cannot authorize merge.
 
 ## Operation Fork
 

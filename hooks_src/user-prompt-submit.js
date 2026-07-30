@@ -43,6 +43,30 @@ function main() {
       agent_id: agentId,
     });
 
+    const prompt = event.original_prompt || event.prompt || '';
+    const match = String(prompt).trim().match(/^\/([a-z][a-z0-9-]*)/i);
+    if (match) {
+      const skillName = match[1].toLowerCase();
+      const decision = health.checkSkillActivation(skillName).decision;
+      if (!['enabled', 'degraded'].includes(decision.status)
+        && decision.reasonCode !== 'ACTIVATION_OWNERSHIP_UNKNOWN') {
+        const apply = decision.plan?.applyCommand
+          ? ` Review and explicitly apply: ${decision.plan.applyCommand}`
+          : '';
+        health.logBlock(
+          'user-prompt-submit',
+          'bundle-blocked',
+          `${skillName}:${decision.reasonCode}`,
+        );
+        process.stderr.write(
+          `[Citadel activation] /${skillName} is ${decision.status} `
+          + `(${decision.reasonCode}).${apply}\n`,
+        );
+        process.exit(2);
+        return;
+      }
+    }
+
     process.exit(0);
   });
 }

@@ -1,6 +1,7 @@
 'use strict';
 
 const { scopesOverlap } = require('../coordination/claims');
+const { sha256Digest } = require('../governance');
 
 const SUCCESS_STATUSES = new Set(['complete', 'completed', 'done', 'success', 'validated', 'merge-ready', 'merged']);
 const MERGED_STATUSES = new Set(['merged']);
@@ -219,11 +220,97 @@ function validateMergeOrder(task, tasks, options = {}) {
   return { ok: blockers.length === 0, blockers };
 }
 
-function getMergeCandidates(tasks) {
+function normalizeGovernanceId(value, fallback) {
+  const cleaned = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_.:-]+/g, '-')
+    .replace(/^[_.:-]+/, '')
+    .replace(/-+$/g, '');
+  if (!cleaned) return fallback;
+  return /^[a-z]/.test(cleaned) ? cleaned : `id-${cleaned}`;
+}
+
+function taskGovernanceAuthority(task, options = {}) {
+  const sessionId = normalizeGovernanceId(options.sessionId, 'fleet-session');
+  const id = `${sessionId}-task-${normalizeGovernanceId(taskId(task), 'unknown')}`;
+  const generation = Number.isInteger(options.subjectGeneration)
+    && options.subjectGeneration > 0
+    ? options.subjectGeneration
+    : 1;
+  return Object.freeze({
+    kind: 'fleet-task',
+    id,
+    digest: sha256Digest({
+      contract: 'fleet-task-authority-v1',
+      session_id: sessionId,
+      task: {
+        id: taskId(task),
+        campaign: task.campaign || '',
+        scope: [...(task.scope || [])].sort(),
+        deps: [...(task.deps || [])].sort(),
+        wave: task.wave ?? null,
+        agent: task.agent || '',
+        branch: task.branch || '',
+      },
+      source_generation: generation,
+    }),
+    generation,
+  });
+}
+
+function evaluateMergeCandidates(tasks, options = {}) {
   return tasks
     .filter((task) => MERGE_CANDIDATE_STATUSES.has(normalizeStatus(task.status)))
-    .map((task) => ({ task, merge: validateMergeOrder(task, tasks) }))
-    .filter((entry) => entry.merge.ok)
+    .map((task) => {
+      const merge = validateMergeOrder(task, tasks);
+      const authority = taskGovernanceAuthority(task, options);
+      if (!merge.ok) {
+        return { task, merge, authority, governance: null };
+      }
+      if (typeof options.authorize !== 'function') {
+        return {
+          task,
+          merge,
+          authority,
+          governance: {
+            authorized: false,
+            status: 'unknown',
+            authorization_code: 'GOVERNANCE_AUTHORITY_REQUIRED',
+          },
+        };
+      }
+      try {
+        const governance = options.authorize(task, authority, 'merge');
+        return {
+          task,
+          merge,
+          authority,
+          governance: governance && typeof governance === 'object'
+            ? governance
+            : {
+              authorized: false,
+              status: 'unknown',
+              authorization_code: 'GOVERNANCE_AUTHORITY_INVALID',
+            },
+        };
+      } catch {
+        return {
+          task,
+          merge,
+          authority,
+          governance: {
+            authorized: false,
+            status: 'unknown',
+            authorization_code: 'GOVERNANCE_AUTHORITY_ERROR',
+          },
+        };
+      }
+    });
+}
+
+function getMergeCandidates(tasks, options = {}) {
+  return evaluateMergeCandidates(tasks, options)
+    .filter((entry) => entry.merge.ok && entry.governance?.authorized === true)
     .map((entry) => entry.task);
 }
 
@@ -274,13 +361,15 @@ function createRepairTask(tasks, failedTask, reason) {
   };
 }
 
-function summarizeSession(content) {
+function summarizeSession(content, options = {}) {
   const tasks = parseWorkQueue(content);
   return {
     tasks,
     ready: getReadyTasks(tasks),
     blocked: getBlockedTasks(tasks),
-    mergeCandidates: getMergeCandidates(tasks),
+    mergeCandidates: getMergeCandidates(tasks, options),
+    governanceBlocked: evaluateMergeCandidates(tasks, options)
+      .filter((entry) => entry.merge.ok && entry.governance?.authorized !== true),
     scopeConflicts: getScopeConflicts(tasks),
   };
 }
@@ -288,6 +377,7 @@ function summarizeSession(content) {
 module.exports = {
   createRepairTask,
   dependencyStatus,
+  evaluateMergeCandidates,
   getBlockedTasks,
   getMergeCandidates,
   getReadyTasks,
@@ -297,6 +387,7 @@ module.exports = {
   parseWorkQueue,
   serializeWorkQueue,
   summarizeSession,
+  taskGovernanceAuthority,
   updateWorkQueue,
   validateMergeOrder,
 };

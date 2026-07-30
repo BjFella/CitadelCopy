@@ -22,14 +22,25 @@ The mistake to avoid runs in **both** directions:
 
 - **`phase-validator`** (small, read-only, e.g. Haiku) — the **mechanical** judge. Reads a HANDOFF and
   checks whether it credibly claims the exit conditions were met. Its verdict is **advisory and
-  retryable**: the orchestrator may accept a `partial` over its `fail`. Right-sized for prose checks;
-  wrong tier for "is this actually good?".
+  retryable**, but it cannot manufacture objective evidence or authorize acceptance. A failed,
+  timed-out, malformed, or absent result remains `failed` or `unknown`; `partial` is progress
+  metadata only. Right-sized for prose checks; wrong tier for "is this actually good?".
 - **`arbiter`** (strong, different-family, *acting*) — the **holistic** judge. Re-runs the objective
   gates itself (typecheck/tests/lint/the phase's command conditions), reads the real diff, and judges
   architecture / subtle correctness / coherence. Its `verdict: "block"` is **binding** — the
   orchestrator may not accept around it. Invoked: after a worker's retries are exhausted; as the
   completion judge for a holistic run-until condition; and as a coherence critic after a deterministic
   gate passes.
+
+## Fail-honest judge boundary
+
+Only current, subject-bound `passed` evidence with complete required coverage
+can unlock a dependency, terminal success, or merge. Deterministic commands own
+objective truth. Phase Validator timeout or malformed output is `unknown` and
+uses a bounded retry; exhaustion invokes the Arbiter when a holistic decision
+remains relevant, then holds and aggregates one human escalation if the Arbiter
+blocks or is unavailable. Independent reversible work may continue while the
+dependent subgraph remains held.
 
 ## Why a *different family*, not a weaker model
 
@@ -52,7 +63,7 @@ deterministic + small-model gates; escalate only the irreducible holistic calls 
 
 | Decision | Judge | Binding? |
 |---|---|---|
-| Does the HANDOFF claim the exit conditions were met? | `phase-validator` (mechanical) | no (retryable) |
+| Does the HANDOFF claim the exit conditions were met? | `phase-validator` (mechanical) | no (retryable; cannot authorize acceptance) |
 | Did the objective gates actually pass? | a deterministic command, re-run by the `arbiter` | n/a |
 | Is the work sound / correct / coherent (binding accept)? | `arbiter` (holistic) | **yes** |
 | Holistic run-until completion ("is it right yet?") | `arbiter` | **yes** |

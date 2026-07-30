@@ -36,8 +36,8 @@ function usage() {
     'Usage:',
     '  node scripts/usefulness-trial.js [--json] [--write] [--run-verification] [--task <request>] [--project-root <path>]',
     '',
-    'Runs a first-use usefulness trial against a real project.',
-    'The trial checks whether Citadel gives a user a setup path, next action, route, verification command, and durable evidence.',
+    'Runs a first-use readiness inspection against a real project.',
+    'It checks setup, routing, verification selection, and durable evidence; it does not compare Citadel with a bare agent.',
     '--write records .planning/usefulness-trial/latest.md.',
   ].join('\n');
 }
@@ -156,6 +156,8 @@ function buildTrial(projectRoot, options = {}) {
   const decision = decideTrial(proof, criteria);
 
   return {
+    evidenceKind: 'readiness-inspection',
+    claimBoundary: 'Engineering readiness only; not comparative or real-user utility evidence.',
     generatedAt: options.now || proof.generatedAt,
     projectRoot: root,
     task,
@@ -170,9 +172,11 @@ function buildTrial(projectRoot, options = {}) {
 
 function renderTrial(trial) {
   const lines = [
-    'Citadel Usefulness Trial',
+    'Citadel Readiness Inspection',
     '='.repeat(40),
     `Generated: ${trial.generatedAt}`,
+    `Evidence kind: ${trial.evidenceKind}`,
+    `Claim boundary: ${trial.claimBoundary}`,
     `Project: ${trial.projectRoot}`,
     `Task: ${trial.task}`,
     `Decision: ${trial.decision}`,

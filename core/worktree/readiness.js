@@ -3,6 +3,7 @@
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
+const configControl = require('../config');
 
 const DEFAULT_PROFILE = Object.freeze({
   setupCommand: null,
@@ -32,9 +33,10 @@ function readJson(filePath) {
 }
 
 function readHarnessConfig(projectRoot) {
-  return readJson(path.join(projectRoot, '.claude', 'harness.json')) ||
-    readJson(path.join(projectRoot, '.Codex', 'harness.json')) ||
-    {};
+  const runtime = configControl.detectRuntimeContract(projectRoot);
+  const effective = configControl.loadActivationContext(projectRoot, { runtime });
+  if (!effective.usable || effective.receipt?.authority.valid !== true) return {};
+  return configControl.readConfigFile(projectRoot).raw || {};
 }
 
 function asArray(value) {

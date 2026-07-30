@@ -10,19 +10,80 @@ const path = require('path');
 
 const {
   createRepairTask,
+  evaluateMergeCandidates,
   getBlockedTasks,
   getMergeCandidates,
   getReadyTasks,
   getScopeConflicts,
   parseWorkQueue,
   serializeWorkQueue,
+  taskGovernanceAuthority,
   updateWorkQueue,
   validateMergeOrder,
 } = require('../core/fleet/session');
+const governance = require('../core/governance');
 
 function write(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content);
+}
+
+function authorizeFleetTask(projectRoot, task, sessionId) {
+  const authority = taskGovernanceAuthority(task, { sessionId });
+  const subject = { kind: authority.kind, id: authority.id };
+  const producerContractDigest = governance.sha256Digest({
+    contract: 'fleet-session-test-validator-v1',
+  });
+  const policy = governance.createGatePolicy({
+    contract_version: 1,
+    policy_id: 'fleet-session-merge',
+    subject_kind: 'fleet-task',
+    required_observations: [{
+      observation_id: 'validator',
+      producer_kind: 'mechanical-validator',
+      producer_contract_digest: producerContractDigest,
+    }],
+    retry_policy: {
+      max_attempts: 1,
+      initial_delay_ms: 0,
+      backoff_multiplier: 1,
+      max_delay_ms: 0,
+    },
+    deadline_policy: {
+      attempt_timeout_ms: 1000,
+      overall_deadline_ms: 10000,
+    },
+    checkpoint_requirement: 'none',
+    human_gate: { required: false, observation_id: null },
+    allowed_dispositions: ['hold', 'merge'],
+  });
+  const observation = governance.createEvidenceObservation({
+    contract_version: 1,
+    observation_id: 'validator',
+    subject,
+    subject_digest: authority.digest,
+    subject_generation: authority.generation,
+    attempt_id: 'attempt-1',
+    producer: { kind: 'mechanical-validator', id: 'validator' },
+    producer_contract_digest: producerContractDigest,
+    truth_status: 'passed',
+    coverage: { required: 1, observed: 1, passed: 1, complete: true },
+    reason_code: 'VERIFIED',
+    artifact_digests: [governance.sha256Digest({ task: task.id, proof: 'passed' })],
+    observed_at: '2026-07-30T20:10:00.000Z',
+    expires_at: null,
+  });
+  return governance.evaluateAndRecord({
+    projectRoot,
+    policy,
+    observations: [observation],
+    subject,
+    subjectDigest: authority.digest,
+    subjectGeneration: authority.generation,
+    startedAt: '2026-07-30T20:09:00.000Z',
+    decidedAt: '2026-07-30T20:10:01.000Z',
+    requestedDisposition: 'merge',
+  });
 }
 
 const sample = [
@@ -58,7 +119,26 @@ assert.equal(blocked[0].task.id, '3');
 assert.equal(blocked[0].blockers[0].dep, '2');
 
 const mergeCandidates = getMergeCandidates(tasks).map((task) => task.id);
-assert.deepEqual(mergeCandidates, ['4'], 'only no-dep validated work should be merge-ready');
+assert.deepEqual(
+  mergeCandidates,
+  [],
+  'status-only work queue projections must never authorize a merge',
+);
+const governanceBlocked = evaluateMergeCandidates(tasks)
+  .filter((entry) => entry.merge.ok && entry.governance?.authorized !== true);
+assert.equal(governanceBlocked.length, 1);
+assert.equal(
+  governanceBlocked[0].governance.authorization_code,
+  'GOVERNANCE_AUTHORITY_REQUIRED',
+);
+assert.deepEqual(
+  getMergeCandidates(tasks, {
+    sessionId: 'session-example',
+    authorize: () => ({ authorized: true, authorization_code: 'AUTHORIZED' }),
+  }).map((task) => task.id),
+  ['4'],
+  'an explicit governance authorizer can release an order-valid candidate',
+);
 
 const blockedMerge = validateMergeOrder('6', tasks);
 assert.equal(blockedMerge.ok, false, 'completed dependent work should wait for merged deps');
@@ -121,6 +201,8 @@ try {
   assert(output.includes('#2 UI [pending] blocked by blocked worktree readiness'));
   assert(output.includes('MERGE BLOCKED'));
   assert(output.includes('#6 Package [complete]'));
+  assert(output.includes('GOVERNANCE BLOCKED'));
+  assert(output.includes('#4 Docs [validated] - RECEIPT_MISSING'));
   assert(output.includes('SCOPE CONFLICTS'));
   assert(!output.includes('undefined'));
 
@@ -135,6 +217,25 @@ try {
   const parsed = JSON.parse(json);
   assert.equal(parsed.analysis.ready.length, 1, 'json output should exclude readiness-blocked tasks by default');
   assert.equal(parsed.analysis.readinessBlocked.length, 1, 'json output should expose readiness blockers');
+  assert.equal(parsed.analysis.mergeCandidates.length, 0, 'status alone must not authorize merge');
+  assert.equal(parsed.analysis.governanceBlocked.length, 1);
+
+  authorizeFleetTask(tempRoot, tasks.find((task) => task.id === '4'), 'session-example');
+  const authorizedJson = execFileSync(process.execPath, [
+    path.join(__dirname, 'fleet-steward.js'),
+    '--project-root',
+    tempRoot,
+    '--session',
+    sessionFile,
+    '--json',
+  ], { encoding: 'utf8' });
+  const authorized = JSON.parse(authorizedJson);
+  assert.deepEqual(
+    authorized.analysis.mergeCandidates.map((task) => task.id),
+    ['4'],
+    `Fleet Steward must release a candidate only from the durable governance receipt: ${authorizedJson}`,
+  );
+  assert.equal(authorized.analysis.governanceBlocked.length, 0);
 
   const override = execFileSync(process.execPath, [
     path.join(__dirname, 'fleet-steward.js'),
