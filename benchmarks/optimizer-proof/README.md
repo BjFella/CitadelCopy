@@ -104,6 +104,8 @@ scenario, requires a fresh outside Ed25519 key and explicit acknowledgement,
 and refuses to overwrite its output. See
 [`holdout/EXTERNAL_SELECTION.md`](holdout/EXTERNAL_SELECTION.md) and
 [`holdout/EXTERNAL_REPRODUCTION.md`](holdout/EXTERNAL_REPRODUCTION.md).
+The canonical public request is
+[`holdout/external-selection-request.json`](holdout/external-selection-request.json).
 
 ## Frozen identities
 

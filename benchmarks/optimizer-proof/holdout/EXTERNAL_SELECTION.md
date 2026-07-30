@@ -7,15 +7,16 @@ performance results or consuming model quota.
 
 Do this only after the frozen runner and method are publicly accessible.
 
-1. Generate the exact request:
+1. Verify or regenerate the exact checked-in request:
 
    ```bash
    node scripts/optimizer-benchmark.js selection-request \
      --output external-selection-request.json
    ```
 
-2. Publish `external-selection-request.json`. Do not run or disclose any
-   holdout or matrix outcomes before the choice.
+2. Publish
+   [`external-selection-request.json`](external-selection-request.json). Do
+   not run or disclose any holdout or matrix outcomes before the choice.
 3. Ask one person who is not the local matrix signer to select exactly one ID
    from `holdout_scenario_ids`.
 4. Require a public HTTPS response that states the request ID, scenario-set ID,

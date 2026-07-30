@@ -160,7 +160,13 @@ function main() {
   const publicIndex = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
   const optimizerPage = fs.readFileSync(path.join(ROOT, 'docs', 'optimizer.html'), 'utf8');
   const selectionRequest = buildExternalSelectionRequest(freeze, scenarios);
+  const publishedSelectionRequest = JSON.parse(fs.readFileSync(
+    path.join(BENCHMARK, 'holdout', 'external-selection-request.json'),
+    'utf8',
+  ));
   validateExternalSelectionRequest(selectionRequest, freeze, scenarios);
+  validateExternalSelectionRequest(publishedSelectionRequest, freeze, scenarios);
+  assert.deepStrictEqual(publishedSelectionRequest, selectionRequest);
   assert.strictEqual(selectionRequest.scenario_set_id, freeze.scenario_set_id);
   assert.deepStrictEqual(selectionRequest.holdout_scenario_ids, freeze.holdout_scenario_ids);
   assert.deepStrictEqual(selectionRequest.response_fields, [

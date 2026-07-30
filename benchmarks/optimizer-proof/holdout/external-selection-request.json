@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "kind": "citadel_optimizer_external_selection_request",
+  "request_id": "sha256:21609f77cf7871aea9128ac67f4418e15fc6f80a23c222ac4f7f0f3bea81f9fb",
+  "scenario_set_id": "optimizer-scenarios-sha256:602e496906f3a293203750602234ba88a55a86b9e4f54f32239264098dcebe5b",
+  "frozen_at": "2026-07-30",
+  "holdout_scenario_ids": [
+    "citadel-short-executor-proof",
+    "p-limit-short-clear-queue",
+    "nanoid-size-consistency",
+    "citadel-safety-model-proof"
+  ],
+  "constraints": {
+    "outside_selector_required": true,
+    "select_exactly": 1,
+    "selection_before_local_matrix": true,
+    "holdout_results_disclosed": false,
+    "selection_source_must_be_https": true
+  },
+  "response_fields": [
+    "request_id",
+    "scenario_set_id",
+    "scenario_id",
+    "selected_by",
+    "selected_at",
+    "selection_source"
+  ]
+}

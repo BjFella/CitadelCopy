@@ -17,6 +17,10 @@ selector URL alone cannot satisfy the reproduction gate. The quota-bounded
 outside workflow is in
 [`EXTERNAL_REPRODUCTION.md`](EXTERNAL_REPRODUCTION.md).
 
-Current outside selection: **not collected**.
+Current outside selection: **request published; response not collected**.
+
+The exact machine-bound request is
+[`external-selection-request.json`](external-selection-request.json). It must
+receive a public HTTPS response before the local matrix is run.
 
 Current outside reproduction: **not collected**.
