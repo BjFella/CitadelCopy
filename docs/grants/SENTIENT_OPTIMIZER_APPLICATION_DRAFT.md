@@ -103,8 +103,9 @@ Current fixture simulations validate report math only. They are not model
 performance evidence. Exact model IDs, canonical executor digests, the runtime
 adapter, and a list-price normalization are frozen. A four-profile
 subscription-backed calibration verified exact model identity, receipts, and
-known cost sources, while all four task verifiers failed. Outside selection,
-the preliminary matrix, and independent reproduction remain open.
+known cost sources, while all four task verifiers failed. The local Ed25519
+run-attestation public key is also frozen. Outside selection, the preliminary
+matrix, and independent reproduction remain open.
 The list-price normalization is a common comparison unit, not a claim that
 Seth's subscription is billed per run.
 

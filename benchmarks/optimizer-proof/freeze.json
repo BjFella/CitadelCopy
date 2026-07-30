@@ -19,5 +19,5 @@
   "calibration_record_digest": "sha256:007953799c8422a61cca18abd28f54433d12f3fa63e8fdaf6fbf1fc8a498282c",
   "external_scenario": null,
   "external_reproduction_digest": null,
-  "attestation_public_key": null
+  "attestation_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgImYiRsz1MlhupbP2MOI5ORRVayyWIgORgOjnXzMSHI=\n-----END PUBLIC KEY-----\n"
 }

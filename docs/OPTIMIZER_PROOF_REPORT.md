@@ -39,7 +39,7 @@ math fixture. It is not evidence that real models save money.
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
 | Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
 | External scenario selector | Not collected |
-| Local run-attestation public key | Not frozen |
+| Local run-attestation public key | Frozen; private key stored outside the repository |
 | Independent reproduction | Not collected |
 | Model calls made by this work | None |
 
