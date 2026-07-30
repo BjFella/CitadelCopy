@@ -49,7 +49,8 @@ Policy, scenario, and repetition form a unique matrix key. Missing, duplicate,
 or caller-injected runs fail report construction.
 
 The policy cannot read fixture truth. `learnCapabilityProfiles()` rejects any
-holdout record. An outside maintainer later selects one already frozen holdout.
+holdout record. A precommitted future public-randomness beacon selects one
+already frozen holdout without human discretion.
 The local matrix signer and outside reproducer are separate trust roles.
 
 The runner verifies repository tests and requires every expected artifact to
@@ -124,8 +125,8 @@ vendor-reported `total_cost_usd`.
    zero-call forensic replay classifies the Claude result as an artifact-gate
    false negative; the future matrix copy is re-frozen with only `index.js`
    required. This is harness evidence, not comparative performance evidence.
-4. **Outside selection**: an independent maintainer selects one already frozen
-   holdout before the local matrix starts.
+4. **Public-random selection**: a future drand round committed while the method
+   is public selects one already frozen holdout before the local matrix starts.
 5. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
 6. **Independent reproduction**: outside run, public key, raw privacy-safe
@@ -144,6 +145,7 @@ node scripts/optimizer-benchmark.js calibrate --output benchmarks/optimizer-proo
 node scripts/optimizer-benchmark.js pilot-plan
 node scripts/optimizer-benchmark.js pilot
 node scripts/optimizer-benchmark.js selection-request
+node scripts/optimizer-benchmark.js select-holdout --output <external-selection.json>
 node scripts/optimizer-benchmark.js reproduction-plan
 node scripts/optimizer-benchmark.js matrix-plan
 node scripts/test-optimizer.js
@@ -156,13 +158,14 @@ allowance from their subscription quota. Independent reproduction remains a
 submission blocker, but it does not have to finish before the local matrix
 starts.
 
-The no-model outside-selection tooling emits a digest-bound request, verifies
-that the response selects one frozen holdout, and writes a reviewable candidate
-freeze. The independent-reproduction tooling reports its exact call/runtime
+The no-model selection tooling emits a digest-bound request, commits to a
+future drand round, requires three identical relay responses, derives exactly
+one frozen holdout, and writes a reviewable candidate freeze. The
+independent-reproduction tooling reports its exact call/runtime
 envelope before execution, requires an outside signing key and explicit quota
 acknowledgement, and validates the signed record before writing a second
-candidate freeze. These workflows are prepared locally but have not been
-published, sent, selected, or run.
+candidate freeze. The selection method is public; the committed round has not
+yet been collected or frozen.
 
 The proof bundle carries three scenario sets:
 `inputs/calibration-scenarios/` reproduces the exact set used by calibration,

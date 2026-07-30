@@ -4,10 +4,10 @@ Holdouts are declared in the frozen scenario manifests and repeated in
 `freeze.json`. They may be evaluated by a calibrated policy, but their outcomes
 must never be passed to `learnCapabilityProfiles()`.
 
-Before actual runs, an outside maintainer must select one of the already frozen
-holdouts after the runner and method are public. The selection source, date,
-and selector are frozen independently from the local matrix signer. The exact
-request and response workflow is in
+Before actual runs, a future public-randomness beacon committed after the
+runner and method are public selects one of the already frozen holdouts. The
+selection source, round, method, and record digest are frozen before the local
+matrix. The exact request and selection workflow is in
 [`EXTERNAL_SELECTION.md`](EXTERNAL_SELECTION.md).
 
 Independent reproduction is a second gate. The reproducer supplies a
@@ -17,10 +17,12 @@ selector URL alone cannot satisfy the reproduction gate. The quota-bounded
 outside workflow is in
 [`EXTERNAL_REPRODUCTION.md`](EXTERNAL_REPRODUCTION.md).
 
-Current outside selection: **request published; response not collected**.
+Current holdout selection: **future public beacon committed; round not yet
+collected**.
 
 The exact machine-bound request is
 [`external-selection-request.json`](external-selection-request.json). It must
-receive a public HTTPS response before the local matrix is run.
+produce a validated public-random record before the local matrix is run. No
+human selector is required.
 
 Current outside reproduction: **not collected**.

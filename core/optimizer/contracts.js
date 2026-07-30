@@ -236,7 +236,8 @@ const FREEZE_FIELDS = Object.freeze([
 ]);
 const EXTERNAL_SCENARIO_FIELDS = Object.freeze([
   'scenario_id',
-  'selected_by',
+  'selection_method',
+  'selection_record_digest',
   'selected_at',
   'selection_source',
 ]);
@@ -756,8 +757,11 @@ function validateFreeze(value, scenarios, executors, source = 'freeze') {
     if (!value.holdout_scenario_ids.includes(value.external_scenario.scenario_id)) {
       throw new Error(`${source}.external_scenario is not a frozen holdout`);
     }
-    if (typeof value.external_scenario.selected_by !== 'string' || !value.external_scenario.selected_by.trim()) {
-      throw new Error(`${source}.external_scenario.selected_by is invalid`);
+    if (value.external_scenario.selection_method !== 'drand-public-beacon') {
+      throw new Error(`${source}.external_scenario.selection_method is invalid`);
+    }
+    if (!DIGEST.test(value.external_scenario.selection_record_digest)) {
+      throw new Error(`${source}.external_scenario.selection_record_digest is invalid`);
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value.external_scenario.selected_at)) {
       throw new Error(`${source}.external_scenario.selected_at is invalid`);

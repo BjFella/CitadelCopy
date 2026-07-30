@@ -71,6 +71,8 @@ node scripts/optimizer-benchmark.js validate
 node scripts/optimizer-benchmark.js doctor
 node scripts/optimizer-benchmark.js pilot-plan
 node scripts/optimizer-benchmark.js selection-request
+node scripts/optimizer-benchmark.js select-holdout \
+  --output <external-selection.json>
 node scripts/optimizer-benchmark.js reproduction-plan
 node scripts/optimizer-benchmark.js plan \
   --scenario p-limit-short-clear-queue \
@@ -97,9 +99,11 @@ The fixed record path and completed status prevent a duplicate pilot. Its raw
 failed result, archived inputs, and zero-call forensic replay are all
 digest-bound and remain excluded from performance claims.
 
-`selection-request`, `freeze-selection`, `reproduction-plan`,
+`selection-request`, `select-holdout`, `freeze-selection`, `reproduction-plan`,
 `verify-reproduction`, and `freeze-reproduction` make no model calls. The
-outside `reproduce` command is separately quota-gated, runs one selected
+selection command reads one precommitted public beacon round from three
+relays; it does not contact a human. The `reproduce` command is separately
+quota-gated, runs one selected
 scenario, requires a fresh outside Ed25519 key and explicit acknowledgement,
 and refuses to overwrite its output. See
 [`holdout/EXTERNAL_SELECTION.md`](holdout/EXTERNAL_SELECTION.md) and

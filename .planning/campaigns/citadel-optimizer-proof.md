@@ -34,12 +34,12 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Forensically explain the 0/4 task result and re-freeze a corrected matrix
   verifier without rewriting the archived calibration scenario set.
 - [x] Define a fail-closed 2-run diagnostic pilot across both frontier runtimes.
-- [x] Prepare machine-bound outside selection and independently signed
+- [x] Prepare machine-bound public-random selection and independently signed
   reproduction workflows without publishing or consuming quota.
 - [x] Approve and run the bounded diagnostic pilot.
 - [x] Forensically classify the pilot's artifact-gate false negative and
   re-freeze the corrected actual matrix without rewriting the pilot record.
-- [ ] Collect outside holdout selection.
+- [ ] Collect the precommitted public-random holdout selection.
 - [ ] Run the attested actual matrix.
 - [ ] Collect independent reproduction.
 - [ ] Replace fixture presentation with actual evidence.

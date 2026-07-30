@@ -51,8 +51,9 @@ const {
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
 const {
+  buildBeaconSelectionRecord,
   buildExternalSelectionRequest,
-  frozenSelectionFromResponse,
+  frozenSelectionFromRecord,
 } = require('../core/optimizer/external-selection');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -308,7 +309,22 @@ function privateKeyForRun(file, freeze) {
   return privateKey;
 }
 
-function main() {
+async function fetchJson(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(url, {
+      headers: { accept: 'application/json' },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function main() {
   const options = args(process.argv.slice(2));
   const command = options._[0] || 'validate';
   if (options.scenarios || options.executors || options.freeze) {
@@ -373,6 +389,33 @@ function main() {
     return;
   }
 
+  if (command === 'select-holdout') {
+    if (!options.output) throw new Error('select-holdout requires --output');
+    if (benchmark.freeze.external_scenario !== null) {
+      throw new Error('Public-random scenario is already frozen');
+    }
+    const output = path.resolve(options.output);
+    if (fs.existsSync(output)) throw new Error('selection output already exists');
+    const request = buildExternalSelectionRequest(benchmark.freeze, benchmark.scenarios);
+    if (Date.now() < Date.parse(request.beacon.round_time)) {
+      throw new Error(`Committed drand round is not available before ${request.beacon.round_time}`);
+    }
+    const relayResponses = await Promise.all(request.beacon.source_urls.map(async (sourceUrl) => ({
+      source_url: sourceUrl,
+      beacon: await fetchJson(sourceUrl),
+    })));
+    const selection = buildBeaconSelectionRecord(
+      request,
+      benchmark.freeze,
+      benchmark.scenarios,
+      relayResponses,
+      new Date().toISOString(),
+    );
+    writeJson(output, selection);
+    process.stdout.write(`Wrote public-random holdout selection to ${output}; no model calls made\n`);
+    return;
+  }
+
   if (command === 'reproduction-plan') {
     const scenario = benchmark.freeze.external_scenario === null
       ? null
@@ -404,9 +447,9 @@ function main() {
     const output = path.resolve(options.output);
     if (fs.existsSync(output)) throw new Error('selection freeze output already exists');
     const request = buildExternalSelectionRequest(benchmark.freeze, benchmark.scenarios);
-    const response = JSON.parse(fs.readFileSync(path.resolve(options.input), 'utf8'));
-    const externalScenario = frozenSelectionFromResponse(
-      response,
+    const record = JSON.parse(fs.readFileSync(path.resolve(options.input), 'utf8'));
+    const externalScenario = frozenSelectionFromRecord(
+      record,
       request,
       benchmark.freeze,
       benchmark.scenarios,
@@ -416,7 +459,7 @@ function main() {
       external_scenario: externalScenario,
     }, benchmark.scenarios, benchmark.executors);
     writeJson(output, nextFreeze);
-    process.stdout.write(`Wrote externally selected candidate freeze to ${output}; no model calls made\n`);
+    process.stdout.write(`Wrote public-random selected candidate freeze to ${output}; no model calls made\n`);
     return;
   }
 
@@ -797,12 +840,10 @@ function main() {
 }
 
 if (require.main === module) {
-  try {
-    main();
-  } catch (error) {
+  main().catch((error) => {
     process.stderr.write(`Optimizer benchmark failed: ${error.message}\n`);
     process.exitCode = 1;
-  }
+  });
 }
 
 module.exports = Object.freeze({

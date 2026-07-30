@@ -45,7 +45,7 @@ math fixture. It is not evidence that real models save money.
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
 | Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
 | Diagnostic pilot | Completed 2/2 identity and receipt gates; raw record failed; Claude's 22-test pass was an artifact-gate false negative |
-| External scenario selector | Not collected |
+| Holdout selector | Future drand round committed; not yet collected |
 | Local run-attestation public key | Frozen; private key stored outside the repository |
 | Independent reproduction | Not collected |
 | Model calls made across calibration attempts | 6 total; 4 in the completed record |
@@ -57,9 +57,10 @@ attestation key are complete. The remaining machine-readable blockers are
 outside scenario selection and independent reproduction, so `actual-run`
 execution and the submission gate remain closed.
 
-The selection request, response binding, outside quota plan, fresh-key
-reproduction, signature verification, and candidate-freeze commands are now
-prepared and tested locally. None has been published, sent, selected, or run.
+The method and public-random selection request are published. The request binds
+one future drand round, three relay URLs, and a deterministic modulo rule. No
+human selector is involved, no selection has yet been collected, and no matrix
+run has started.
 
 ## Claim boundary
 
@@ -67,8 +68,9 @@ Safe current claim:
 
 > Citadel now contains a separate, reproducible engineering contract for
 > outcome-aware economic routing and can run a frozen comparative evaluation
-> once outside selection is collected and matrix subscription quota is
-> approved. Independent reproduction remains required before a grant claim.
+> once the precommitted public beacon is collected and matrix subscription
+> quota is approved. Clean hosted verification remains required before a grant
+> claim.
 
 Unsafe current claims:
 
@@ -120,9 +122,8 @@ replay narrows only the future matrix manifest to `index.js`; it classifies the
 Claude run as task-verified and leaves the Codex run failed. This proves the
 evidence path can carry a real verifier pass but supplies no savings claim.
 
-The next gate is publication of the frozen method followed by outside holdout
-selection. Both still require explicit approval. The full matrix remains
-separately quota-gated.
+The next gate is collection and verification of the already committed public
+beacon round. The full matrix remains separately quota-gated.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

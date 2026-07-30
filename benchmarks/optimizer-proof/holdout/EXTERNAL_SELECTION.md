@@ -1,52 +1,56 @@
-# Outside holdout selection
+# Public-random holdout selection
 
-This procedure creates a public, machine-bound holdout choice without exposing
-performance results or consuming model quota.
+Citadel selects one already-frozen holdout without asking another person and
+without exposing performance results.
 
-## Owner procedure
+The checked-in request commits, before the beacon round exists, to:
 
-Do this only after the frozen runner and method are publicly accessible.
+- the frozen scenario-set and ordered holdout IDs;
+- League of Entropy drand mainnet chain hash and public key;
+- round `6333716`, expected at `2026-07-30T20:15:00.000Z`;
+- three public relay URLs;
+- an exact deterministic selection rule.
 
-1. Verify or regenerate the exact checked-in request:
+The canonical request is
+[`external-selection-request.json`](external-selection-request.json).
 
-   ```bash
-   node scripts/optimizer-benchmark.js selection-request \
-     --output external-selection-request.json
-   ```
+## Selection procedure
 
-2. Publish
-   [`external-selection-request.json`](external-selection-request.json). Do
-   not run or disclose any holdout or matrix outcomes before the choice.
-3. Ask one person who is not the local matrix signer to select exactly one ID
-   from `holdout_scenario_ids`.
-4. Require a public HTTPS response that states the request ID, scenario-set ID,
-   selected scenario, selector identity, and selection date.
-5. Save those six fields as `external-selection-response.json`.
-6. Generate, but do not silently adopt, a candidate freeze:
+After the committed round time:
 
-   ```bash
-   node scripts/optimizer-benchmark.js freeze-selection \
-     --input external-selection-response.json \
-     --output freeze.selection-candidate.json
-   ```
+```bash
+node scripts/optimizer-benchmark.js select-holdout \
+  --output external-selection.json
+```
 
-7. Review the candidate against `benchmarks/optimizer-proof/freeze.json`.
-   The only changed field should be `external_scenario`. Replace the checked-in
-   freeze through the normal reviewed commit workflow.
+The command makes no model calls. It fetches the exact round from all three
+committed relays and fails unless:
 
-`selection-request` and `freeze-selection` make no model calls and refuse to
-overwrite output files.
+- every response has the exact drand beacon fields;
+- all three responses are identical;
+- the round equals `6333716`;
+- `randomness` equals `sha256(signature)`;
+- the output path does not already exist.
 
-## Response contract
+Citadel then hashes the request ID, a line feed, and the beacon randomness,
+interprets the result as an unsigned 256-bit big-endian integer, and reduces it
+modulo four. The resulting index selects from the ordered frozen holdout list.
 
-The response JSON must contain exactly these fields:
+Review and freeze the selection:
 
-- `request_id`: the ID in the published request;
-- `scenario_set_id`: the frozen scenario-set ID in that request;
-- `scenario_id`: one of the request's four holdout IDs;
-- `selected_by`: the outside selector's stable public identity;
-- `selected_at`: the selection date in `YYYY-MM-DD`;
-- `selection_source`: the public HTTPS page containing the selection.
+```bash
+node scripts/optimizer-benchmark.js freeze-selection \
+  --input external-selection.json \
+  --output freeze.selection-candidate.json
+```
 
-Citadel rejects a response for another request, a non-holdout scenario, a
-selection predating the freeze, incomplete provenance, or extra fields.
+The candidate may change only `external_scenario`. It binds the selection
+method, record digest, round date, and public beacon URL.
+
+## Verification boundary
+
+Relay agreement and the signature-to-randomness hash are checked locally. The
+request also pins the drand chain hash and public key so the BLS signature can
+be independently verified with the official drand client. A clean hosted
+verification must perform that check before the grant evidence is called
+independently verifiable.

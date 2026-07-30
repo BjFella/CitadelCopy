@@ -104,16 +104,16 @@ performance evidence. Exact model IDs, canonical executor digests, the runtime
 adapter, and a list-price normalization are frozen. A four-profile
 subscription-backed calibration verified exact model identity, receipts, and
 known cost sources, while all four task verifiers failed. The local Ed25519
-run-attestation public key is also frozen. Outside selection, the preliminary
-matrix, and independent reproduction remain open.
+run-attestation public key is also frozen. The precommitted public-random
+selection, preliminary matrix, and clean hosted verification remain open.
 The list-price normalization is a common comparison unit, not a claim that
 Seth's subscription is billed per run.
 
-The outside-selection request and response are bound to the frozen scenario-set
-identity. A separate reproduction command discloses its maximum call/runtime
-envelope, requires explicit quota acknowledgement and a fresh outside Ed25519
-key, and validates the signed record before it can be bound into the freeze.
-Those workflows are prepared locally but have not been published or run.
+The selection request is bound to the frozen scenario-set identity and commits
+to a future League of Entropy drand round while the method is already public.
+Three relays must agree before its deterministic choice can be bound into the
+freeze. This removes human discretion and does not require favors, engagement,
+model quota, or a private selector.
 
 A no-model forensic reproduction found that the original calibration verifier
 failed on unrelated repository tooling before reaching the task tests. The
@@ -163,8 +163,8 @@ or stop the economic claim.
    run/runtime envelope and 0/4 task-verifier result are recorded.
 2. **Preliminary proof**: complete attested matrix, held-out comparison, raw
    records, limitations, and one-command verifier.
-3. **Independent proof**: outside-selected scenario, external reproduction,
-   public key, and signed proof bundle.
+3. **Independent proof**: public-random selected scenario, clean hosted
+   verification, public keys, and signed proof bundle.
 4. **Generalized controller**: learned profiles across more stacks, tool and
    topology decisions, and public adapter contracts.
 5. **Adoption proof**: integrations that let another open harness use the
@@ -210,6 +210,7 @@ credits from Sentient could reduce the cash evaluation line.
 Do not submit until:
 
 - the actual preliminary matrix closes or honestly fails;
-- an outside maintainer selects and reproduces a scenario;
+- the committed public beacon selects a scenario and a clean hosted runner
+  independently verifies the selection and proof bundle;
 - the demo and results page link to actual proof rather than fixtures;
 - Seth reviews and approves the final wording and submission.

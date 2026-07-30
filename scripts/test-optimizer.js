@@ -85,10 +85,11 @@ const {
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
 const {
+  buildBeaconSelectionRecord,
   buildExternalSelectionRequest,
-  frozenSelectionFromResponse,
+  frozenSelectionFromRecord,
+  validateBeaconSelectionRecord,
   validateExternalSelectionRequest,
-  validateExternalSelectionResponse,
 } = require('../core/optimizer/external-selection');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -169,47 +170,61 @@ function main() {
   assert.deepStrictEqual(publishedSelectionRequest, selectionRequest);
   assert.strictEqual(selectionRequest.scenario_set_id, freeze.scenario_set_id);
   assert.deepStrictEqual(selectionRequest.holdout_scenario_ids, freeze.holdout_scenario_ids);
-  assert.deepStrictEqual(selectionRequest.response_fields, [
-    'request_id',
-    'scenario_set_id',
-    'scenario_id',
-    'selected_by',
-    'selected_at',
-    'selection_source',
-  ]);
-  const selectionResponse = {
-    request_id: selectionRequest.request_id,
-    scenario_set_id: selectionRequest.scenario_set_id,
-    scenario_id: freeze.holdout_scenario_ids[0],
-    selected_by: 'independent-maintainer',
-    selected_at: freeze.frozen_at,
-    selection_source: 'https://example.com/optimizer-selection',
+  assert.strictEqual(selectionRequest.beacon.round, 6333716);
+  assert.strictEqual(selectionRequest.beacon.round_time, '2026-07-30T20:15:00.000Z');
+  const beaconSignature = 'ab'.repeat(96);
+  const beacon = {
+    round: selectionRequest.beacon.round,
+    randomness: crypto.createHash('sha256')
+      .update(Buffer.from(beaconSignature, 'hex'))
+      .digest('hex'),
+    signature: beaconSignature,
+    previous_signature: 'cd'.repeat(96),
   };
-  validateExternalSelectionResponse(selectionResponse, selectionRequest, freeze, scenarios);
+  const relayResponses = selectionRequest.beacon.source_urls.map((sourceUrl) => ({
+    source_url: sourceUrl,
+    beacon,
+  }));
+  const selectionRecord = buildBeaconSelectionRecord(
+    selectionRequest,
+    freeze,
+    scenarios,
+    relayResponses,
+    selectionRequest.beacon.round_time,
+  );
+  validateBeaconSelectionRecord(selectionRecord, selectionRequest, freeze, scenarios);
+  const selectedExternalScenario = frozenSelectionFromRecord(
+    selectionRecord,
+    selectionRequest,
+    freeze,
+    scenarios,
+  );
   assert.deepStrictEqual(
-    frozenSelectionFromResponse(selectionResponse, selectionRequest, freeze, scenarios),
+    selectedExternalScenario,
     {
-      scenario_id: selectionResponse.scenario_id,
-      selected_by: selectionResponse.selected_by,
-      selected_at: selectionResponse.selected_at,
-      selection_source: selectionResponse.selection_source,
+      scenario_id: selectionRecord.scenario_id,
+      selection_method: 'drand-public-beacon',
+      selection_record_digest: selectionRecord.selection_digest,
+      selected_at: '2026-07-30',
+      selection_source: selectionRequest.beacon.source_urls[0],
     },
   );
   assert.throws(() => validateExternalSelectionRequest({
     ...selectionRequest,
     request_id: `sha256:${'0'.repeat(64)}`,
   }, freeze, scenarios), /does not bind/);
-  assert.throws(() => validateExternalSelectionResponse({
-    ...selectionResponse,
+  assert.throws(() => validateBeaconSelectionRecord({
+    ...selectionRecord,
     scenario_id: scenarios.find((scenario) => !scenario.holdout).id,
-  }, selectionRequest, freeze, scenarios), /frozen holdout/);
+  }, selectionRequest, freeze, scenarios), /choice is invalid/);
   assert.throws(() => validateFreeze({
     ...freeze,
     external_scenario: {
       scenario_id: scenarios.find((scenario) => !scenario.holdout).id,
-      selected_by: 'independent-maintainer',
-      selected_at: freeze.frozen_at,
-      selection_source: 'https://example.com/optimizer-selection',
+      selection_method: 'drand-public-beacon',
+      selection_record_digest: selectionRecord.selection_digest,
+      selected_at: '2026-07-30',
+      selection_source: selectionRequest.beacon.source_urls[0],
     },
   }, scenarios, executors), /not a frozen holdout/);
 
@@ -850,12 +865,6 @@ function main() {
       executor_profile_digest: boundExecutorProfileDigest(candidate),
     });
   });
-  const selectedExternalScenario = {
-    scenario_id: freeze.holdout_scenario_ids[0],
-    selected_by: 'independent-maintainer',
-    selected_at: '2026-07-29',
-    selection_source: 'https://example.com/optimizer-selection',
-  };
   const preReproductionFreeze = validateFreeze({
     ...freeze,
     executor_set_id: executorSetIdentity(boundExecutors),
@@ -969,9 +978,9 @@ function main() {
       JSON.parse(fs.readFileSync(requestPath, 'utf8')),
       selectionRequest,
     );
-    const responsePath = path.join(selectionTemp, 'response.json');
+    const responsePath = path.join(selectionTemp, 'selection.json');
     const candidateFreezePath = path.join(selectionTemp, 'freeze.candidate.json');
-    fs.writeFileSync(responsePath, `${JSON.stringify(selectionResponse, null, 2)}\n`);
+    fs.writeFileSync(responsePath, `${JSON.stringify(selectionRecord, null, 2)}\n`);
     const freezeSelectionCli = invoke([
       'freeze-selection',
       '--input', responsePath,
@@ -980,12 +989,7 @@ function main() {
     assert.strictEqual(freezeSelectionCli.status, 0, freezeSelectionCli.stderr);
     assert.match(freezeSelectionCli.stdout, /no model calls made/);
     const candidateFreeze = JSON.parse(fs.readFileSync(candidateFreezePath, 'utf8'));
-    assert.deepStrictEqual(candidateFreeze.external_scenario, {
-      scenario_id: selectionResponse.scenario_id,
-      selected_by: selectionResponse.selected_by,
-      selected_at: selectionResponse.selected_at,
-      selection_source: selectionResponse.selection_source,
-    });
+    assert.deepStrictEqual(candidateFreeze.external_scenario, selectedExternalScenario);
     validateFreeze(candidateFreeze, scenarios, executors);
   } finally {
     fs.rmSync(selectionTemp, { recursive: true, force: true });
