@@ -123,7 +123,8 @@ function main() {
     max_cli_runs: 12,
     max_model_runtime_minutes: 620,
   });
-  assert.strictEqual(calibrationPlan.quota_acknowledged, false);
+  assert.strictEqual(calibrationPlan.approval_status, 'approved');
+  assert.strictEqual(calibrationPlan.quota_acknowledged, true);
   assert.strictEqual(Object.hasOwn(calibrationPlan, 'approved_spend_usd'), false);
   assert.throws(() => validateCalibrationPlan({
     ...calibrationPlan,
@@ -136,6 +137,14 @@ function main() {
     approved_by: 'Seth Gammon',
     approved_at: '2026-07-30T00:00:00.000Z',
   }, scenarios, executors), /quota acknowledgement/);
+  const pendingCalibrationPlan = {
+    ...calibrationPlan,
+    approval_status: 'pending',
+    quota_acknowledged: false,
+    approved_by: null,
+    approved_at: null,
+  };
+  assert.doesNotThrow(() => validateCalibrationPlan(pendingCalibrationPlan, scenarios, executors));
   const approvedCalibrationPlan = {
     ...calibrationPlan,
     approval_status: 'approved',
@@ -185,6 +194,12 @@ function main() {
     scenarios,
     executors,
   ));
+  assert.throws(() => validateCalibrationRecord(
+    calibrationRecord,
+    pendingCalibrationPlan,
+    scenarios,
+    executors,
+  ), /approved subscription quota/);
   assert.throws(() => validateCalibrationRecord({
     ...calibrationRecord,
     quota_budget: { ...calibrationRecord.quota_budget, max_cli_runs: 13 },
@@ -579,18 +594,8 @@ function main() {
   const calibrationOutput = JSON.parse(calibrationCli.stdout);
   assert.strictEqual(calibrationOutput.no_model_calls_made, true);
   assert.strictEqual(calibrationOutput.plan.total_runs, 12);
+  assert.strictEqual(calibrationOutput.plan.approval_status, 'approved');
   assert(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'));
-  const unauthorizedCalibrationOutput = path.join(
-    os.tmpdir(),
-    `must-not-write-optimizer-calibration-${process.pid}.json`,
-  );
-  const unauthorizedCalibration = invoke([
-    'calibrate',
-    '--output', unauthorizedCalibrationOutput,
-  ]);
-  assert.notStrictEqual(unauthorizedCalibration.status, 0);
-  assert.match(unauthorizedCalibration.stderr, /explicitly approved subscription quota/);
-  assert.strictEqual(fs.existsSync(unauthorizedCalibrationOutput), false);
   const matrixCli = invoke(['matrix-plan']);
   assert.strictEqual(matrixCli.status, 0, matrixCli.stderr);
   const matrixOutput = JSON.parse(matrixCli.stdout);

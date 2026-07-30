@@ -37,7 +37,7 @@ math fixture. It is not evidence that real models save money.
 | Executor profile digests | Bound to canonical Operation Fork profiles |
 | Runtime adapter | Self-contained and bound by source digest |
 | Codex price basis | Official API list-price normalization, observed 2026-07-29 |
-| Calibration | 12-run non-holdout plan frozen; subscription quota not authorized; no runs made |
+| Calibration | 12-run non-holdout plan frozen and subscription quota authorized; no runs made |
 | External scenario selector | Not collected |
 | Local run-attestation public key | Not frozen |
 | Independent reproduction | Not collected |
@@ -73,7 +73,8 @@ to the frozen models, checks observed identity and cost provenance, and tests
 whether the telemetry supports a common normalized-cost comparison. Approval
 authorizes at most 12 CLI runs and 620 aggregate model-runtime timeout minutes
 from the subscription quota. It does not require or imply a dollar spend
-ceiling.
+ceiling. Seth authorized that bounded quota on 2026-07-30; execution remains
+pending until a calibration record is produced.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a
