@@ -15,6 +15,10 @@ const { buildReport } = require('./report');
 const { validateCalibrationPlan, validateCalibrationRecord } = require('./calibration');
 const { validateCalibrationForensics } = require('./calibration-forensics');
 const {
+  validateDiagnosticPilotPlan,
+  validateDiagnosticPilotRecord,
+} = require('./diagnostic-pilot');
+const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('./external-reproduction');
@@ -90,6 +94,8 @@ function checkedInInputs(root) {
   const calibrationPlanFile = path.join(benchmarkRoot, 'calibration-plan.json');
   const calibrationRecordFile = path.join(benchmarkRoot, 'calibration-record.json');
   const calibrationForensicsFile = path.join(benchmarkRoot, 'calibration-forensics.json');
+  const diagnosticPilotPlanFile = path.join(benchmarkRoot, 'diagnostic-pilot-plan.json');
+  const diagnosticPilotRecordFile = path.join(benchmarkRoot, 'diagnostic-pilot-record.json');
   const externalReproductionFile = path.join(benchmarkRoot, 'external-reproduction.json');
   const scenarios = loadScenarios(scenarioDirectory);
   const calibrationScenarios = loadScenarios(calibrationScenarioDirectory);
@@ -117,6 +123,29 @@ function checkedInInputs(root) {
   );
   if (digest(calibrationForensics) !== freeze.calibration_forensics_digest) {
     throw new Error('Frozen calibration forensics digest mismatch');
+  }
+  if (!realRegularFile(benchmarkRoot, diagnosticPilotPlanFile)) {
+    throw new Error('Diagnostic pilot plan is missing');
+  }
+  const diagnosticPilotPlan = validateDiagnosticPilotPlan(
+    JSON.parse(fs.readFileSync(diagnosticPilotPlanFile, 'utf8')),
+    scenarios,
+    executors,
+  );
+  let diagnosticPilotRecord = null;
+  if (diagnosticPilotPlan.record_digest !== null) {
+    if (!realRegularFile(benchmarkRoot, diagnosticPilotRecordFile)) {
+      throw new Error('Completed diagnostic pilot record is missing');
+    }
+    diagnosticPilotRecord = validateDiagnosticPilotRecord(
+      JSON.parse(fs.readFileSync(diagnosticPilotRecordFile, 'utf8')),
+      diagnosticPilotPlan,
+      scenarios,
+      executors,
+    );
+    if (digest(diagnosticPilotRecord) !== diagnosticPilotPlan.record_digest) {
+      throw new Error('Diagnostic pilot record digest mismatch');
+    }
   }
   let calibrationRecord = null;
   if (freeze.calibration_record_digest !== null) {
@@ -165,6 +194,10 @@ function checkedInInputs(root) {
     calibrationRecord,
     calibrationForensicsFile,
     calibrationForensics,
+    diagnosticPilotPlanFile,
+    diagnosticPilotPlan,
+    diagnosticPilotRecordFile: diagnosticPilotRecord === null ? null : diagnosticPilotRecordFile,
+    diagnosticPilotRecord,
     externalReproductionFile: externalReproduction === null ? null : externalReproductionFile,
     externalReproduction,
     scenarios,
@@ -191,8 +224,9 @@ function bundleReadme(report) {
 Claim status: **${report.claim_status}**
 
 This directory contains frozen benchmark inputs, the archived calibration
-scenario set, the completed calibration and forensic records, raw run records,
-the derived report, and a content-addressed manifest.
+scenario set, the completed calibration and forensic records, the bounded
+diagnostic-pilot plan and any completed pilot record, raw run records, the
+derived report, and a content-addressed manifest.
 
 Verify from a Citadel checkout:
 
@@ -226,6 +260,10 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     copyFile(inputs.calibrationRecordFile, path.join(output, 'inputs', 'calibration-record.json'));
   }
   copyFile(inputs.calibrationForensicsFile, path.join(output, 'inputs', 'calibration-forensics.json'));
+  copyFile(inputs.diagnosticPilotPlanFile, path.join(output, 'inputs', 'diagnostic-pilot-plan.json'));
+  if (inputs.diagnosticPilotRecordFile !== null) {
+    copyFile(inputs.diagnosticPilotRecordFile, path.join(output, 'inputs', 'diagnostic-pilot-record.json'));
+  }
   if (inputs.pricingFile !== null) {
     copyFile(inputs.pricingFile, path.join(output, 'inputs', 'pricing.json'));
   }
@@ -255,6 +293,8 @@ function buildBundle({ root, rawFile, reportFile, outputDirectory }) {
     'inputs/calibration-plan.json',
     ...(inputs.calibrationRecordFile === null ? [] : ['inputs/calibration-record.json']),
     'inputs/calibration-forensics.json',
+    'inputs/diagnostic-pilot-plan.json',
+    ...(inputs.diagnosticPilotRecordFile === null ? [] : ['inputs/diagnostic-pilot-record.json']),
     ...(inputs.pricingFile === null ? [] : ['inputs/pricing.json']),
     ...(inputs.externalReproductionFile === null ? [] : ['inputs/external-reproduction.json']),
     ...fs.readdirSync(path.join(output, 'inputs', 'calibration-scenarios')).sort()
@@ -366,6 +406,27 @@ function verifyBundle(bundleDirectory) {
   if (digest(calibrationForensics) !== freeze.calibration_forensics_digest) {
     throw new Error('Bundle calibration forensics digest mismatch');
   }
+  const diagnosticPilotPlan = validateDiagnosticPilotPlan(
+    JSON.parse(fs.readFileSync(path.join(root, 'inputs', 'diagnostic-pilot-plan.json'), 'utf8')),
+    scenarios,
+    executors,
+  );
+  let diagnosticPilotRecord = null;
+  if (diagnosticPilotPlan.record_digest !== null) {
+    const diagnosticPilotRecordFile = path.join(root, 'inputs', 'diagnostic-pilot-record.json');
+    if (!realRegularFile(root, diagnosticPilotRecordFile)) {
+      throw new Error('Bundle completed diagnostic pilot record is missing');
+    }
+    diagnosticPilotRecord = validateDiagnosticPilotRecord(
+      JSON.parse(fs.readFileSync(diagnosticPilotRecordFile, 'utf8')),
+      diagnosticPilotPlan,
+      scenarios,
+      executors,
+    );
+    if (digest(diagnosticPilotRecord) !== diagnosticPilotPlan.record_digest) {
+      throw new Error('Bundle diagnostic pilot record digest mismatch');
+    }
+  }
   if (freeze.calibration_record_digest !== null) {
     const calibrationRecordFile = path.join(root, 'inputs', 'calibration-record.json');
     if (!realRegularFile(root, calibrationRecordFile)) {
@@ -424,6 +485,8 @@ function verifyBundle(bundleDirectory) {
     report_reproduced: true,
     calibration_record_verified: freeze.calibration_record_digest !== null,
     calibration_forensics_verified: true,
+    diagnostic_pilot_plan_verified: true,
+    diagnostic_pilot_record_verified: diagnosticPilotRecord !== null,
   });
 }
 

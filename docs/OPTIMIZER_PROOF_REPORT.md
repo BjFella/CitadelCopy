@@ -97,9 +97,11 @@ calibration scenario set preserves what actually ran; the corrected actual
 matrix has a new frozen scenario-set identity. The 0/4 calibration result is
 therefore not interpretable as model quality and supplies no savings evidence.
 
-The next quota-consuming gate is a small diagnostic pilot against the corrected
-verifier. The full matrix should not run until that pilot produces auditable
-task-verifier receipts.
+The next quota-consuming gate is a pending two-run diagnostic pilot against the
+corrected verifier: one frontier Claude profile, one frontier Codex profile,
+and at most 80 aggregate model-runtime timeout minutes. It is explicitly
+non-claim evidence. The full matrix should not run until that pilot produces
+auditable task-verifier receipts.
 
 Official API list prices remain a normalization basis for comparing routes.
 They are not a claim about Seth's invoice or the marginal cost of a

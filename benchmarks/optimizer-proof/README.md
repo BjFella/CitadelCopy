@@ -60,6 +60,7 @@ invoice amount.
 ```bash
 node scripts/optimizer-benchmark.js validate
 node scripts/optimizer-benchmark.js doctor
+node scripts/optimizer-benchmark.js pilot-plan
 node scripts/optimizer-benchmark.js plan \
   --scenario p-limit-short-clear-queue \
   --policy adaptive \
@@ -78,6 +79,12 @@ node scripts/test-optimizer.js
 
 `--fixture-probe` is visibly synthetic. A real adaptive plan requires
 `--repository <checked-out-path>`.
+
+`pilot-plan` makes no model calls. The checked-in plan is pending and caps the
+diagnostic at 2 frontier-profile CLI runs and 80 aggregate model-runtime
+timeout minutes. `pilot` remains fail-closed until Seth explicitly approves
+that subscription-quota envelope. The fixed record path prevents accidentally
+starting a second pilot over an interrupted or completed record.
 
 ## Frozen identities
 

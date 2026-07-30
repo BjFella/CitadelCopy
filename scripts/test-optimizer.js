@@ -71,6 +71,13 @@ const {
 } = require('../core/optimizer/calibration');
 const { validateCalibrationForensics } = require('../core/optimizer/calibration-forensics');
 const {
+  diagnosticPilotAuthorizationDigest,
+  diagnosticPilotCases,
+  diagnosticPilotObservation,
+  validateDiagnosticPilotPlan,
+  validateDiagnosticPilotRecord,
+} = require('../core/optimizer/diagnostic-pilot');
+const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
@@ -115,6 +122,11 @@ function main() {
     calibrationScenarios,
     scenarios,
   );
+  const diagnosticPilotPlan = validateDiagnosticPilotPlan(
+    JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'diagnostic-pilot-plan.json'), 'utf8')),
+    scenarios,
+    executors,
+  );
   const truth = validateFixtureTruth(
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'truth.json'), 'utf8')),
     scenarios,
@@ -136,6 +148,12 @@ function main() {
   assert.strictEqual(calibrationPlan.quota_acknowledged, true);
   assert.strictEqual(calibrationPlan.record_digest, freeze.calibration_record_digest);
   assert.strictEqual(digest(calibrationForensics), freeze.calibration_forensics_digest);
+  assert.strictEqual(diagnosticPilotPlan.approval_status, 'pending');
+  assert.strictEqual(diagnosticPilotPlan.total_runs, 2);
+  assert.deepStrictEqual(diagnosticPilotPlan.quota_budget, {
+    max_cli_runs: 2,
+    max_model_runtime_minutes: 80,
+  });
   assert.notStrictEqual(scenarioSetIdentity(calibrationScenarios), scenarioSetIdentity(scenarios));
   assert.strictEqual(
     scenarioSetIdentity(calibrationScenarios),
@@ -194,6 +212,81 @@ function main() {
     verified: true,
     attestation: null,
   };
+  const approvedDiagnosticPilotPlan = {
+    ...diagnosticPilotPlan,
+    approval_status: 'approved',
+    quota_acknowledged: true,
+    approved_by: 'Seth Gammon',
+    approved_at: '2026-07-30T00:00:00.000Z',
+  };
+  assert.doesNotThrow(() => validateDiagnosticPilotPlan(
+    approvedDiagnosticPilotPlan,
+    scenarios,
+    executors,
+  ));
+  const diagnosticCases = diagnosticPilotCases(approvedDiagnosticPilotPlan, scenarios, executors);
+  assert.strictEqual(diagnosticCases.length, 2);
+  assert.deepStrictEqual(
+    new Set(diagnosticCases.map((item) => item.profile.runtime)),
+    new Set(['claude', 'codex']),
+  );
+  const diagnosticRuns = diagnosticCases.map(({ scenario, profile }) => ({
+    ...calibrationRun,
+    scenario_set_id: scenarioSetIdentity(scenarios),
+    scenario_id: scenario.id,
+    selected_profile_id: profile.profile_id,
+    observed_profile_id: profile.profile_id,
+    requested_model: profile.model,
+    observed_model: profile.model,
+    outcome: 'passed',
+    verified: true,
+    failure_code: null,
+    verification_receipts: calibrationRun.verification_receipts.map((receipt) => ({
+      ...receipt,
+      profile_id: profile.profile_id,
+      status: 'passed',
+      exit_code: 0,
+    })),
+  }));
+  const diagnosticObservations = diagnosticRuns.map((run, index) => (
+    diagnosticPilotObservation(run, diagnosticCases[index].profile)
+  ));
+  const diagnosticRecord = {
+    schema: 1,
+    kind: 'citadel_optimizer_diagnostic_pilot_record',
+    authorization_digest: diagnosticPilotAuthorizationDigest(approvedDiagnosticPilotPlan),
+    scenario_set_id: scenarioSetIdentity(scenarios),
+    executor_set_id: executorSetIdentity(executors),
+    access_basis: approvedDiagnosticPilotPlan.access_basis,
+    quota_budget: approvedDiagnosticPilotPlan.quota_budget,
+    started_at: '2026-07-30T00:00:00.000Z',
+    completed_at: '2026-07-30T00:01:00.000Z',
+    status: 'passed',
+    planned_run_count: 2,
+    completed_run_count: 2,
+    stop_reason: null,
+    runs: diagnosticObservations,
+  };
+  assert.doesNotThrow(() => validateDiagnosticPilotRecord(
+    diagnosticRecord,
+    approvedDiagnosticPilotPlan,
+    scenarios,
+    executors,
+  ));
+  assert.throws(() => validateDiagnosticPilotRecord({
+    ...diagnosticRecord,
+    runs: diagnosticRecord.runs.map((run) => ({
+      ...run,
+      task_outcome: 'failed',
+      task_verified: false,
+      failure_code: 'VERIFICATION_FAILED',
+      verification_receipts: run.verification_receipts.map((receipt) => ({
+        ...receipt,
+        status: 'failed',
+        exit_code: 1,
+      })),
+    })),
+  }, approvedDiagnosticPilotPlan, scenarios, executors), /task-verifier pass/);
   const calibrationRecord = {
     schema: 1,
     kind: 'citadel_optimizer_calibration_record',
@@ -540,9 +633,13 @@ function main() {
     assert.strictEqual(verifiedBundle.report_reproduced, true);
     assert.strictEqual(verifiedBundle.calibration_record_verified, true);
     assert.strictEqual(verifiedBundle.calibration_forensics_verified, true);
+    assert.strictEqual(verifiedBundle.diagnostic_pilot_plan_verified, true);
+    assert.strictEqual(verifiedBundle.diagnostic_pilot_record_verified, false);
     const bundledCalibration = path.join(bundleDirectory, 'inputs', 'calibration-record.json');
     assert.strictEqual(fs.existsSync(bundledCalibration), true);
     assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'calibration-forensics.json')), true);
+    assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-plan.json')), true);
+    assert.strictEqual(fs.existsSync(path.join(bundleDirectory, 'inputs', 'diagnostic-pilot-record.json')), false);
     assert.strictEqual(fs.existsSync(path.join(
       bundleDirectory,
       'inputs',
@@ -710,12 +807,28 @@ function main() {
   assert.strictEqual(calibrationOutput.plan.total_runs, 4);
   assert.strictEqual(calibrationOutput.plan.approval_status, 'completed');
   assert.strictEqual(calibrationOutput.blockers.includes('CALIBRATION_REQUIRED'), false);
+  const pilotPlanCli = invoke(['pilot-plan']);
+  assert.strictEqual(pilotPlanCli.status, 0, pilotPlanCli.stderr);
+  const pilotPlanOutput = JSON.parse(pilotPlanCli.stdout);
+  assert.strictEqual(pilotPlanOutput.no_model_calls_made, true);
+  assert.strictEqual(pilotPlanOutput.plan.total_runs, 2);
+  assert.strictEqual(pilotPlanOutput.plan.approval_status, 'pending');
+  assert.strictEqual(pilotPlanOutput.record_present, false);
+  const pilotRecordPath = path.join(BENCHMARK, 'diagnostic-pilot-record.json');
+  assert.strictEqual(fs.existsSync(pilotRecordPath), false);
+  const blockedPilot = invoke(['pilot']);
+  assert.notStrictEqual(blockedPilot.status, 0);
+  assert.match(blockedPilot.stderr, /explicitly approved subscription quota/);
+  assert.strictEqual(fs.existsSync(pilotRecordPath), false);
   const matrixCli = invoke(['matrix-plan']);
   assert.strictEqual(matrixCli.status, 0, matrixCli.stderr);
   const matrixOutput = JSON.parse(matrixCli.stdout);
   assert.strictEqual(matrixOutput.no_model_calls_made, true);
   assert.strictEqual(matrixOutput.run_count, 120);
   assert.strictEqual(new Set(matrixOutput.runs.map((run) => run.run_key)).size, 120);
+  assert(matrixOutput.blockers.includes('EXTERNAL_SCENARIO_NOT_SELECTED'));
+  assert.strictEqual(matrixOutput.blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'), false);
+  assert(matrixOutput.submission_blockers.includes('EXTERNAL_REPRODUCTION_REQUIRED'));
   const actualBlocked = invoke([
     'run',
     '--scenario', scenarios[0].id,

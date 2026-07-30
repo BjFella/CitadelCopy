@@ -115,11 +115,18 @@ vendor-reported `total_cost_usd`.
    repair touching both expected artifacts. The subscription-quota budget
    capped calibration at 4 runs and 160 aggregate model-runtime timeout
    minutes.
-3. **Preliminary evidence**: complete frozen actual-run matrix and held-out
+3. **Diagnostic pilot**: a separately authorized, non-claim two-run check uses
+   the corrected scenario with one frontier profile from each runtime. It is
+   capped at 2 CLI runs and 80 aggregate model-runtime timeout minutes. It
+   exists only to demonstrate that the task-verifier evidence path can produce
+   a pass before the 120-cell matrix consumes quota.
+4. **Outside selection**: an independent maintainer selects one already frozen
+   holdout before the local matrix starts.
+5. **Preliminary evidence**: complete frozen actual-run matrix and held-out
    gate.
-4. **Independent reproduction**: outside selection, outside run, public key,
-   raw privacy-safe records, and one-command verification.
-5. **Grant claim**: only the claims supported by steps 3 and 4.
+6. **Independent reproduction**: outside run, public key, raw privacy-safe
+   records, and one-command verification.
+7. **Grant claim**: only the claims supported by steps 5 and 6.
 
 There is no calendar promise. Progress advances when an evidence gate closes.
 
@@ -130,20 +137,25 @@ node scripts/optimizer-benchmark.js validate
 node scripts/optimizer-benchmark.js doctor
 node scripts/optimizer-benchmark.js calibration-plan
 node scripts/optimizer-benchmark.js calibrate --output benchmarks/optimizer-proof/calibration-record.json
+node scripts/optimizer-benchmark.js pilot-plan
+node scripts/optimizer-benchmark.js pilot
 node scripts/optimizer-benchmark.js matrix-plan
 node scripts/test-optimizer.js
 node scripts/optimizer-proof-bundle.js verify <bundle-directory>
 ```
 
-Actual execution remains fail-closed until the doctor has no blockers and the
-user explicitly approves consuming the frozen run/runtime allowance from their
-subscription quota.
+Actual matrix execution remains fail-closed until an outside scenario is
+selected and the user explicitly approves consuming the frozen run/runtime
+allowance from their subscription quota. Independent reproduction remains a
+submission blocker, but it does not have to finish before the local matrix
+starts.
 
 The proof bundle carries both scenario sets: `inputs/calibration-scenarios/`
 reproduces the exact set used by the completed calibration, while
 `inputs/scenarios/` is the corrected set frozen for the actual matrix. It also
 includes and verifies `calibration-record.json` and
-`calibration-forensics.json`.
+`calibration-forensics.json`. It also carries the pending or completed
+diagnostic-pilot plan and verifies the pilot record when one is bound.
 
 Model and pricing references:
 

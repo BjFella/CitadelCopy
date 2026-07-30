@@ -118,6 +118,10 @@ records retain bounded, path- and secret-redacted verifier and patch receipts, a
 standalone bundle verifies the completed calibration record, the forensic
 record, and both scenario sets.
 
+A two-run, frontier-only diagnostic pilot is prepared but not approved. It is
+explicitly excluded from performance evidence and exists to prove the corrected
+task-verifier path before the full matrix consumes subscription quota.
+
 ## Evaluation
 
 Pre-application evidence gate:

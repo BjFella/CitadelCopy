@@ -33,8 +33,11 @@ multi-step agent cost without lowering independently verified completion.
 - [x] Bind the completed calibration record into the reproducible proof bundle.
 - [x] Forensically explain the 0/4 task result and re-freeze a corrected matrix
   verifier without rewriting the archived calibration scenario set.
+- [x] Define a fail-closed 2-run diagnostic pilot across both frontier runtimes.
+- [ ] Approve and run the bounded diagnostic pilot.
+- [ ] Collect outside holdout selection.
 - [ ] Run the attested actual matrix.
-- [ ] Collect outside selection and independent reproduction.
+- [ ] Collect independent reproduction.
 - [ ] Replace fixture presentation with actual evidence.
 - [ ] Review and approve submission.
 

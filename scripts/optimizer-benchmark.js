@@ -36,6 +36,13 @@ const {
 } = require('../core/optimizer/calibration');
 const { validateCalibrationForensics } = require('../core/optimizer/calibration-forensics');
 const {
+  diagnosticPilotAuthorizationDigest,
+  diagnosticPilotCases,
+  diagnosticPilotObservation,
+  validateDiagnosticPilotPlan,
+  validateDiagnosticPilotRecord,
+} = require('../core/optimizer/diagnostic-pilot');
+const {
   externalReproductionDigest,
   validateExternalReproduction,
 } = require('../core/optimizer/external-reproduction');
@@ -51,6 +58,8 @@ const PRICING_FILE = path.join(BENCHMARK_ROOT, 'pricing.json');
 const CALIBRATION_PLAN_FILE = path.join(BENCHMARK_ROOT, 'calibration-plan.json');
 const CALIBRATION_RECORD_FILE = path.join(BENCHMARK_ROOT, 'calibration-record.json');
 const CALIBRATION_FORENSICS_FILE = path.join(BENCHMARK_ROOT, 'calibration-forensics.json');
+const DIAGNOSTIC_PILOT_PLAN_FILE = path.join(BENCHMARK_ROOT, 'diagnostic-pilot-plan.json');
+const DIAGNOSTIC_PILOT_RECORD_FILE = path.join(BENCHMARK_ROOT, 'diagnostic-pilot-record.json');
 const EXTERNAL_REPRODUCTION_FILE = path.join(BENCHMARK_ROOT, 'external-reproduction.json');
 
 function args(argv) {
@@ -108,6 +117,26 @@ function checkedInBenchmark() {
   if (digest(calibrationForensics) !== freeze.calibration_forensics_digest) {
     throw new Error('Frozen calibration forensics digest mismatch');
   }
+  const diagnosticPilotPlan = validateDiagnosticPilotPlan(
+    JSON.parse(fs.readFileSync(DIAGNOSTIC_PILOT_PLAN_FILE, 'utf8')),
+    scenarios,
+    executors,
+  );
+  let diagnosticPilotRecord = null;
+  if (diagnosticPilotPlan.record_digest !== null) {
+    if (!fs.existsSync(DIAGNOSTIC_PILOT_RECORD_FILE)) {
+      throw new Error('Completed diagnostic pilot record is missing');
+    }
+    diagnosticPilotRecord = validateDiagnosticPilotRecord(
+      JSON.parse(fs.readFileSync(DIAGNOSTIC_PILOT_RECORD_FILE, 'utf8')),
+      diagnosticPilotPlan,
+      scenarios,
+      executors,
+    );
+    if (digest(diagnosticPilotRecord) !== diagnosticPilotPlan.record_digest) {
+      throw new Error('Diagnostic pilot record digest mismatch');
+    }
+  }
   let calibrationRecord = null;
   if (freeze.calibration_record_digest !== null) {
     if (!fs.existsSync(CALIBRATION_RECORD_FILE)) throw new Error('Frozen calibration record is missing');
@@ -150,6 +179,8 @@ function checkedInBenchmark() {
     calibrationPlan,
     calibrationRecord,
     calibrationForensics,
+    diagnosticPilotPlan,
+    diagnosticPilotRecord,
     externalReproduction,
   };
 }
@@ -222,6 +253,8 @@ function doctor(benchmark) {
     calibration_record_digest: benchmark.freeze.calibration_record_digest,
     calibration_forensics_digest: benchmark.freeze.calibration_forensics_digest,
     calibration_scenario_set_id: scenarioSetIdentity(benchmark.calibrationScenarios),
+    diagnostic_pilot_approval_status: benchmark.diagnosticPilotPlan.approval_status,
+    diagnostic_pilot_record_present: benchmark.diagnosticPilotRecord !== null,
     blockers,
   };
 }
@@ -256,6 +289,7 @@ function main() {
       metric_set_id: metricSetIdentity(),
       policies: benchmark.freeze.policies,
       repetitions: benchmark.freeze.repetitions,
+      diagnostic_pilot_status: benchmark.diagnosticPilotPlan.approval_status,
       actual_run_status: doctor(benchmark).status,
     }, null, 2)}\n`);
     return;
@@ -272,6 +306,108 @@ function main() {
       plan: benchmark.calibrationPlan,
       blockers: doctor(benchmark).blockers,
     }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'pilot-plan') {
+    process.stdout.write(`${JSON.stringify({
+      no_model_calls_made: true,
+      plan: benchmark.diagnosticPilotPlan,
+      record_present: benchmark.diagnosticPilotRecord !== null,
+      output_path: path.relative(ROOT, DIAGNOSTIC_PILOT_RECORD_FILE).replace(/\\/g, '/'),
+    }, null, 2)}\n`);
+    return;
+  }
+
+  if (command === 'pilot') {
+    if (benchmark.diagnosticPilotPlan.approval_status !== 'approved'
+      || benchmark.diagnosticPilotPlan.quota_acknowledged !== true) {
+      throw new Error('Diagnostic pilot requires an explicitly approved subscription quota');
+    }
+    if (fs.existsSync(DIAGNOSTIC_PILOT_RECORD_FILE)) {
+      throw new Error('Diagnostic pilot record already exists; refusing duplicate quota consumption');
+    }
+    const readiness = doctor(benchmark);
+    const allowedBlockers = new Set([
+      'EXTERNAL_SCENARIO_NOT_SELECTED',
+      'EXTERNAL_REPRODUCTION_REQUIRED',
+    ]);
+    const blocking = readiness.blockers.filter((blocker) => !allowedBlockers.has(blocker));
+    if (blocking.length) throw new Error(`Diagnostic pilot readiness failed: ${blocking.join(', ')}`);
+    const cases = diagnosticPilotCases(
+      benchmark.diagnosticPilotPlan,
+      benchmark.scenarios,
+      benchmark.executors,
+    );
+    const record = {
+      schema: 1,
+      kind: 'citadel_optimizer_diagnostic_pilot_record',
+      authorization_digest: diagnosticPilotAuthorizationDigest(benchmark.diagnosticPilotPlan),
+      scenario_set_id: benchmark.freeze.scenario_set_id,
+      executor_set_id: benchmark.freeze.executor_set_id,
+      access_basis: benchmark.diagnosticPilotPlan.access_basis,
+      quota_budget: benchmark.diagnosticPilotPlan.quota_budget,
+      started_at: new Date().toISOString(),
+      completed_at: null,
+      status: 'running',
+      planned_run_count: benchmark.diagnosticPilotPlan.total_runs,
+      completed_run_count: 0,
+      stop_reason: null,
+      runs: [],
+    };
+    writeJson(DIAGNOSTIC_PILOT_RECORD_FILE, validateDiagnosticPilotRecord(
+      record,
+      benchmark.diagnosticPilotPlan,
+      benchmark.scenarios,
+      benchmark.executors,
+    ));
+    const adapterFile = path.join(ROOT, 'scripts', 'optimizer-runtime-adapter.js');
+    for (const item of cases) {
+      const run = runScenario({
+        scenario: item.scenario,
+        scenarios: benchmark.scenarios,
+        executors: [item.profile],
+        policyId: benchmark.diagnosticPilotPlan.policy_id,
+        repetition: 1,
+        adapterFile,
+        pricingSnapshot: benchmark.pricingSnapshot,
+      });
+      const observation = diagnosticPilotObservation(run, item.profile);
+      record.runs.push(observation);
+      record.completed_run_count = record.runs.length;
+      if (observation.evidence_status !== 'passed') {
+        record.status = 'failed';
+        record.completed_at = new Date().toISOString();
+        record.stop_reason = 'PILOT_EVIDENCE_FAILED';
+      } else if (record.completed_run_count === record.planned_run_count) {
+        record.completed_at = new Date().toISOString();
+        if (record.runs.some((candidate) => candidate.task_verified)) {
+          record.status = 'passed';
+        } else {
+          record.status = 'failed';
+          record.stop_reason = 'NO_TASK_VERIFIER_PASS';
+        }
+      }
+      writeJson(DIAGNOSTIC_PILOT_RECORD_FILE, validateDiagnosticPilotRecord(
+        record,
+        benchmark.diagnosticPilotPlan,
+        benchmark.scenarios,
+        benchmark.executors,
+      ));
+      process.stdout.write(`${JSON.stringify({
+        diagnostic_case: `${item.scenario.id}/${item.profile.profile_id}`,
+        evidence_status: observation.evidence_status,
+        task_verified: observation.task_verified,
+        completed_run_count: record.completed_run_count,
+        planned_run_count: record.planned_run_count,
+      })}\n`);
+      if (record.stop_reason === 'PILOT_EVIDENCE_FAILED') {
+        process.exitCode = 2;
+        return;
+      }
+    }
+    if (record.status !== 'passed') process.exitCode = 2;
+    process.stdout.write(`Diagnostic pilot ${record.status}; record written to ${DIAGNOSTIC_PILOT_RECORD_FILE}\n`);
     return;
   }
 
@@ -377,6 +513,10 @@ function main() {
         }
       }
     }
+    const submissionReadiness = doctor(benchmark);
+    const executionBlockers = submissionReadiness.blockers.filter((blocker) => (
+      blocker !== 'EXTERNAL_REPRODUCTION_REQUIRED'
+    ));
     process.stdout.write(`${JSON.stringify({
       schema: 1,
       kind: 'citadel_optimizer_matrix_plan',
@@ -385,8 +525,9 @@ function main() {
       executor_set_id: benchmark.freeze.executor_set_id,
       metric_set_id: benchmark.freeze.metric_set_id,
       run_count: runs.length,
-      execution_status: doctor(benchmark).status,
-      blockers: doctor(benchmark).blockers,
+      execution_status: executionBlockers.length ? 'blocked' : 'ready',
+      blockers: executionBlockers,
+      submission_blockers: submissionReadiness.blockers,
       runs,
     }, null, 2)}\n`);
     return;
