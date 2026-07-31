@@ -10,6 +10,28 @@ permissions:
   contents: read
 
 jobs:
+  optimizer-proof:
+    name: optimizer proof and public beacon
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+      - name: Verify optimizer contracts and frozen request
+        run: node scripts/test-optimizer.js
+      - name: Install pinned official drand verifier
+        if: ${{ hashFiles('benchmarks/optimizer-proof/external-selection.json') != '' }}
+        run: npm install --no-save --package-lock=false --ignore-scripts drand-client@1.4.2
+      - name: Verify committed beacon BLS signature
+        if: ${{ hashFiles('benchmarks/optimizer-proof/external-selection.json') != '' }}
+        run: node scripts/optimizer-drand-verify.js
+      - name: Verify committed optimizer proof bundle
+        if: ${{ hashFiles('benchmarks/optimizer-proof/proof-bundle/manifest.json') != '' }}
+        run: node scripts/optimizer-proof-bundle.js verify benchmarks/optimizer-proof/proof-bundle
+
   citadel-action-consumer:
     name: reusable Citadel verification action
     runs-on: ubuntu-latest

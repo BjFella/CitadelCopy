@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "kind": "non_claim_fixture_pricing",
+  "utility_multiplier": 0.18,
+  "workhorse_multiplier": 0.42,
+  "frontier_multiplier": 1,
+  "notice": "These deterministic multipliers test report math only. They are not vendor prices or performance evidence."
+}

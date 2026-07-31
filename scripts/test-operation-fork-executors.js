@@ -76,6 +76,11 @@ const codexObserved = forks.observeRuntime('codex', { status: 0, stdout: codexSt
   { cwd: project, env: { CODEX_HOME: codexHome } });
 assert.equal(codexObserved.model, 'gpt-5.6-sol');
 assert.equal(codexObserved.tokens, 107);
+assert.deepEqual(codexObserved.token_usage, {
+  input_tokens: 100,
+  cached_input_tokens: 80,
+  output_tokens: 7,
+});
 assert.equal(codexObserved.source, 'codex-session-jsonl');
 assert.equal(codexObserved.trusted, true);
 const otherCwd = path.join(sandbox, 'other-worktree');
@@ -379,6 +384,14 @@ assert.equal(verifierCalls, 1, 'containment violation must skip verifier spawn')
 
 // Windows launches a known npm shim through its JavaScript entrypoint without
 // a command interpreter.
+assert.deepEqual(forks.candidateDirectories('codex', {
+  APPDATA: 'C:\\Users\\operator\\AppData\\Roaming',
+  PATH: 'C:\\Program Files\\WindowsApps;C:\\Windows\\System32',
+}, 'win32'), [
+  'C:\\Users\\operator\\AppData\\Roaming\\npm',
+  'C:\\Program Files\\WindowsApps',
+  'C:\\Windows\\System32',
+]);
 const invocation = forks.runtimeInvocationForProfile(executors.executors[2]);
 const shim = forks.platformInvocation(invocation, {
   platform: 'win32',
@@ -394,6 +407,14 @@ assert.deepEqual(shim.args, [
   'C:\\Program Files\\nodejs\\node_modules\\@openai\\codex\\bin\\codex.js',
   ...invocation.args,
 ]);
+assert.equal(
+  forks.nodeEntrypoint('npm', 'C:\\Program Files\\nodejs\\npm.cmd', 'win32'),
+  'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+);
+assert.equal(
+  forks.nodeEntrypoint('corepack', 'C:\\Program Files\\nodejs\\corepack.cmd', 'win32'),
+  'C:\\Program Files\\nodejs\\node_modules\\corepack\\dist\\corepack.js',
+);
 const direct = forks.platformInvocation(invocation, {
   platform: 'win32', env: {}, resolve: () => 'C:\\tools\\codex.exe',
 });

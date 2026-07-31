@@ -242,5 +242,9 @@ Replay output is deterministic and redacted.
 covers strict fields, duplicate IDs, same-runtime profiles, provider rules,
 canonical digests, legacy compatibility, exact literal invocation, schema 2
 bindings, receipt tamper rejection, model proof, Mission Control honesty, and
-public replay redaction. Until production support exists, the test must parse
-successfully and stop with `EXECUTOR_PROFILES_NOT_IMPLEMENTED`.
+public replay redaction. Production support lives in
+`core/forks/executor-profiles.js`; both
+`node scripts/test-executor-profiles.js` and
+`node scripts/test-operation-fork-executors.js` must pass. The
+`EXECUTOR_PROFILES_NOT_IMPLEMENTED` failure is now only the fail-closed result
+when that production module is missing.

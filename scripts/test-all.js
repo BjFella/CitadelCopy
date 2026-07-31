@@ -128,6 +128,7 @@ const UNLOCK_TESTS = Object.freeze([
   ['Team platform', 'test-team-platform.js'],
   ['Relay contract', 'test-relay-contract.js'],
   ['Reliability learning', 'test-reliability-learning.js'],
+  ['Optimizer proof', 'test-optimizer.js'],
   ['Proof bundle', 'test-proof-bundle.js'],
   ['Governance contract kernel', 'test-governance-contracts.js'],
   ['Governance runtime authority', 'test-governance-runtime.js'],
