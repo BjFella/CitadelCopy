@@ -149,10 +149,11 @@ method. A future benchmark version must correct them with a new identity.
 - Report:
   `optimizer-report-sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9`
 - Proof bundle:
-  `sha256:1e694ca4ba96190a8cb320ca13f4ae402c3001bfabffa104966460e3a60a9fb7`
+  `sha256:1822a5a8c73e570884ca8e0e38c28bdaf2d1934f8fafdb647f60ad5d337e13db`
 - Bundle contents: 46 digest-bound files
 - Local bundle verification: valid; 46/46 files verified; report,
   calibration, diagnostic pilot, and forensic records reproduced
+- Portability: copied text inputs are canonicalized to LF before hashing
 - Public-random holdout: `citadel-short-executor-proof`, selected by
   precommitted drand round `6333716`
 - Clean hosted bundle verification: pending this commit's GitHub job

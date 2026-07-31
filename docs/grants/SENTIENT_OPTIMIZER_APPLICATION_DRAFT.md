@@ -115,7 +115,7 @@ Report:
 `optimizer-report-sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9`
 
 Proof bundle:
-`sha256:1e694ca4ba96190a8cb320ca13f4ae402c3001bfabffa104966460e3a60a9fb7`
+`sha256:1822a5a8c73e570884ca8e0e38c28bdaf2d1934f8fafdb647f60ad5d337e13db`
 
 The list-price normalization is a comparison unit, not Seth's subscription
 invoice.

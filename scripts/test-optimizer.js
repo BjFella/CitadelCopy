@@ -822,6 +822,16 @@ function main() {
     assert.strictEqual(verifiedBundle.valid, true);
     assert.strictEqual(verifiedBundle.bundle_id, bundle.manifest.bundle_id);
     assert.strictEqual(verifiedBundle.report_reproduced, true);
+    for (const record of bundle.manifest.files) {
+      const bundledText = fs.readFileSync(
+        path.join(bundleDirectory, ...record.path.split('/')),
+        'utf8',
+      );
+      assert(
+        !bundledText.includes('\r'),
+        `Proof bundle text must use portable LF line endings: ${record.path}`,
+      );
+    }
     assert.strictEqual(verifiedBundle.calibration_record_verified, true);
     assert.strictEqual(verifiedBundle.calibration_forensics_verified, true);
     assert.strictEqual(verifiedBundle.diagnostic_pilot_plan_verified, true);

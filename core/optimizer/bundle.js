@@ -87,7 +87,8 @@ function fileRecord(root, file) {
 
 function copyFile(source, target) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.copyFileSync(source, target, fs.constants.COPYFILE_EXCL);
+  const content = fs.readFileSync(source, 'utf8').replace(/\r\n?/g, '\n');
+  fs.writeFileSync(target, content, { encoding: 'utf8', flag: 'wx' });
 }
 
 function writeFile(target, content) {

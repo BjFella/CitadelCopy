@@ -9,3 +9,4 @@ docs/proof-ledger.json text eol=lf
 docs/PROOF_LEDGER.md text eol=lf
 action.yml text eol=lf
 .github/workflows/*.yml text eol=lf
+benchmarks/optimizer-proof/proof-bundle/** text eol=lf
