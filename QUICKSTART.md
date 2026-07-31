@@ -1,6 +1,8 @@
 # Quickstart
 
-This guide has merged into [INSTALL.md](INSTALL.md), the single canonical installation guide.
+Installation lives in [INSTALL.md](INSTALL.md). Once installed, the first useful
+command is simply `/do <outcome>`; see the progressive levels in the
+[README](README.md#start-using-it).
 
 What used to live here and where it went:
 

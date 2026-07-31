@@ -27,6 +27,7 @@ You keep the runtime and your repository. Citadel adds the operating contract ar
 - campaigns and handoffs written into the repository
 - coordinated agents working in isolated git worktrees
 - local telemetry for cost, routing, and activation
+- optional whole-operation selection across declared models, tools, and topologies, with independent verification and fail-honest economic lenses
 
 The repository remains the source of truth. There is no hosted control plane required for the core workflow.
 
@@ -37,6 +38,12 @@ Choose CrewAI, LangChain, or LangGraph when you need to ship an agent as part of
 Choose Superpowers when your main problem is development discipline and you want an opinionated workflow centered on design, planning, TDD, review, and finishing branches. Citadel and Superpowers are complementary: one supplies operating infrastructure, the other supplies methodology.
 
 Citadel also does not replace code review, sandbox an untrusted host, or prove that an agent's output is correct. It makes the work more persistent, inspectable, and enforceable.
+
+Operation Control is not a claim that Citadel has a better model. It is the
+runtime-neutral layer that chooses the least complex declared path likely to
+meet a verified outcome target, then stops, repairs, or escalates for an
+explicit reason. Use it only when those constraints matter; ordinary work
+still begins with `/do`.
 
 ## A practical rule
 
