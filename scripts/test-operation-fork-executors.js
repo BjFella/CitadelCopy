@@ -408,11 +408,11 @@ assert.deepEqual(shim.args, [
   ...invocation.args,
 ]);
 assert.equal(
-  forks.nodeEntrypoint('npm', 'C:\\Program Files\\nodejs\\npm.cmd'),
+  forks.nodeEntrypoint('npm', 'C:\\Program Files\\nodejs\\npm.cmd', 'win32'),
   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
 );
 assert.equal(
-  forks.nodeEntrypoint('corepack', 'C:\\Program Files\\nodejs\\corepack.cmd'),
+  forks.nodeEntrypoint('corepack', 'C:\\Program Files\\nodejs\\corepack.cmd', 'win32'),
   'C:\\Program Files\\nodejs\\node_modules\\corepack\\dist\\corepack.js',
 );
 const direct = forks.platformInvocation(invocation, {

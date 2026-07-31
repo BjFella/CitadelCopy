@@ -54,13 +54,14 @@ function findOnPath(command, env) {
   return null;
 }
 
-function nodeEntrypoint(command, resolved) {
-  const root = path.dirname(resolved);
-  if (command === 'codex') return path.join(root, 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
-  if (command === 'claude') return path.join(root, 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
-  if (command === 'npm') return path.join(root, 'node_modules', 'npm', 'bin', 'npm-cli.js');
-  if (command === 'npx') return path.join(root, 'node_modules', 'npm', 'bin', 'npx-cli.js');
-  if (command === 'corepack') return path.join(root, 'node_modules', 'corepack', 'dist', 'corepack.js');
+function nodeEntrypoint(command, resolved, platform = process.platform) {
+  const platformPath = platform === 'win32' ? path.win32 : path;
+  const root = platformPath.dirname(resolved);
+  if (command === 'codex') return platformPath.join(root, 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
+  if (command === 'claude') return platformPath.join(root, 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+  if (command === 'npm') return platformPath.join(root, 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (command === 'npx') return platformPath.join(root, 'node_modules', 'npm', 'bin', 'npx-cli.js');
+  if (command === 'corepack') return platformPath.join(root, 'node_modules', 'corepack', 'dist', 'corepack.js');
   return null;
 }
 
@@ -80,7 +81,7 @@ function platformInvocation(invocation, options = {}) {
   if (!SHIM_EXTENSIONS.includes(extension)) {
     return { command: resolved, args: [...invocation.args], windowsVerbatimArguments: false };
   }
-  const entrypoint = (options.resolveEntrypoint || nodeEntrypoint)(invocation.command, resolved);
+  const entrypoint = (options.resolveEntrypoint || nodeEntrypoint)(invocation.command, resolved, platform);
   if (!entrypoint || !(options.exists || fs.existsSync)(entrypoint)) {
     throw Object.assign(new Error('Executor shim has no trusted direct entrypoint'), {
       code: 'FORK_EXECUTOR_SHIM_UNSAFE',
