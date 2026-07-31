@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const configControl = require('../core/config');
 
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const TELEMETRY_DIR = path.join(PROJECT_ROOT, '.planning', 'telemetry');
@@ -175,13 +176,7 @@ function logTiming(hook, durationMs, meta = {}) {
  * Read the harness config file if it exists.
  * @returns {object} Config object or empty defaults
  */
-function readConfig() {
-  const configPath = path.join(PROJECT_ROOT, '.claude', 'harness.json');
-  try {
-    if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    }
-  } catch { /* malformed config — use defaults */ }
+function defaultConfig() {
   return {
     language: 'unknown',
     framework: null,
@@ -250,6 +245,54 @@ function readConfig() {
       daemon_runs: 0,
       override: null,
     },
+  };
+}
+
+function readConfig() {
+  const defaults = defaultConfig();
+  const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  const effective = configControl.loadActivationContext(PROJECT_ROOT, { runtime });
+  const loaded = configControl.readConfigFile(PROJECT_ROOT);
+  const authorityValid = effective.usable
+    && effective.receipt
+    && effective.receipt.authority.valid === true;
+  const raw = authorityValid && loaded.raw && typeof loaded.raw === 'object'
+    ? loaded.raw
+    : {};
+  return {
+    ...defaults,
+    ...raw,
+    typecheck: { ...defaults.typecheck, ...(raw.typecheck || {}) },
+    test: { ...defaults.test, ...(raw.test || {}) },
+    qualityRules: { ...defaults.qualityRules, ...(raw.qualityRules || {}) },
+    features: { ...defaults.features, ...(raw.features || {}) },
+    telemetry: { ...defaults.telemetry, ...(raw.telemetry || {}) },
+    policy: { ...defaults.policy, ...(raw.policy || {}) },
+    verification: { ...defaults.verification, ...(raw.verification || {}) },
+    preCompact: { ...defaults.preCompact, ...(raw.preCompact || {}) },
+    worktreeReadiness: {
+      ...defaults.worktreeReadiness,
+      ...(raw.worktreeReadiness || {}),
+    },
+    docs: { ...defaults.docs, ...(raw.docs || {}) },
+    trust: { ...defaults.trust, ...(raw.trust || {}) },
+    __citadel: {
+      authorityValid,
+      effectiveStatus: effective.receipt?.status || effective.status,
+      effectiveReasonCode: effective.reasonCode,
+      effectiveReceiptDigest: effective.receipt?.receiptDigest || null,
+      effectivePersisted: effective.persisted !== false,
+      errors: effective.receipt?.errors || effective.errors || [],
+    },
+  };
+}
+
+function checkSkillActivation(skillName) {
+  const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  const effective = configControl.loadActivationContext(PROJECT_ROOT, { runtime });
+  return {
+    effective,
+    decision: configControl.preflightSkill(effective, skillName),
   };
 }
 
@@ -514,20 +557,68 @@ function readConsent(category) {
  * @param {'always-ask'|'session-allow'|'auto-allow'} preference
  */
 function writeConsent(category, preference) {
+  if (!CONSENT_CATEGORIES.includes(category)) {
+    throw new TypeError(`Unknown consent category: ${category}`);
+  }
+  if (!['always-ask', 'session-allow', 'auto-allow'].includes(preference)) {
+    throw new TypeError(`Unknown consent preference: ${preference}`);
+  }
+
   const configPath = path.join(PROJECT_ROOT, '.claude', 'harness.json');
-  let config = {};
-  try {
-    if (fs.existsSync(configPath)) {
-      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    }
-  } catch { /* start fresh */ }
-
-  if (!config.consent) config.consent = {};
-  config.consent[category] = preference;
-
   const dir = path.dirname(configPath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+  const existed = fs.existsSync(configPath);
+  const previousConfig = existed ? fs.readFileSync(configPath) : null;
+  let parsed;
+  if (existed) {
+    try {
+      parsed = JSON.parse(previousConfig.toString('utf8'));
+    } catch (error) {
+      throw new Error(`Cannot update consent because harness.json is invalid JSON: ${error.message}`);
+    }
+  } else {
+    parsed = configControl.createDefaultConfig();
+  }
+
+  const kind = configControl.configKind(parsed);
+  if (['future', 'unsupported', 'invalid'].includes(kind)) {
+    throw new Error(`Cannot update consent in ${kind} harness config`);
+  }
+
+  const candidate = {
+    ...parsed,
+    consent: {
+      ...(parsed.consent || {}),
+      [category]: preference,
+    },
+  };
+  if (kind === 'v2' || kind === 'new') configControl.assertConfigV2(candidate);
+
+  const effectivePath = configControl.effectiveConfigPath(PROJECT_ROOT);
+  const effectiveExisted = fs.existsSync(effectivePath);
+  const previousEffective = effectiveExisted ? fs.readFileSync(effectivePath) : null;
+  const temporary = path.join(
+    dir,
+    `.${path.basename(configPath)}.${process.pid}.${Date.now()}.tmp`,
+  );
+
+  fs.writeFileSync(temporary, `${JSON.stringify(candidate, null, 2)}\n`);
+  try {
+    fs.renameSync(temporary, configPath);
+    configControl.reconcileEffectiveConfig(PROJECT_ROOT, {
+      runtime: configControl.detectRuntimeContract(PROJECT_ROOT),
+    });
+  } catch (error) {
+    try {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+      if (existed) fs.writeFileSync(configPath, previousConfig);
+      else if (fs.existsSync(configPath)) fs.unlinkSync(configPath);
+      if (effectiveExisted) fs.writeFileSync(effectivePath, previousEffective);
+      else if (fs.existsSync(effectivePath)) fs.unlinkSync(effectivePath);
+    } catch { /* preserve the original failure */ }
+    throw error;
+  }
 }
 
 /**
@@ -644,6 +735,7 @@ module.exports = {
   canonicalize,
   verifyAuditIntegrity,
   readConfig,
+  checkSkillActivation,
   readTrustLevel,
   detectStack,
   getTypecheckConfig,

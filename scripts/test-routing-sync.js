@@ -44,7 +44,7 @@ const TABLE_PATH = path.join(PROJECT_ROOT, 'core', 'skills', 'routing-table.json
 }
 
 const table = JSON.parse(fs.readFileSync(TABLE_PATH, 'utf8'));
-assert.equal(table.schemaVersion, 1, 'routing-table.json schemaVersion must be 1');
+assert.equal(table.schemaVersion, 2, 'routing-table.json schemaVersion must be 2');
 assert(Array.isArray(table.skills) && table.skills.length > 0, 'routing-table.json must list skills');
 
 // (b) every table entry maps to an existing skill directory
@@ -70,6 +70,10 @@ for (const skill of table.skills) {
 // (d) keywords are non-empty arrays of non-empty strings
 for (const skill of table.skills) {
   assert(Array.isArray(skill.keywords) && skill.keywords.length > 0, `"${skill.name}" must have a non-empty keywords array`);
+  assert(
+    ['core', 'persistence', 'parallel', 'operations', 'delivery'].includes(skill.productBundle),
+    `"${skill.name}" must name a valid product bundle`,
+  );
   for (const keyword of skill.keywords) {
     assert(typeof keyword === 'string' && keyword.trim().length > 0, `"${skill.name}" has an empty or non-string keyword`);
   }

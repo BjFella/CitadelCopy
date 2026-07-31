@@ -18,7 +18,9 @@
 'use strict';
 
 const path = require('path');
+const { reconcileEffectiveConfig } = require('../core/config');
 const { installClaudeHooks } = require('../runtimes/claude-code/generators/install-hooks');
+const claudeRuntime = require('../runtimes/claude-code/runtime');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 
@@ -64,11 +66,16 @@ function parseArgs(argv) {
 function main() {
   try {
     const options = parseArgs(process.argv);
+    const resolved = reconcileEffectiveConfig(options.projectRoot, { runtime: claudeRuntime });
+    if (resolved.receipt.status === 'blocked') {
+      throw new Error(`Harness config blocks hook installation: ${resolved.receipt.errors.join('; ')}`);
+    }
     const result = installClaudeHooks({
       citadelRoot: CITADEL_ROOT,
       projectRoot: options.projectRoot,
       hookProfile: options.hookProfile,
       claudeVersion: options.claudeVersion,
+      effectiveBundles: resolved.receipt.bundles.effective,
     });
     console.log(`Citadel hooks installed to ${result.settingsPath}`);
     console.log(`  ${result.hookCount} Citadel hooks resolved (${result.citadelRoot})`);
@@ -82,6 +89,7 @@ function main() {
       console.log(`  Skipped unsupported hook events: ${result.compatibility.skippedEvents.join(', ')}`);
       console.log('  Re-run with --hook-profile latest after upgrading Claude Code to enable them.');
     }
+    console.log(`  Product bundles: ${resolved.receipt.bundles.effective.join(', ')}`);
     console.log('Hooks are ready. No restart needed.');
   } catch (error) {
     console.error(`Error: ${error.message}`);

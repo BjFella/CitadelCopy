@@ -11,9 +11,10 @@
  * hook entries from .claude/settings.json.
  *
  * Usage:
- *   node /path/to/Citadel/scripts/unharness.js                  # from project dir
+ *   node /path/to/Citadel/scripts/unharness.js                  # prints governed migration path
  *   node /path/to/Citadel/scripts/unharness.js /project          # explicit project path
  *   node /path/to/Citadel/scripts/unharness.js --export-only     # export without deleting
+ *   node /path/to/Citadel/scripts/unharness.js --legacy-apply    # explicit inexact fallback
  */
 
 'use strict';
@@ -26,9 +27,11 @@ function parseArgs(argv) {
   const options = {
     projectRoot: process.env.CLAUDE_PROJECT_DIR || process.cwd(),
     exportOnly: false,
+    legacyApply: false,
   };
   for (const arg of args) {
     if (arg === '--export-only') { options.exportOnly = true; continue; }
+    if (arg === '--legacy-apply') { options.legacyApply = true; continue; }
     if (!arg.startsWith('--')) options.projectRoot = path.resolve(arg);
   }
   return options;
@@ -136,7 +139,7 @@ function isCitadelRepo(dir) {
 
 function main() {
   const options = parseArgs(process.argv);
-  const { projectRoot, exportOnly } = options;
+  const { projectRoot, exportOnly, legacyApply } = options;
 
   if (isCitadelRepo(projectRoot)) {
     console.error('Error: unharness cannot run against the Citadel plugin repo itself.');
@@ -147,6 +150,24 @@ function main() {
 
   const planning = path.join(projectRoot, '.planning');
   const citadelDir = path.join(projectRoot, '.citadel');
+  const activeReceipt = path.join(citadelDir, 'adoption', 'active.json');
+
+  if (!exportOnly && !legacyApply) {
+    console.error('');
+    console.error('Citadel Unharness is now plan-first.');
+    if (fs.existsSync(activeReceipt)) {
+      console.error('This project has a governed adoption receipt.');
+      console.error(`Run: node "${path.join(__dirname, 'adopt.js')}" leave plan --target "${projectRoot}"`);
+      console.error('Review and save that plan, then run leave apply with its confirmation token.');
+    } else {
+      console.error('No governed adoption receipt was found, so exact ownership is unknown.');
+      console.error(`Run: node "${path.join(__dirname, 'adopt.js')}" import plan "${path.resolve(__dirname, '..')}" --target "${projectRoot}"`);
+      console.error('After importing and reviewing ownership, use adopt leave plan|apply.');
+      console.error('The one-major emergency fallback is --legacy-apply; it cannot prove exact removal.');
+    }
+    process.exitCode = 2;
+    return;
+  }
   const pluginRootFile = path.join(citadelDir, 'plugin-root.txt');
   const citadelRoot = fs.existsSync(pluginRootFile)
     ? fs.readFileSync(pluginRootFile, 'utf8').trim()
@@ -255,7 +276,8 @@ function main() {
   }
 
   console.log('');
-  console.log('Done. Citadel has been removed from this project.');
+  console.log('Legacy cleanup completed.');
+  console.log('Exact removal remains unknown because this path did not use an adoption receipt.');
   if (hasContent) {
     console.log('Your history is in docs/citadel/ — delete it or keep it.');
   }

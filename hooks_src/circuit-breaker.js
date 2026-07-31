@@ -44,12 +44,9 @@ const LAST_CMD_RESULT = path.join(PROJECT_ROOT, '.planning', 'telemetry', 'last-
 
 function getHangThreshold() {
   try {
-    const harnessPath = path.join(PROJECT_ROOT, '.claude', 'harness.json');
-    if (fs.existsSync(harnessPath)) {
-      const harness = JSON.parse(fs.readFileSync(harnessPath, 'utf8'));
-      const t = harness?.agentTimeouts?.command;
-      if (typeof t === 'number' && t > 0) return t;
-    }
+    const harness = health.readConfig();
+    const t = harness?.agentTimeouts?.command;
+    if (typeof t === 'number' && t > 0) return t;
   } catch { /* fall through */ }
   return 300; // default: 5 minutes
 }

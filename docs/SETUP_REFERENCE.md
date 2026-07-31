@@ -15,6 +15,13 @@ output layouts it references.
 | Express | Zero questions, auto-detect, hooks installed, done | ~30 sec |
 | Update | Reconfigure an existing setup (offered when harness.json already has full config) | varies |
 
+All modes preview and apply schema-v2 config through
+`scripts/citadel-config.js initialize`; they do not bypass protected config
+files. Recommended and Express select `standard@1.0.0` with Core + Persistence.
+Full Tour may offer Parallel and Operations as separate explicit activation
+plans. Setup reconciles `.citadel/effective-config.json` and then regenerates
+only the hooks owned by effective bundles.
+
 ## Stack Detection Tables
 
 Setup never asks what can be read from the project root.

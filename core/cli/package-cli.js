@@ -19,15 +19,20 @@ const HELP = `Citadel ${VERSION}
 Usage: citadel <command> [options]
 
 Commands:
-  install      Detect a local agent runtime and install Citadel
+  install      Legacy runtime-package installer; prefer adopt plan/apply
   doctor       Check package integrity and runtime availability
-  update       Verify and apply a Citadel release archive
-  rollback     Restore a backup made by the updater
-  uninstall    Export project state and remove Citadel from a project
+  update       Plan/apply a receipt-owned update
+  rollback     Plan/apply a receipt-owned rollback
+  uninstall    Compatibility alias for receipt-owned adopt leave
   pack         Inspect, verify, certify, install, or remove outcome Packs
   journey      Start or complete a receipt-backed Pack journey
   receipt      Verify an operation receipt offline
   fork         Run one operation through comparable isolated runtimes
+  adopt        Plan, apply, inspect, evolve, or leave a governed adoption
+  config       Inspect or change the versioned operating profile and bundles
+  governance   Record or authorize a fail-honest governance decision
+  control-plane Run the Governance Port alpha or its conformance suite
+  trial        Operate the local-only Real User Proof v2 instrument
   help         Show this help
 
 Run citadel <command> --help for command-specific help.
@@ -38,15 +43,22 @@ const COMMAND_HELP = Object.freeze({
 
 Runtime is selected from --runtime, CITADEL_RUNTIME, project markers, or an
 installed Claude Code or Codex command. Ambiguous detection fails closed.
+This is the one-major legacy runtime-package adapter. New project adoption uses
+citadel adopt plan|apply so every mutation and later leave is receipt-owned.
 `,
   doctor: 'Usage: citadel doctor [--project-root PATH] [--runtime claude|codex] [--json]\n',
-  update: 'Usage: citadel update --archive <release.tar.gz> [--target PATH] [--apply] [--json]\n',
-  rollback: 'Usage: citadel rollback <backup-path> --target PATH [--apply] [--json]\n',
-  uninstall: 'Usage: citadel uninstall [PROJECT] [--project-root PATH] [--export-only] [--dry-run] [--json]\n',
+  update: 'Usage: citadel update <plan SOURCE --migration FILE | apply PLAN> [options]\n',
+  rollback: 'Usage: citadel rollback <plan | apply PLAN> [options]\n',
+  uninstall: 'Usage: citadel uninstall [PROJECT] [--project-root PATH] [--dry-run] [--json]\n       citadel uninstall --apply --plan PLAN [--confirm TOKEN] [--json]\n',
   pack: 'Usage: citadel pack <list|inspect|verify|certify|install|installed|uninstall> [options]\n',
   journey: 'Usage: citadel journey <start|complete> --run-id ID [--pack NAME --runtime RUNTIME | --evidence FILE]\n',
   receipt: 'Usage: citadel receipt verify --input FILE [--public-key FILE]\n',
   fork: 'Usage: citadel fork <start|resume|status|compare|select|land|replay> [options]\n',
+  adopt: 'Usage: citadel adopt <plan|apply|doctor|update|rollback|restore|import|leave> [options]\n',
+  config: 'Usage: citadel config <show|check|reconcile|initialize|plan|migrate|set-profile|enable|disable> [options]\n',
+  governance: 'Usage: citadel governance <evaluate|authorize|check> [options]\n',
+  'control-plane': 'Usage: citadel control-plane <stdio|conformance> [options]\n',
+  trial: 'Usage: citadel trial <validate|plan|start|record|report|share-preview|purge> [options]\n',
 });
 
 function has(args, flag) {
@@ -242,52 +254,52 @@ function doctor(args, context) {
   return report.pass ? EXIT.OK : EXIT.FAILURE;
 }
 
-function delegateUpdate(command, args, context) {
-  const json = has(args, '--json');
-  let forwarded = stripFlag(stripFlag(args, '--json'), '--dry-run');
-  if (command === 'rollback' && !value(forwarded, '--rollback')) {
-    if (!forwarded[0] || forwarded[0].startsWith('--')) {
-      const error = new Error('rollback requires a backup path');
-      error.code = CODE.COMMAND_FAILED;
-      return reportError(context.io, json, error, command);
-    }
-    forwarded = ['--rollback', forwarded[0], ...forwarded.slice(1)];
-  }
-  try {
-    return child('update.js', forwarded, { ...context, json });
-  } catch (error) {
-    return reportError(context.io, json, error, command);
-  }
-}
-
 function uninstall(args, context) {
   const json = has(args, '--json');
   const dryRun = has(args, '--dry-run');
   const configured = value(args, '--project-root', value(args, '--target-project'));
   const positional = args.find((item, index) => !item.startsWith('-') && (index === 0 || !['--project-root', '--target-project'].includes(args[index - 1])));
   const projectRoot = path.resolve(configured || positional || context.cwd || process.cwd());
-  const plan = {
-    schema: 1,
-    command: 'uninstall',
-    project_root: projectRoot,
-    export_only: has(args, '--export-only'),
-    dry_run: dryRun,
-    will_export_state: true,
-    will_remove_harness: !has(args, '--export-only'),
-  };
-  if (dryRun) {
-    if (json) writeJson(context.io, plan);
-    else context.io.stdout.write(`Uninstall plan for ${projectRoot}\nState will be exported before removal.\n`);
-    return EXIT.OK;
+  if (has(args, '--export-only')) {
+    const forwarded = [projectRoot, '--export-only'];
+    return child('unharness.js', forwarded, { ...context, json: false });
   }
-  const forwarded = [projectRoot];
-  if (plan.export_only) forwarded.push('--export-only');
-  if (!json) return child('unharness.js', forwarded, { ...context, json: false });
-  const result = (context.spawn || spawnSync)(process.execPath, [path.join(ROOT, 'scripts', 'unharness.js'), ...forwarded], {
-    cwd: context.cwd || process.cwd(), encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  writeJson(context.io, { ...plan, ok: result.status === 0, stdout: result.stdout || '', stderr: result.stderr || '' });
-  return result.status ?? EXIT.FAILURE;
+  if (has(args, '--apply')) {
+    const planFile = value(args, '--plan');
+    if (!planFile) {
+      const error = new Error('uninstall --apply requires --plan <saved leave plan>');
+      error.code = CODE.COMMAND_FAILED;
+      error.exitCode = EXIT.USAGE;
+      return reportError(context.io, json, error, 'uninstall');
+    }
+    const forwarded = ['leave', 'apply', path.resolve(context.cwd, planFile)];
+    const confirmation = value(args, '--confirm');
+    if (confirmation) forwarded.push('--confirm', confirmation);
+    if (json) forwarded.push('--json');
+    return child('adopt.js', forwarded, { ...context, json });
+  }
+  const forwarded = ['leave', 'plan', '--target', projectRoot];
+  const controlRoot = value(args, '--control-root');
+  if (controlRoot) forwarded.push('--control-root', controlRoot);
+  if (json || dryRun) forwarded.push('--json');
+  return child('adopt.js', forwarded, { ...context, json: json || dryRun });
+}
+
+function controlPlane(args, context) {
+  const command = args[0];
+  if (command === 'conformance') {
+    return child('control-plane-conformance.js', args.slice(1), {
+      ...context,
+      json: has(args, '--json'),
+    });
+  }
+  if (command === 'stdio') {
+    return child('control-plane-stdio.js', args.slice(1), { ...context, json: false });
+  }
+  const error = new Error('control-plane requires stdio or conformance');
+  error.code = CODE.COMMAND_FAILED;
+  error.exitCode = EXIT.USAGE;
+  return reportError(context.io, has(args, '--json'), error, 'control-plane');
 }
 
 function unavailable(command, args, context) {
@@ -326,12 +338,30 @@ function main(argv = process.argv.slice(2), options = {}) {
   }
   if (command === 'install') return install(args, context);
   if (command === 'doctor') return doctor(args, context);
-  if (command === 'update' || command === 'rollback') return delegateUpdate(command, args, context);
+  if (command === 'update' || command === 'rollback') {
+    if (['plan', 'apply'].includes(args[0])) {
+      return child('adopt.js', [command, ...args], {
+        ...context,
+        json: has(args, '--json'),
+      });
+    }
+    const error = new Error(
+      `${command} is receipt-owned; use citadel ${command} plan|apply`,
+    );
+    error.code = CODE.COMMAND_FAILED;
+    error.exitCode = EXIT.USAGE;
+    return reportError(context.io, has(args, '--json'), error, command);
+  }
   if (command === 'uninstall') return uninstall(args, context);
   if (command === 'pack') return child('packs.js', args, { ...context, json: has(args, '--json') });
   if (command === 'journey') return child('start-journey.js', args, { ...context, json: has(args, '--json') });
   if (command === 'receipt') return child('receipt.js', args, { ...context, json: has(args, '--json') });
   if (command === 'fork') return child('operation-fork.js', args, { ...context, json: true });
+  if (command === 'adopt') return child('adopt.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'config') return child('citadel-config.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'governance') return child('governance-gate.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'control-plane') return controlPlane(args, context);
+  if (command === 'trial') return child('product-proof-trial.js', args, { ...context, json: true });
   const error = new Error(`unknown command: ${command}`);
   error.code = CODE.COMMAND_FAILED;
   error.exitCode = EXIT.USAGE;

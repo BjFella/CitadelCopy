@@ -130,6 +130,21 @@ const UNLOCK_TESTS = Object.freeze([
   ['Reliability learning', 'test-reliability-learning.js'],
   ['Optimizer proof', 'test-optimizer.js'],
   ['Proof bundle', 'test-proof-bundle.js'],
+  ['Governance contract kernel', 'test-governance-contracts.js'],
+  ['Governance runtime authority', 'test-governance-runtime.js'],
+  ['Versioned config policy', 'test-config-policy.js'],
+  ['Progressive activation contract', 'test-config-activation.js'],
+  ['Progressive activation consumers', 'test-config-consumers.js'],
+  ['Hook product bundles', 'test-hook-bundles.js'],
+  ['Governed adoption lifecycle', 'test-adoption-lifecycle.js'],
+  ['Governed adoption evolution', 'test-adoption-evolution.js'],
+  ['Governed unharness compatibility', 'test-unharness-governed.js'],
+  ['Governance Port alpha', 'test-control-plane.js'],
+  ['Governance Port stdio transport', 'test-control-plane-stdio.js'],
+  ['Public contracts package', 'test-public-contracts-package.js'],
+  ['Real User Proof v2', 'test-product-proof-v2.js'],
+  ['Governed lifecycle real-use proof', 'test-governed-lifecycle-usecases.js'],
+  ['Fail-honest orchestration semantics', 'test-orchestration-semantics.js'],
 ].map(([label, file]) => Object.freeze([label, path.join(PLUGIN_ROOT, 'scripts', file)])));
 
 const STRICT = process.argv.includes('--strict');

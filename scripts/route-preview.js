@@ -4,6 +4,7 @@
 const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const config = require('../core/config');
 
 function parseArgs(argv) {
   const args = {
@@ -114,8 +115,10 @@ function loadSkills() {
   const tablePath = path.join(__dirname, '..', 'core', 'skills', 'routing-table.json');
   const table = JSON.parse(fs.readFileSync(tablePath, 'utf8'));
   return table.skills.map((entry) => ({
+    name: entry.name,
     route: ROUTE_LABELS[entry.name] || `/${entry.name}`,
     keywords: entry.keywords,
+    productBundle: entry.productBundle,
   }));
 }
 
@@ -399,11 +402,48 @@ function boundaryFor(route, dirty) {
   };
 }
 
+function skillNameForRoute(route) {
+  const match = String(route || '').trim().match(/^\/([a-z][a-z0-9-]*)/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+function activationBoundary(projectRoot, selected, options = {}) {
+  const skill = skillNameForRoute(selected);
+  if (!skill) return { skill: null, context: null, decision: null };
+  const context = options.activationContext || config.loadActivationContext(projectRoot, {
+    runtime: options.runtime,
+    runtimeId: options.runtimeId,
+    env: options.env,
+  });
+  return {
+    skill,
+    context: {
+      status: context.status,
+      persisted: context.persisted !== false,
+      reasonCode: context.reasonCode,
+      receiptPath: context.receiptPath,
+    },
+    decision: config.preflightRoute(context, skill),
+  };
+}
+
 function buildPreview(input, options = {}) {
   const projectRoot = path.resolve(options.projectRoot || process.cwd());
   const selected = selectRoute(input);
   const dirty = options.gitDirty === undefined ? gitDirty(projectRoot) : Boolean(options.gitDirty);
-  const boundary = boundaryFor(selected.selected, dirty);
+  let boundary = boundaryFor(selected.selected, dirty);
+  const activation = activationBoundary(projectRoot, selected.selected, options);
+  if (activation.decision
+    && !['enabled', 'degraded'].includes(activation.decision.status)) {
+    boundary = {
+      canRunNow: false,
+      boundary: 'product-bundle-activation',
+      risk: 'low',
+      approval: activation.decision.plan?.applyCommand
+        ? `Review the activation plan, then explicitly apply: ${activation.decision.plan.applyCommand}`
+        : `Resolve ${activation.decision.reasonCode} before invoking ${selected.selected}.`,
+    };
+  }
 
   return {
     generatedAt: options.now || new Date().toISOString(),
@@ -411,6 +451,7 @@ function buildPreview(input, options = {}) {
     input: String(input || ''),
     ...selected,
     ...boundary,
+    activation,
     gitDirty: dirty,
   };
 }
@@ -440,6 +481,11 @@ function render(preview) {
   ];
 
   if (preview.approval) lines.push(`  Approval: ${preview.approval}`);
+  if (preview.activation?.decision) {
+    lines.push(`  Product bundle: ${preview.activation.decision.bundleId}`);
+    lines.push(`  Activation: ${preview.activation.decision.status} (${preview.activation.decision.reasonCode})`);
+    lines.push(`  Effective config: ${preview.activation.context.status}${preview.activation.context.persisted ? '' : ' (bootstrap preview; not persisted)'}`);
+  }
 
   lines.push('');
   lines.push('Alternatives');
@@ -473,5 +519,6 @@ module.exports = {
   parseArgs,
   render,
   selectRoute,
+  skillNameForRoute,
   usage,
 };

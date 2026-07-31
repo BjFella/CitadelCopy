@@ -52,7 +52,7 @@ withTempProject((projectRoot) => {
   const reportPath = writeTrial(projectRoot, trial);
   assert.equal(reportPath, '.planning/usefulness-trial/latest.md');
   assert(fs.existsSync(path.join(projectRoot, reportPath)));
-  assert(fs.readFileSync(path.join(projectRoot, reportPath), 'utf8').includes('Citadel Usefulness Trial'));
+  assert(fs.readFileSync(path.join(projectRoot, reportPath), 'utf8').includes('Citadel Readiness Inspection'));
 });
 
 withTempProject((projectRoot) => {
@@ -66,7 +66,9 @@ withTempProject((projectRoot) => {
     runVerification: true,
   });
 
-  assert.equal(trial.decision, 'ready-for-dogfood');
+assert.equal(trial.decision, 'ready-for-dogfood');
+assert.equal(trial.evidenceKind, 'readiness-inspection');
+assert.match(trial.claimBoundary, /not comparative/i);
   assert.equal(trial.score.label, '5/5');
   assert(renderTrial(trial).includes('Use this project for the post-landing first-use audit'));
 });

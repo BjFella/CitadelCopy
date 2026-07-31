@@ -1,4 +1,9 @@
-# Usefulness Trial
+# Readiness Inspection (legacy command: usefulness trial)
+
+This command produces `readiness-inspection` evidence. It verifies that setup,
+routing, verification selection, and durable local artifacts are available. It
+does **not** run a bare-agent comparison, measure accepted output or rework, or
+prove real-user utility. Comparative claims belong to Real User Proof v2.
 
 Citadel's first-use trial answers one practical question:
 

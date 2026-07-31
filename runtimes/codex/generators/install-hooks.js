@@ -6,6 +6,7 @@ const {
   readJson,
   writeJson,
 } = require('../../../core/hooks/install');
+const { filterHookTemplate } = require('../../../core/hooks/bundles');
 
 const CODEX_EVENTS = new Set([
   'SessionStart',
@@ -45,6 +46,8 @@ function extractHookName(command) {
 }
 
 function translateCodexHooks(hooksTemplate, adapterScriptPath, options = {}) {
+  const bundleFilter = filterHookTemplate(hooksTemplate, options.effectiveBundles);
+  hooksTemplate = bundleFilter.template;
   const codexHooks = {};
   const warnings = [];
   const installed = [];
@@ -100,7 +103,7 @@ function translateCodexHooks(hooksTemplate, adapterScriptPath, options = {}) {
     }
   }
 
-  return { hooks: codexHooks, installed, skipped, warnings };
+  return { hooks: codexHooks, installed, skipped: [...skipped, ...bundleFilter.skipped], warnings, bundleFilter };
 }
 
 function translateCodexPluginHooks(hooksTemplate) {
@@ -112,7 +115,9 @@ function translateCodexPluginHooks(hooksTemplate) {
 
 function installCodexHooks(options = {}) {
   const existingHooks = options.existingHooks || {};
-  const translated = translateCodexHooks(options.hooksTemplate, options.adapterScriptPath);
+  const translated = translateCodexHooks(options.hooksTemplate, options.adapterScriptPath, {
+    effectiveBundles: options.effectiveBundles,
+  });
   const mergedHooks = mergeHookMaps({
     existingHooks,
     generatedHooks: translated.hooks,

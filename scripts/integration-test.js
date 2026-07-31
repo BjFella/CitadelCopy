@@ -28,6 +28,7 @@ const fs            = require('fs');
 const path          = require('path');
 const os            = require('os');
 const { spawnSync } = require('child_process');
+const configControl = require('../core/config');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 const HOOKS_SRC    = path.join(CITADEL_ROOT, 'hooks_src');
@@ -498,6 +499,9 @@ sequence('protect-files glob: src/** blocks recursive match, non-matching path a
   const harnessPath = path.join(sb, '.claude', 'harness.json');
   const config = { protectedFiles: ['.claude/harness.json', 'src/**'] };
   fs.writeFileSync(harnessPath, JSON.stringify(config, null, 2));
+  configControl.reconcileEffectiveConfig(sb, {
+    runtime: configControl.detectRuntimeContract(sb),
+  });
 
   // Create the deeply nested file so its directory exists
   const deepFile = path.join(sb, 'src', 'deeply', 'nested', 'file.ts');
@@ -516,6 +520,9 @@ sequence('protect-files glob: src/** blocks recursive match, non-matching path a
 
   // Restore original harness.json (it is protected by default)
   fs.writeFileSync(harnessPath, JSON.stringify({ protectedFiles: ['.claude/harness.json'] }, null, 2));
+  configControl.reconcileEffectiveConfig(sb, {
+    runtime: configControl.detectRuntimeContract(sb),
+  });
   fs.rmSync(deepFile);
   fs.rmSync(otherFile);
 

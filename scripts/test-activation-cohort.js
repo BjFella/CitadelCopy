@@ -92,25 +92,28 @@ test('cohort keeps the newest observation for one opaque installation', () => {
   assert.equal(latest[0].submission.observation_day, 8);
 });
 
-test('decision report uses explicit denominators and reaches ready only after 25 mature submissions', () => {
+test('schema-one session return remains diagnostic and cannot manufacture meaningful retention readiness', () => {
   const records = Array.from({ length: 25 }, (_, index) => envelope(submission(index + 1), index + 1));
   const result = cohort.cohortReport(records);
   assert.equal(result.cohort.shared_installations, 25);
   assert.equal(result.cohort.seven_day_eligible, 25);
   assert.equal(result.cohort.verified_handoff_rate, 1);
-  assert.equal(result.cohort.seven_day_return_rate, 1);
+  assert.equal(result.cohort.seven_day_return_rate, null);
+  assert.equal(result.cohort.legacy_session_return_rate, 1);
+  assert.equal(result.gates.seven_day_return_rate.state, 'unknown');
+  assert.equal(result.gates.seven_day_return_rate.legacy_session_return_rate, 1);
   assert.equal(result.gates.install_or_route_failure_rate.state, 'passed');
-  assert.equal(result.milestone_status, 'ready');
+  assert.equal(result.milestone_status, 'observing');
 });
 
-test('seven-day return remains waiting when the cohort is large but immature', () => {
+test('seven-day meaningful retention remains unknown when only session-return evidence exists', () => {
   const records = Array.from({ length: 25 }, (_, index) => envelope(submission(index + 1, {
     observation_day: 2,
     journey: { return_session: false },
   }), index + 1));
   const result = cohort.cohortReport(records);
   assert.equal(result.cohort.seven_day_eligible, 0);
-  assert.equal(result.gates.seven_day_return_rate.state, 'waiting');
+  assert.equal(result.gates.seven_day_return_rate.state, 'unknown');
   assert.equal(result.gates.seven_day_return_rate.eligible_count, 0);
   assert.equal(result.gates.seven_day_return_rate.required_eligible, 25);
   assert.equal(result.milestone_status, 'observing');
@@ -133,7 +136,7 @@ test('empty report is collecting and never manufactures zero retention', () => {
   const result = cohort.cohortReport([]);
   assert.equal(result.milestone_status, 'collecting');
   assert.equal(result.cohort.seven_day_return_rate, null);
-  assert.equal(result.gates.seven_day_return_rate.state, 'waiting');
+  assert.equal(result.gates.seven_day_return_rate.state, 'unknown');
 });
 
 if (process.exitCode) process.exit(process.exitCode);

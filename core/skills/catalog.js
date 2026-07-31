@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { bundleForSkill } = require('../config');
 
 const TASK_CLASSES = ['orchestration', 'quality', 'knowledge', 'research', 'creation', 'operations', 'integration', 'utility'];
 const RISK_LEVELS = ['low', 'medium', 'high'];
@@ -108,6 +109,7 @@ function readSkill(skillsDir, name) {
     benchmarkCount: bench.count,
     neighborSkills: frontmatter['neighbor-skills'] || [],
     userInvocable: frontmatter['user-invocable'],
+    productBundle: bundleForSkill(name),
     filePath,
   };
 }

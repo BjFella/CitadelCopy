@@ -27,17 +27,21 @@ function trial(index, overrides = {}) {
 }
 
 const complete = report([selection, ...Array.from({ length: 10 }, (_, index) => trial(index))]);
-assert.equal(complete.milestone_ready, true);
+assert.equal(complete.legacy_instrument_complete, true);
+assert.equal(complete.milestone_ready, false);
+assert.equal(complete.claim_status, 'superseded_instrument_only');
+assert.equal(complete.utility_claim, false);
+assert.equal(complete.superseded_by, 'real_user_proof_v2');
 assert.equal(complete.cohort.participants, 10);
 assert.equal(complete.cohort.dashboard_passes, 10);
 assert.equal(complete.cohort.return_users_within_14_days, 5);
 
 const partial = report([selection, ...Array.from({ length: 9 }, (_, index) => trial(index))]);
 assert.equal(partial.milestone_ready, false);
-assert.equal(partial.gates.ten_independent_users, false);
+assert.equal(partial.legacy_gates.ten_independent_users, false);
 
 assert.throws(() => report([selection, trial(0), trial(0)]), /participant_id values must be unique/);
-assert.equal(report([{ ...selection, selected_at: '2026-07-13T00:00:00.000Z' }, trial(0)]).gates.external_selection, false);
+assert.equal(report([{ ...selection, selected_at: '2026-07-13T00:00:00.000Z' }, trial(0)]).legacy_gates.external_selection, false);
 assert.throws(() => validateTrial({ ...trial(0), prompt: 'secret task text' }), /fields must be exact/);
 assert.throws(() => validateTrial({ ...trial(0), consent_aggregate: false }), /consent/);
 assert.throws(() => validateTrial({ ...trial(0), second_task_at: '2026-07-12T12:01:00.000Z' }), /at least 24 hours/);

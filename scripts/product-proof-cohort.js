@@ -113,6 +113,9 @@ function report(records) {
   const returnUsers = trials.filter(trial => trial.second_task_at !== null).length;
   const result = {
     schema: 1,
+    claim_status: 'superseded_instrument_only',
+    utility_claim: false,
+    superseded_by: 'real_user_proof_v2',
     benchmark_selection: { present: selections.length === 1, selected_before_trials: selectedBeforeTrials, scenario_id: selections[0]?.scenario_id || null },
     cohort: {
       participants: trials.length,
@@ -124,7 +127,7 @@ function report(records) {
       return_users_within_14_days: returnUsers,
     },
   };
-  result.gates = {
+  result.legacy_gates = {
     external_selection: selectedBeforeTrials,
     ten_independent_users: trials.length >= 10,
     completion_rate: trials.length >= 10 && result.cohort.completion_rate >= 0.95,
@@ -133,7 +136,13 @@ function report(records) {
     dashboard_comprehension: trials.length >= 10 && dashboardPasses >= 8,
     retention: returnUsers >= 5,
   };
-  result.milestone_ready = Object.values(result.gates).every(Boolean);
+  result.legacy_instrument_complete = Object.values(result.legacy_gates).every(Boolean);
+  // The v1 cohort validates measurement plumbing only. It cannot satisfy the
+  // randomized paired, ITT, false-pass, or exact D7/D30 requirements of v2.
+  result.gates = Object.fromEntries(
+    Object.keys(result.legacy_gates).map((gate) => [gate, false]),
+  );
+  result.milestone_ready = false;
   return result;
 }
 
