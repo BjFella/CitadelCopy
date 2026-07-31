@@ -21,6 +21,7 @@ citadel operation init \
   --model gpt-5.6-sol \
   --verifier-executable npm \
   --verifier-arg test \
+  --required-changed-path src/parser.js \
   --out-dir .citadel/operations/parser-regression
 ```
 
@@ -103,6 +104,8 @@ After execution, Citadel reconciles the observed model, topology, configured
 tools, and tool calls against the selected plan. A mismatch fails control. A
 missing required observation is `unknown`. A result passes only when independent
 verification passes and control reconciliation passes.
+For change-producing work, repeat `--required-changed-path` during `init` so an
+already-green test suite cannot pass an adapter that made no required change.
 
 ## Failure-directed escalation
 

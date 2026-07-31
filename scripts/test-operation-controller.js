@@ -22,6 +22,10 @@ assert.throws(() => operation.validateRequest({
   ...request,
   constraints: { ...request.constraints, required_tools: ['network'] },
 }), /required tools must also be allowed/);
+assert.throws(() => operation.validateRequest({
+  ...request,
+  verifier: { ...request.verifier, required_changed_paths: ['../escape'] },
+}), /safe relative paths/);
 
 const planned = operation.routeOperation({ request, catalog, history: [] });
 assert.equal(planned.selection_status, 'meets-quality-target');
@@ -133,6 +137,27 @@ const failedAdapterVerification = operation.verifyAttempt({
 });
 assert.equal(failedAdapterVerification.status, 'failed');
 
+const artifactRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-operation-artifact-'));
+spawnSync('git', ['init'], { cwd: artifactRoot, encoding: 'utf8', shell: false });
+spawnSync('git', ['config', 'user.email', 'operation-test@example.invalid'], { cwd: artifactRoot, encoding: 'utf8', shell: false });
+spawnSync('git', ['config', 'user.name', 'Operation Test'], { cwd: artifactRoot, encoding: 'utf8', shell: false });
+fs.writeFileSync(path.join(artifactRoot, 'required.txt'), 'before\n');
+spawnSync('git', ['add', 'required.txt'], { cwd: artifactRoot, encoding: 'utf8', shell: false });
+spawnSync('git', ['commit', '-m', 'fixture'], { cwd: artifactRoot, encoding: 'utf8', shell: false });
+fs.writeFileSync(path.join(artifactRoot, 'required.txt'), 'after\n');
+const artifactRequest = {
+  ...request,
+  verifier: { kind: 'command', executable: process.execPath, args: ['-e', 'process.exit(0)'], cwd: '.', timeout_ms: 10000, required_changed_paths: ['required.txt'] },
+};
+const artifactVerification = operation.verifyAttempt({ request: artifactRequest, adapterResult: { status: 'completed', output: '' }, workspaceRoot: artifactRoot });
+assert.equal(artifactVerification.status, 'passed');
+const uncoveredVerification = operation.verifyAttempt({
+  request: { ...artifactRequest, verifier: { ...artifactRequest.verifier, required_changed_paths: ['missing.txt'] } },
+  adapterResult: { status: 'completed', output: '' }, workspaceRoot: artifactRoot,
+});
+assert.equal(uncoveredVerification.failure_code, 'REQUIRED_ARTIFACT_NOT_CHANGED');
+fs.rmSync(artifactRoot, { recursive: true, force: true });
+
 const adapterInput = {
   schema: 1,
   protocol: operation.ADAPTER_PROTOCOL,
@@ -193,6 +218,7 @@ const cliInit = spawnSync(process.execPath, [
   '--objective', 'Run the repository verification',
   '--runtime', 'codex', '--model', 'gpt-test', '--fallback-model', 'gpt-frontier',
   '--verifier-executable', 'node', '--verifier-arg', 'check.js', '--out-dir', initialized,
+  '--required-changed-path', 'scripts/test.js',
   '--json',
 ], { cwd: ROOT, encoding: 'utf8', shell: false });
 assert.equal(cliInit.status, 0, cliInit.stderr);
@@ -202,6 +228,7 @@ const initializedCatalog = JSON.parse(fs.readFileSync(path.join(initialized, 'ca
 operation.validateRequest(initializedRequest);
 operation.validateCatalog(initializedCatalog);
 assert.equal(initializedRequest.constraints.budgets.actual_cash, null);
+assert.deepEqual(initializedRequest.verifier.required_changed_paths, ['scripts/test.js']);
 assert.equal(initializedCatalog.plans[0].fallback_plan_ids[0], initializedCatalog.plans[1].plan_id);
 const output = path.join(temp, 'report.json');
 const cliRun = spawnSync(process.execPath, [

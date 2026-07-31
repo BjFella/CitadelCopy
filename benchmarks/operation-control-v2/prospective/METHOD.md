@@ -22,6 +22,7 @@ savings, or superiority.
 - Planned tools: `filesystem`, `shell`
 - Required observed tool calls: none
 - Independent verifier: `node scripts/test-executor-profiles.js`
+- Required changed artifact: `scripts/test-executor-profiles.js`
 - Adapter timeout: 30 minutes
 - Verifier timeout: 10 minutes
 - Actual-cash, marginal, and market-equivalent budgets: unset
@@ -41,8 +42,9 @@ An integration pass requires all of the following:
 3. requested and observed topology match;
 4. no unplanned or disallowed tool is observed;
 5. the independent verifier exits zero;
-6. the report digest verifies offline;
-7. missing cash or price evidence remains `unknown`.
+6. the required test artifact is observed as changed;
+7. the report digest verifies offline;
+8. missing cash or price evidence remains `unknown`.
 
 Any missing model/topology observation is `unknown`. Any control mismatch or
 failed verifier is a failure. The result is published regardless of outcome.

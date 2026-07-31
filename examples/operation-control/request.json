@@ -21,6 +21,7 @@
     "executable": "node",
     "args": ["check.js"],
     "cwd": ".",
-    "timeout_ms": 10000
+    "timeout_ms": 10000,
+    "required_changed_paths": []
   }
 }

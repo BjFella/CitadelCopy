@@ -88,11 +88,16 @@ function validateCosts(value, name = 'costs') {
 function validateVerifier(value) {
   object(value, 'request.verifier');
   if (value.kind === 'command') {
-    exact(value, ['kind', 'executable', 'args', 'cwd', 'timeout_ms'], 'request.verifier');
+    exact(value, ['kind', 'executable', 'args', 'cwd', 'timeout_ms', 'required_changed_paths'], 'request.verifier');
     if (typeof value.executable !== 'string' || !value.executable.trim()) throw new TypeError('request.verifier.executable is required');
     if (!Array.isArray(value.args) || value.args.some((item) => typeof item !== 'string')) throw new TypeError('request.verifier.args must be strings');
     if (typeof value.cwd !== 'string' || !value.cwd.trim()) throw new TypeError('request.verifier.cwd is required');
     positive(value.timeout_ms, 'request.verifier.timeout_ms');
+    if (!Array.isArray(value.required_changed_paths) || value.required_changed_paths.length > 64
+      || value.required_changed_paths.some((item) => typeof item !== 'string'
+        || !item.trim() || pathIsUnsafe(item))) {
+      throw new TypeError('request.verifier.required_changed_paths must contain safe relative paths');
+    }
     return value;
   }
   if (value.kind === 'adapter-result') {
@@ -100,6 +105,12 @@ function validateVerifier(value) {
     return value;
   }
   throw new TypeError('request.verifier.kind is invalid');
+}
+
+function pathIsUnsafe(value) {
+  const normalized = String(value).replace(/\\/g, '/');
+  return normalized.startsWith('/') || /^[A-Za-z]:/.test(normalized)
+    || normalized.split('/').some((segment) => segment === '..' || segment === '');
 }
 
 function validateRequest(value) {

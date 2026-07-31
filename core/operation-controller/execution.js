@@ -125,6 +125,37 @@ function executeAdapter({ adapter, plan, request, decision, workspaceRoot, retry
   }
 }
 
+function changedWorkspacePaths(workspaceRoot, spawn = spawnSync, env = process.env) {
+  const top = spawn('git', ['rev-parse', '--show-toplevel'], {
+    cwd: workspaceRoot, env: safeEnvironment([], env), encoding: 'utf8', shell: false,
+    stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000,
+  });
+  if (top.error || top.status !== 0) return { status: 'unknown', paths: [] };
+  const repositoryRoot = String(top.stdout || '').trim();
+  const status = spawn('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--', '.'], {
+    cwd: workspaceRoot, env: safeEnvironment([], env), encoding: 'utf8', shell: false,
+    stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000,
+  });
+  if (status.error || status.status !== 0) return { status: 'unknown', paths: [] };
+  const paths = [];
+  const entries = String(status.stdout || '').split('\0').filter(Boolean);
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    const code = entry.slice(0, 2);
+    const candidates = [entry.slice(3)];
+    if (code.includes('R') || code.includes('C')) {
+      const target = entries[index + 1];
+      if (target) { candidates.push(target); index += 1; }
+    }
+    for (const candidate of candidates) {
+      const absolute = path.resolve(repositoryRoot, candidate);
+      if (!contained(workspaceRoot, absolute)) continue;
+      paths.push(path.relative(workspaceRoot, absolute).replace(/\\/g, '/'));
+    }
+  }
+  return { status: 'known', paths: [...new Set(paths)].sort() };
+}
+
 function verifyAttempt({ request, adapterResult, workspaceRoot, spawn = spawnSync, env = process.env }) {
   if (adapterResult?.status !== 'completed') {
     return {
@@ -155,10 +186,26 @@ function verifyAttempt({ request, adapterResult, workspaceRoot, spawn = spawnSyn
       evidence: { kind: 'command', exit_code: null, duration_ms: Date.now() - started, output_digest: digest(combined) },
     };
   }
+  if (result.status !== 0) return {
+    status: 'failed',
+    failure_code: 'VERIFICATION_FAILED',
+    evidence: { kind: 'command', exit_code: result.status, duration_ms: Date.now() - started, output_digest: digest(combined), artifact_coverage: 'not-evaluated' },
+  };
+  const changed = changedWorkspacePaths(workspaceRoot, spawn, env);
+  const required = request.verifier.required_changed_paths;
+  const coverage = changed.status === 'known' && required.every((requiredPath) => changed.paths.includes(requiredPath));
+  if (required.length && changed.status !== 'known') return {
+    status: 'unknown', failure_code: 'ARTIFACT_OBSERVATION_FAILED',
+    evidence: { kind: 'command', exit_code: 0, duration_ms: Date.now() - started, output_digest: digest(combined), artifact_coverage: 'unknown' },
+  };
   return {
-    status: result.status === 0 ? 'passed' : 'failed',
-    failure_code: result.status === 0 ? null : 'VERIFICATION_FAILED',
-    evidence: { kind: 'command', exit_code: result.status, duration_ms: Date.now() - started, output_digest: digest(combined) },
+    status: coverage ? 'passed' : 'failed',
+    failure_code: coverage ? null : 'REQUIRED_ARTIFACT_NOT_CHANGED',
+    evidence: {
+      kind: 'command', exit_code: 0, duration_ms: Date.now() - started,
+      output_digest: digest(combined), artifact_coverage: coverage ? 'passed' : 'failed',
+      required_paths_digest: digest(required), changed_paths_digest: digest(changed.paths),
+    },
   };
 }
 
@@ -303,6 +350,7 @@ function historyRecordFromAttempt(request, attempt) {
 
 module.exports = Object.freeze({
   aggregateObservedCosts,
+  changedWorkspacePaths,
   executeAdapter,
   historyRecordFromAttempt,
   parseAdapterResult,

@@ -133,6 +133,7 @@ function initializedRequest(args, catalog) {
       args: values(args, '--verifier-arg'),
       cwd: value(args, '--verifier-cwd', '.'),
       timeout_ms: Number(value(args, '--verifier-timeout-ms', 600000)),
+      required_changed_paths: values(args, '--required-changed-path'),
     },
   };
 }

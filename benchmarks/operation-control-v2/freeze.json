@@ -5,7 +5,7 @@
   "source_optimizer_report_id": "optimizer-report-sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9",
   "source_run_set_digest": "sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9",
   "controller_source_digests": {
-    "core/operation-controller/contracts.js": "sha256:4f57952a12598ede5985203933860db940f23ef6f6733bc940efc546af26cb89",
+    "core/operation-controller/contracts.js": "sha256:c7d6c4d25a45d9e153382a6e9e15919b134bb2a83397b7703f42235abcecb6a1",
     "core/operation-controller/controller.js": "sha256:1c020300887916b7a73cf3cb01a06ab9d94a1036fe91529b9603bfd028923e53",
     "scripts/operation-control-evidence.js": "sha256:246df2444b0b2f7968d85c47b9a7b9bcd7a912dad7332b5677a7f9282eed626f"
   },
@@ -16,5 +16,5 @@
     "REPORT.md": "sha256:6aaa373eef4d6f06b9052ad7f80fcab848090df22924ce8ee636f088d1b4402d"
   },
   "evidence_boundary": "retrospective calibration only; prospective performance gate remains open",
-  "freeze_digest": "sha256:0513c00a328a1d54f823915ceda8def6b46ea7511c562509530baf88ca526988"
+  "freeze_digest": "sha256:dc8b04ac2b8ce2672e473d3ce13af3ce46c70913481a9d1dada47e37de039ece"
 }
