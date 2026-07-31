@@ -85,6 +85,11 @@ function main() {
 
     const relativePath = path.relative(PROJECT_ROOT, filePath).replace(/\\/g, '/');
 
+    // Capture durable knowledge close to the write so a disposable clone does
+    // not depend solely on a clean SessionEnd event. Non-memory edits take only
+    // the allowlist check and never open SQLite.
+    syncRepositoryMemory(filePath, relativePath);
+
     // Determine which hot-path lenses apply to this file
     const lenses = selectHotPathLenses(filePath, relativePath);
 
@@ -108,6 +113,14 @@ function main() {
     const hotBlockOnErrors = config.verification?.hotBlockOnErrors === true;
     process.exit(hotBlockOnErrors ? exitCode : 0);
   });
+}
+
+function syncRepositoryMemory(filePath, relativePath) {
+  try {
+    const memory = require('../core/memory/repository-store');
+    if (!memory.isDurablePath(relativePath)) return;
+    memory.syncRepository(PROJECT_ROOT, { filePath });
+  } catch { /* optional, best-effort, and never changes edit verification */ }
 }
 
 // ── Hot-Path Lens Dispatch ──────────────────────────────────────────────────

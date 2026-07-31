@@ -56,7 +56,7 @@ Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->35<!-- /GENERATE
 | Safety (PreToolUse) | `protect-files.js`, `external-action-gate.js`, `governance.js` | Block protected edits, gate external actions, audit tool calls |
 | Quality (PostToolUse) | `post-edit.js`, `organize-enforce.js`, `complexity-check.js` | Typecheck, file placement, advisory complexity scores |
 | Wave (PostToolBatch) | `post-tool-batch.js` | Async quality checkpoint after parallel tool waves |
-| Session | `init-project.js`, `session-end.js`, `restore-compact.js` | Scaffold state, flush telemetry, restore after compression |
+| Session | `init-project.js`, `session-end.js`, `restore-compact.js` | Scaffold state, flush telemetry, restore after compression, and sync opted-in cross-clone memory |
 | Fleet | `subagent-start.js`, `subagent-stop.js`, `worktree-setup.js` | Agent identity binding, completion logging, worktree init |
 | Consent | `permission-request.js`, `external-action-gate.js` | Auto-approve safe ops, gate pushes/PRs with user consent |
 | Signals | `instructions-loaded.js`, `file-changed.js`, `config-change.js` | React to CLAUDE.md reloads, file-on-disk changes, settings changes |
@@ -79,7 +79,9 @@ New telemetry and artifact records carry stable lineage fields (`event_id`, `run
 
 ## Campaign Files
 
-The only persistent state. Everything else is amnesiac.
+The default persistent state. An optional user-level SQLite store can preserve a
+strict durable-knowledge subset across disposable clones; active execution state
+remains repository-local. See [Cross-clone repository memory](REPOSITORY_MEMORY.md).
 
 ```markdown
 # Campaign: {name}

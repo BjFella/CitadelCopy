@@ -33,6 +33,7 @@ Commands:
   governance   Record or authorize a fail-honest governance decision
   control-plane Run the Governance Port alpha or its conformance suite
   trial        Operate the local-only Real User Proof v2 instrument
+  memory       Preserve durable Citadel knowledge across disposable clones
   help         Show this help
 
 Run citadel <command> --help for command-specific help.
@@ -59,6 +60,7 @@ citadel adopt plan|apply so every mutation and later leave is receipt-owned.
   governance: 'Usage: citadel governance <evaluate|authorize|check> [options]\n',
   'control-plane': 'Usage: citadel control-plane <stdio|conformance> [options]\n',
   trial: 'Usage: citadel trial <validate|plan|start|record|report|share-preview|purge> [options]\n',
+  memory: 'Usage: citadel memory <status|enable|sync|restore|versions|restore-version|disable|purge> [options]\n',
 });
 
 function has(args, flag) {
@@ -362,6 +364,7 @@ function main(argv = process.argv.slice(2), options = {}) {
   if (command === 'governance') return child('governance-gate.js', args, { ...context, json: has(args, '--json') });
   if (command === 'control-plane') return controlPlane(args, context);
   if (command === 'trial') return child('product-proof-trial.js', args, { ...context, json: true });
+  if (command === 'memory') return child('repository-memory.js', args, { ...context, json: has(args, '--json') });
   const error = new Error(`unknown command: ${command}`);
   error.code = CODE.COMMAND_FAILED;
   error.exitCode = EXIT.USAGE;

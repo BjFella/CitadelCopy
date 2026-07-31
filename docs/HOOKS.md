@@ -12,7 +12,7 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `protect-files.js` | PreToolUse | Block edits to protected files and out-of-scope paths |
 | `external-action-gate.js` | PreToolUse (Bash) | Gate external actions (git push, API calls) |
 | `governance.js` | PreToolUse (Edit/Write/Bash/Agent) | Audit every significant tool call |
-| `post-edit.js` | PostToolUse | Project-scope incremental typecheck + structural/performance/visual lenses |
+| `post-edit.js` | PostToolUse | Project-scope incremental typecheck + structural/performance/visual lenses; sync eligible opted-in memory files |
 | `organize-enforce.js` | PostToolUse (Edit/Write) | Enforce file placement conventions |
 | `circuit-breaker.js` | PostToolUse (Bash) + PostToolUseFailure | Detect failure loops |
 | `cost-tracker.js` | PostToolUse | Real-time session cost monitoring |
@@ -25,13 +25,13 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `init-project.js` | SessionStart + Setup | Scaffold .planning/ state; also runs in --init-only mode |
 | `restore-compact.js` | SessionStart (compact) | Restore context after compression |
 | `intake-scanner.js` | SessionStart | Report pending work items |
-| `session-end.js` | SessionEnd | Flush session telemetry |
+| `session-end.js` | SessionEnd | Flush session telemetry and opted-in durable repository memory |
 | `subagent-start.js` | SubagentStart | Bind fleet agent identity at spawn time |
 | `subagent-stop.js` | SubagentStop | Log agent completion + flag abnormal exits |
 | `teammate-idle.js` | TeammateIdle | Log teammate idle events (multi-instance fleet) |
 | `permission-request.js` | PermissionRequest + PermissionDenied | Auto-approve safe Citadel ops, log all decisions |
 | `instructions-loaded.js` | InstructionsLoaded | Detect CLAUDE.md reloads, queue doc-sync |
-| `file-changed.js` | FileChanged | React to file-on-disk changes; queue doc-sync and skill-lint |
+| `file-changed.js` | FileChanged | React to file-on-disk changes; queue doc-sync and skill-lint; sync eligible opted-in memory files |
 | `cwd-changed.js` | CwdChanged | Log directory changes; flag when moving outside project root |
 | `config-change.js` | ConfigChange | Detect harness.json / settings.json changes mid-session |
 | `elicitation.js` | Elicitation + ElicitationResult | Log MCP elicitation requests; never auto-responds |

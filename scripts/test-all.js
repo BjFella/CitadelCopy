@@ -34,6 +34,7 @@ const RUNTIME_MATRIX_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-runtime-matr
 const TELEMETRY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-telemetry-core.js');
 const TELEMETRY_INTEGRITY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-telemetry-integrity.js');
 const MEMORY_BLOCK_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-memory-blocks.js');
+const REPOSITORY_MEMORY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-repository-memory.js');
 const EVIDENCE_CONTRACT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-evidence-contracts.js');
 const SANDBOX_PROVIDER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-sandbox-provider.js');
 const SKILL_PACKAGING_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-skill-packaging.js');
@@ -183,6 +184,7 @@ const demoPassed = run('Demo Routing Check', DEMO_TEST);
 const telemetryPassed = run('Telemetry Core Check', TELEMETRY_TEST);
 const telemetryIntegrityPassed = run('Telemetry Integrity Check', TELEMETRY_INTEGRITY_TEST);
 const memoryBlockPassed = run('Memory Block Check', MEMORY_BLOCK_TEST);
+const repositoryMemoryPassed = run('Cross-Clone Repository Memory', REPOSITORY_MEMORY_TEST);
 const evidenceContractPassed = run('Evidence Contract Check', EVIDENCE_CONTRACT_TEST);
 const sandboxProviderPassed = run('Sandbox Provider Check', SANDBOX_PROVIDER_TEST);
 const skillPackagingPassed = run('Skill Packaging Check', SKILL_PACKAGING_TEST);
@@ -269,6 +271,7 @@ console.log(`  Demo routing check: ${demoPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Telemetry core:     ${telemetryPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Telemetry integrity: ${telemetryIntegrityPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Memory blocks:      ${memoryBlockPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Repository memory:  ${repositoryMemoryPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Evidence contracts: ${evidenceContractPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Sandbox provider:   ${sandboxProviderPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Skill packaging:    ${skillPackagingPassed ? 'PASS' : 'FAIL'}`);
@@ -341,7 +344,7 @@ for (const [label, passed] of unlockResults) {
 }
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed) {
+if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && repositoryMemoryPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -440,6 +443,7 @@ if (!demoPassed) console.log('Demo routing check failed. Fix routing bugs in doc
 if (!telemetryPassed) console.log('Telemetry core check failed. Fix telemetry regressions before shipping.');
 if (!telemetryIntegrityPassed) console.log('Telemetry integrity check failed. Fix hashing, IDs, signing, or verifier behavior before shipping.');
 if (!memoryBlockPassed) console.log('Memory block check failed. Fix memory compilation, source linting, or scoped load behavior before shipping.');
+if (!repositoryMemoryPassed) console.log('Repository memory check failed. Fix cross-clone identity, SQLite storage, restore conflicts, or privacy boundaries before shipping.');
 if (!evidenceContractPassed) console.log('Evidence contract check failed. Fix exit evidence parsing, validation, or repair task behavior before shipping.');
 if (!sandboxProviderPassed) console.log('Sandbox provider check failed. Fix provider capabilities, worktree status, or unsupported-provider errors before shipping.');
 if (!skillPackagingPassed) console.log('Skill packaging check failed. Fix metadata, catalog, or scaffold behavior before shipping.');

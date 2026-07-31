@@ -135,6 +135,28 @@ result, and one exact token. `land apply` rechecks all three before a local merg
 pushes, publishes, tags, deploys, or bypasses branch protection. An ambiguous merge effect
 blocks recovery and is not repeated.
 
+## Cross-clone repository memory
+
+On Node.js 22.13+, opt into a user-level SQLite store for completed Citadel
+knowledge that must survive disposable clones:
+
+```sh
+citadel memory enable --project-root .
+citadel memory status --project-root . --json
+citadel memory sync --project-root .
+citadel memory restore --project-root .
+citadel memory versions --project-root . --path .planning/research/topic/REPORT.md
+citadel memory restore-version --project-root . --path .planning/research/topic/REPORT.md --sha256 FULL_DIGEST
+citadel memory disable --project-root .
+citadel memory purge --project-root . --confirm PURGE
+```
+
+The store is disabled by default. It hashes the normalized `origin` fetch URL
+for repository identity, retains content versions, and restores only missing
+files automatically. Existing different content is a conflict and remains
+unchanged unless `restore --force` is invoked manually. No command contacts the
+remote. See [Cross-clone repository memory](REPOSITORY_MEMORY.md).
+
 ## Packs and receipts
 
 `citadel pack` manages the local certified Pack index and lifecycle. `citadel journey` starts or completes a Pack as an Operations Protocol run, and `citadel receipt verify` checks its execution receipt offline. Missing evidence remains `unknown`.
