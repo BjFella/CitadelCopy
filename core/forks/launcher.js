@@ -9,12 +9,14 @@ const path = require('path');
 const DIRECT_EXTENSIONS = Object.freeze(['.exe', '.com']);
 const SHIM_EXTENSIONS = Object.freeze(['.cmd', '.bat']);
 
-function pathEntries(env) {
-  return String(env.PATH || env.Path || '').split(path.delimiter).filter(Boolean);
+function pathEntries(env, platform = process.platform) {
+  const delimiter = platform === 'win32' ? path.win32.delimiter : path.delimiter;
+  return String(env.PATH || env.Path || '').split(delimiter).filter(Boolean);
 }
 
-function candidateDirectories(command, env) {
+function candidateDirectories(command, env, platform = process.platform) {
   const directories = [];
+  const platformPath = platform === 'win32' ? path.win32 : path;
   // The Windows Store desktop bundle can expose an executable path that is
   // visible but not launchable as a CLI. Prefer the official npm shim for the
   // two supported runtimes when it exists under the conventional user npm
@@ -22,14 +24,14 @@ function candidateDirectories(command, env) {
   // below and never launched through a command interpreter.
   if (['codex', 'claude'].includes(command)
     && typeof env.APPDATA === 'string'
-    && path.isAbsolute(env.APPDATA)
+    && platformPath.isAbsolute(env.APPDATA)
     && !/[\r\n\0]/.test(env.APPDATA)) {
-    directories.push(path.join(env.APPDATA, 'npm'));
+    directories.push(platformPath.join(env.APPDATA, 'npm'));
   }
-  directories.push(...pathEntries(env));
+  directories.push(...pathEntries(env, platform));
   const seen = new Set();
   return directories.filter((directory) => {
-    const key = process.platform === 'win32' ? directory.toLowerCase() : directory;
+    const key = platform === 'win32' ? directory.toLowerCase() : directory;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

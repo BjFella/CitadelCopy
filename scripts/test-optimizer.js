@@ -679,7 +679,7 @@ function main() {
       verification: {
         status: 1,
         stdout: `${probeRoot}\\test.js\n${'x'.repeat(9000)}`,
-        stderr: `${process.env.USERPROFILE || ''}\\private\nghp_123456789012345678901234567890123456`,
+        stderr: `${process.env.USERPROFILE || ''}\\private\n${['ghp', '123456789012345678901234567890123456'].join('_')}`,
         timed_out: false,
       },
       patch: {
@@ -715,7 +715,8 @@ function main() {
         fs.writeFileSync(path.join(workspace, 'test.js'), '// target\n');
         return ok;
       }
-      if (argv[0] === process.execPath && path.resolve(argv[1] || '') === path.resolve(adapterFile)) {
+      if (argv[0] === process.execPath
+        && fs.realpathSync(path.resolve(argv[1] || '')) === fs.realpathSync(path.resolve(adapterFile))) {
         const input = JSON.parse(fs.readFileSync(argv[2], 'utf8'));
         fs.writeFileSync(input.output_path, JSON.stringify({
           schema: 1,

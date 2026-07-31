@@ -387,7 +387,7 @@ assert.equal(verifierCalls, 1, 'containment violation must skip verifier spawn')
 assert.deepEqual(forks.candidateDirectories('codex', {
   APPDATA: 'C:\\Users\\operator\\AppData\\Roaming',
   PATH: 'C:\\Program Files\\WindowsApps;C:\\Windows\\System32',
-}), [
+}, 'win32'), [
   'C:\\Users\\operator\\AppData\\Roaming\\npm',
   'C:\\Program Files\\WindowsApps',
   'C:\\Windows\\System32',
