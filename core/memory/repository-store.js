@@ -68,10 +68,15 @@ function runGit(projectRoot, args, options = {}) {
   return String(result.stdout || '').trim() || null;
 }
 
+function realpathOrResolved(value) {
+  const resolved = path.resolve(value);
+  try { return fs.realpathSync.native(resolved); } catch { return resolved; }
+}
+
 function repositoryIdentity(projectRoot, options = {}) {
   const requestedRoot = path.resolve(projectRoot);
   const gitRoot = runGit(requestedRoot, ['rev-parse', '--show-toplevel'], options);
-  const root = path.resolve(gitRoot || requestedRoot);
+  const root = realpathOrResolved(gitRoot || requestedRoot);
   const remote = runGit(root, ['remote', 'get-url', 'origin'], options);
   const normalizedRemote = normalizeRemoteUrl(remote);
   if (normalizedRemote) {
@@ -84,7 +89,6 @@ function repositoryIdentity(projectRoot, options = {}) {
   }
 
   let canonical = root;
-  try { canonical = fs.realpathSync.native(root); } catch { /* use resolved path */ }
   if (process.platform === 'win32') canonical = canonical.toLowerCase();
   return {
     repository_id: sha256(`local:v1:${normalizeSlashes(canonical)}`),
@@ -233,7 +237,10 @@ function openDatabase(options = {}) {
 }
 
 function normalizedRelative(projectRoot, filePath) {
-  const relative = normalizeSlashes(path.relative(projectRoot, path.resolve(filePath)));
+  const root = realpathOrResolved(projectRoot);
+  const requested = path.resolve(filePath);
+  const candidate = fs.existsSync(requested) ? realpathOrResolved(requested) : requested;
+  const relative = normalizeSlashes(path.relative(root, candidate));
   if (!relative || relative === '..' || relative.startsWith('../') || path.isAbsolute(relative)) return null;
   return relative;
 }

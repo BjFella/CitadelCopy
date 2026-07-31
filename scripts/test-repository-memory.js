@@ -98,6 +98,17 @@ assert(fs.existsSync(databasePath));
 if (process.platform !== 'win32') {
   assert.equal(fs.statSync(databasePath).mode & 0o077, 0, 'database must not grant group or other permissions');
 }
+const sourceAlias = path.join(suite, 'source-alias');
+try {
+  fs.symlinkSync(source, sourceAlias, process.platform === 'win32' ? 'junction' : 'dir');
+  const aliasSync = memory.syncRepository(sourceAlias, {
+    databasePath,
+    filePath: path.join(sourceAlias, '.planning', 'research', 'nested', 'note.md'),
+  });
+  assert.equal(aliasSync.entries_synced, 1, 'filesystem aliases must resolve within the canonical Git root');
+} catch (error) {
+  if (!['EPERM', 'EACCES', 'ENOTSUP'].includes(error.code)) throw error;
+}
 const initialResearchVersions = memory.listVersions(source, {
   databasePath,
   relativePath: '.planning/research/nested/note.md',
@@ -197,7 +208,7 @@ try {
     filePath: path.join(linkedDirectory, 'escaped.md'),
   });
   assert.equal(symlinkSync.entries_synced, 0);
-  assert.equal(symlinkSync.skipped[0].reason, 'symlink-path');
+  assert(['unsafe-path', 'symlink-path'].includes(symlinkSync.skipped[0].reason));
 } catch (error) {
   if (!['EPERM', 'EACCES', 'ENOTSUP'].includes(error.code)) throw error;
 }
