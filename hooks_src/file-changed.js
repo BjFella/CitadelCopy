@@ -87,8 +87,18 @@ function main() {
       queueSkillLint(relative);
     }
 
+    syncRepositoryMemory(filePath, relative);
+
     process.exit(0);
   });
+}
+
+function syncRepositoryMemory(filePath, relativePath) {
+  try {
+    const memory = require('../core/memory/repository-store');
+    if (!memory.isDurablePath(relativePath)) return;
+    memory.syncRepository(PROJECT_ROOT, { filePath });
+  } catch { /* optional, best-effort, and never blocks file notifications */ }
 }
 
 function queueDocSync(relative, trigger) {

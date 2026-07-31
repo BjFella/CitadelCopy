@@ -1,11 +1,12 @@
 # Threat Model
 
-Version 3.0 (2026-07-13). Version 1 covered the core hook, campaign, and fleet
+Version 4.0 (2026-07-31). Version 1 covered the core hook, campaign, and fleet
 surfaces. Version 2 adds Teams Mode coordination, routine and daemon
 automation, generated routing surfaces, the native memory write allowlist, and
 the accepted residuals from the June 2026 audit. Version 3 adds Operation Fork,
 cross-runtime worktrees, signed comparison evidence, local selection, landing,
-and redacted replay.
+and redacted replay. Version 4 adds the opt-in user-level cross-clone memory
+boundary, content allowlist, restore controls, and retention semantics.
 
 Citadel is an agent orchestration harness for local coding runtimes. It adds
 skills, hooks, scripts, generated configuration, and repo-local state so an AI
@@ -44,6 +45,7 @@ Citadel does not try to:
 | Source files | The agent can modify code, docs, tests, and generated artifacts. |
 | Secrets and credentials | `.env` files, tokens, keys, and private config must not be copied into prompts, logs, or public artifacts. |
 | Repo-local planning state | `.planning/` can contain campaign details, research, screenshots, telemetry, cost data, local paths, and handoffs. |
+| Optional cross-clone memory | A user-level SQLite database can contain durable completed campaigns, research, discoveries, backlog, and project context. |
 | Runtime configuration | `.codex/`, `.claude/`, `.mcp.json`, and generated hook config influence future agent behavior. |
 | Git branches and worktrees | Fleet and PR workflows can create, inspect, and coordinate parallel work. |
 | External services | GitHub, package registries, MCP servers, and browser targets may have side effects or expose data. |
@@ -74,6 +76,14 @@ Citadel writes state under paths such as `.planning/`, `.citadel/`, `.codex/`,
 and `.claude/`. These files are useful for continuity, but they may contain
 private project details. Users should review them before publishing.
 
+When explicitly enabled, cross-clone memory adds one user-level trust boundary:
+`repository-memory.sqlite3`. It stores only allowlisted durable files, uses a
+SHA-256 digest rather than a raw remote URL or clone path as identity metadata,
+and never transmits data. Allowlisted documents are stored verbatim and may
+themselves contain private URLs or local paths. The database is plaintext local
+storage. A process running as the same OS user can read it, and a malicious
+durable Markdown file remains untrusted input when restored into a later clone.
+
 ### Agents and Sub-Agents
 
 Parallel agents, Fleet sessions, and campaign continuations inherit project
@@ -102,6 +112,10 @@ that conflict with user, system, runtime, or repository policy.
 | Fork comparison spoofing | A runtime claims success without equivalent proof | shared contract digests, signed receipts, required evidence coverage, and explicit unknown states |
 | Duplicate landing | Recovery repeats a merge after losing state | persist unknown before the effect, block ambiguous recovery, and require idempotency |
 | Replay leak | A public comparison exposes prompts, source, paths, or credentials | strict output allowlist, digest projection, and secret-like value rejection |
+| Cross-repository memory bleed | One clone receives another repository's private lessons | normalized remote identity hashed with a versioned domain separator; path-scoped fallback does not claim cross-clone portability |
+| Memory restore overwrite | Stored content replaces newer work in a clone | automatic restore writes missing files only; divergent files are reported and require explicit `--force` |
+| Memory path escape | A tampered database row targets a path outside the repository | strict durable-path allowlist, containment check, plain-file and symlink rejection |
+| Memory retention surprise | Disabling the feature is mistaken for deleting stored content | `disable` preserves and stops use; destructive removal is a separate `purge --confirm PURGE` command |
 
 ## Expanded Surfaces (v2)
 

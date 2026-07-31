@@ -112,6 +112,7 @@
     "update": "node scripts/update.js",
     "memory:compile": "node scripts/memory-compile.js compile",
     "memory:lint": "node scripts/memory-compile.js lint",
+    "memory:repository": "node scripts/repository-memory.js",
     "evidence:validate": "node scripts/evidence-validate.js",
     "sandbox:matrix": "node scripts/sandbox-provider.js matrix",
     "skill:catalog": "node scripts/skill-catalog.js",

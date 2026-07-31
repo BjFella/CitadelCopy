@@ -231,6 +231,10 @@ function main() {
       PLUGIN_ROOT
     );
 
+    // 6a. Restore opted-in durable knowledge from the user-level repository
+    // store. Existing files are never overwritten by this automatic path.
+    restoreRepositoryMemory();
+
     // 6b. Record proof-backed activation milestones. This is local-only,
     // deduplicated, and can never block session initialization.
     recordActivationMilestones();
@@ -248,6 +252,21 @@ function main() {
     // Non-fatal — don't block session start
     process.exit(0);
   }
+}
+
+function restoreRepositoryMemory() {
+  try {
+    const memory = require('../core/memory/repository-store');
+    const result = memory.restoreRepository(PROJECT_ROOT);
+    if (Array.isArray(result.restored) && result.restored.length > 0) {
+      process.stdout.write(`[citadel] restored ${result.restored.length} durable memory file(s) from the user store\n`);
+    }
+    if (Array.isArray(result.conflicts) && result.conflicts.length > 0) {
+      process.stdout.write(
+        `[citadel] cross-clone memory left ${result.conflicts.length} divergent local file(s) unchanged; run citadel memory restore to inspect\n`
+      );
+    }
+  } catch { /* optional, best-effort, and never blocks session start */ }
 }
 
 function activationRuntime() {

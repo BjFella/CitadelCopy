@@ -112,8 +112,19 @@ function main() {
     // Write doc sync queue entry (Tier 6 - processed by next session or doc-sync hook)
     queueDocSync();
 
+    // Snapshot only opted-in durable knowledge. Active execution state,
+    // telemetry, consent, and runtime configuration never enter this store.
+    syncRepositoryMemory();
+
     process.exit(0);
   });
+}
+
+function syncRepositoryMemory() {
+  try {
+    const memory = require('../core/memory/repository-store');
+    memory.syncRepository(PROJECT_ROOT);
+  } catch { /* optional, best-effort, and never blocks session end */ }
 }
 
 /**

@@ -29,6 +29,7 @@ For the detailed trust-boundary map, see [THREAT_MODEL.md](THREAT_MODEL.md).
 - Local use inside a repository you control.
 - Claude Code and OpenAI Codex sessions with normal tool approval boundaries.
 - Project-local state under `.planning/`, `.citadel/`, `.codex/`, `.claude/`, and generated runtime configuration files.
+- Optional user-level cross-clone memory explicitly enabled with `citadel memory enable`.
 - Reviewable pull-request workflows for publishing harness changes.
 
 ### Not supported
@@ -50,6 +51,7 @@ For the detailed trust-boundary map, see [THREAT_MODEL.md](THREAT_MODEL.md).
 | Prompt injection | Repo docs, issues, PRs, web pages, or generated artifacts can contain hostile instructions | Instruction hierarchy, explicit trust boundaries, review before automation |
 | Unattended automation drift | Long-running agents can make broad changes if scope is unclear | Campaign state, handoffs, approval capsules, PR readiness checks |
 | Public artifact leakage | `.planning/` can contain decisions, costs, logs, screenshots, or research | `.gitignore` coverage, private-state guidance, review before sharing |
+| Cross-clone memory disclosure | The optional SQLite store contains durable project notes outside the clone | Disabled by default, repository-key hashing, strict content allowlist, user-only file mode where supported, explicit disable and purge |
 
 ## Defensive hooks and checks
 
@@ -86,6 +88,14 @@ Write boundaries:
 > Do not assume generated Citadel state is safe to publish. It can include repository structure, work plans, local paths, tool outputs, review findings, cost telemetry, screenshots, or links to private work.
 
 Review these paths before committing, sharing logs, recording demos, or opening support issues: `.planning/`, `.citadel/`, `.codex/`, `.claude/`, `.mcp.json`, plus screenshots, browser captures, telemetry logs, research notes, and handoff files.
+
+If cross-clone memory is enabled, also protect the user-level
+`repository-memory.sqlite3` database documented in
+[Cross-clone repository memory](docs/REPOSITORY_MEMORY.md). It is plaintext local
+storage and can contain the full text of completed campaigns, postmortems,
+research, discoveries, backlog items, and project context. Citadel attempts a
+user-only file mode where the operating system supports it; disk encryption and
+account security remain the user's responsibility.
 
 ## Security checklist for harness changes
 

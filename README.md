@@ -120,6 +120,13 @@ Citadel does not replace `CLAUDE.md` or `AGENTS.md`. Those files describe the pr
 
 The repository remains the source of truth. Citadel adds an operating layer around the coding agent rather than replacing its runtime.
 
+If you regularly delete clones, opt into [cross-clone repository memory](docs/REPOSITORY_MEMORY.md)
+on Node.js 22.13+ with `citadel memory enable`. Citadel then keeps completed
+campaigns, postmortems, research, discoveries, backlog, and project context in
+a user-level SQLite database and restores missing files in another clone of the
+same remote. Its default path is outside the checkout, and Citadel never commits,
+pushes, or transmits it.
+
 ## Portable operations
 
 Portable operations are optional. They are for work that needs a stable contract, durable recovery, comparable executors, or a verifiable receipt. Ordinary repository work still begins with `/do`.
@@ -177,6 +184,19 @@ Runtime adapters may add Claude Code or Codex configuration files. [Installation
 </details>
 
 ## Common questions
+
+<details>
+<summary><strong>Can I delete a clone without losing Citadel's lessons?</strong></summary>
+
+<br>
+
+Yes, if you enable cross-clone memory first with `citadel memory enable` on
+Node.js 22.13+. It syncs only durable knowledge to a local user-level SQLite store.
+A new clone with the same `origin` restores missing knowledge automatically
+after Citadel is installed. Existing divergent files are never overwritten
+automatically. See [Cross-clone repository memory](docs/REPOSITORY_MEMORY.md).
+
+</details>
 
 <details>
 <summary><strong>Do I need to learn every skill or operation command?</strong></summary>

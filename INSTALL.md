@@ -326,6 +326,26 @@ leave plan/apply path. A legacy install without a receipt must first use
 `adopt import plan`; the emergency `unharness --legacy-apply` path is explicitly
 inexact and cannot support an exact-removal claim.
 
+## Optional cross-clone memory
+
+Citadel's core remains repository-local. On Node.js 22.13+, users with disposable
+clones can opt into a user-level SQLite store:
+
+```bash
+citadel memory enable
+citadel memory status
+```
+
+The store is keyed by a SHA-256 digest of the normalized `origin` fetch URL.
+It contains only durable Markdown knowledge and project context, never active
+execution state, telemetry, consent, or runtime configuration. Raw remote URLs
+and clone paths are not stored as identity metadata; allowlisted documents are
+stored verbatim and may themselves mention either. Missing files restore
+automatically in another clone of the enabled repository; different existing
+files remain untouched. See
+[Cross-clone repository memory](docs/REPOSITORY_MEMORY.md) for paths, limits,
+manual sync/restore, disable, and purge.
+
 ## Troubleshooting
 
 **Hook not firing / "command not found" errors:**
