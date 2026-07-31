@@ -7,15 +7,15 @@ const path = require('path');
 
 const {
   createRepairTask,
+  evaluateMergeCandidates,
   getBlockedTasks,
-  getMergeCandidates,
   getReadyTasks,
   getScopeConflicts,
   parseWorkQueue,
   serializeWorkQueue,
   updateWorkQueue,
-  validateMergeOrder,
 } = require('../core/fleet/session');
+const { authorizeDecision } = require('../core/governance');
 const { listReadinessReports, matchReadiness } = require('../core/worktree/readiness');
 
 function parseArgs(argv) {
@@ -104,18 +104,31 @@ function analyzeTasks(tasks, options = {}) {
   }
 
   const blocked = getBlockedTasks(tasks);
-  const mergeBlocked = tasks
-    .filter((task) => ['complete', 'completed', 'done', 'success', 'validated', 'merge-ready'].includes(task.status))
-    .map((task) => ({ task, merge: validateMergeOrder(task, tasks) }))
-    .filter((entry) => !entry.merge.ok);
+  const authorize = options.authorize || (options.projectRoot
+    ? (_task, authority, disposition) => authorizeDecision(
+      options.projectRoot,
+      authority,
+      disposition,
+    )
+    : null);
+  const mergeAssessments = evaluateMergeCandidates(tasks, {
+    authorize,
+    sessionId: options.sessionId,
+  });
+  const mergeBlocked = mergeAssessments.filter((entry) => !entry.merge.ok);
+  const governanceBlocked = mergeAssessments
+    .filter((entry) => entry.merge.ok && entry.governance?.authorized !== true);
 
   return {
     count: tasks.length,
     ready: readyWithReadiness,
     blocked,
     readinessBlocked,
-    mergeCandidates: getMergeCandidates(tasks),
+    mergeCandidates: mergeAssessments
+      .filter((entry) => entry.merge.ok && entry.governance?.authorized === true)
+      .map((entry) => entry.task),
     mergeBlocked,
+    governanceBlocked,
     scopeConflicts: getScopeConflicts(tasks),
   };
 }
@@ -176,6 +189,16 @@ function renderReport(snapshot) {
   lines.push('');
 
   lines.push(renderList(
+    'GOVERNANCE BLOCKED',
+    snapshot.analysis.governanceBlocked.map((entry) => {
+      const code = entry.governance?.authorization_code || 'GOVERNANCE_AUTHORITY_INVALID';
+      return `${taskLabel(entry.task)} - ${code} - subject ${entry.authority.id}`;
+    }),
+    'No governance-blocked merge candidates.'
+  ));
+  lines.push('');
+
+  lines.push(renderList(
     'SCOPE CONFLICTS',
     snapshot.analysis.scopeConflicts.map((conflict) => {
       return `Wave ${conflict.wave}: #${conflict.left.id} overlaps #${conflict.right.id}`;
@@ -199,11 +222,14 @@ function renderReport(snapshot) {
 
 function collect(args) {
   const sessionPath = resolveSessionPath(args);
+  const sessionId = sessionPath
+    ? path.basename(sessionPath, path.extname(sessionPath))
+    : 'fleet-session';
   if (!sessionPath || !fs.existsSync(sessionPath)) {
     return {
       sessionPath,
       tasks: [],
-      analysis: analyzeTasks([]),
+      analysis: analyzeTasks([], { projectRoot: args.projectRoot, sessionId }),
       readinessReports: [],
       repair: null,
       wrote: false,
@@ -223,7 +249,12 @@ function collect(args) {
       return {
         sessionPath,
         tasks,
-        analysis: analyzeTasks(tasks, { readinessReports, overrideReadiness: args.overrideReadiness }),
+        analysis: analyzeTasks(tasks, {
+          readinessReports,
+          overrideReadiness: args.overrideReadiness,
+          projectRoot: args.projectRoot,
+          sessionId,
+        }),
         readinessReports,
         repair,
         wrote,
@@ -245,7 +276,12 @@ function collect(args) {
   return {
     sessionPath,
     tasks,
-    analysis: analyzeTasks(tasks, { readinessReports, overrideReadiness: args.overrideReadiness }),
+    analysis: analyzeTasks(tasks, {
+      readinessReports,
+      overrideReadiness: args.overrideReadiness,
+      projectRoot: args.projectRoot,
+      sessionId,
+    }),
     readinessReports,
     repair,
     wrote,

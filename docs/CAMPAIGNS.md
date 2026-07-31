@@ -24,9 +24,12 @@ Complete and archive a finished campaign with:
 node scripts/campaign.js complete <campaign-slug> --archive
 ```
 
-The command refuses to complete campaigns with unfinished phases unless
-`--force` is used after human review. It also writes a `## Completion Record`
-for merge links, verification notes, and final evidence.
+The command refuses to record successful completion while any required phase
+gate is non-passing or lacks complete, current evidence. `--force` is reserved
+for recording an explicit reviewed non-success outcome such as
+`blocked-decision`; it cannot relabel missing, failed, blocked, or unknown
+evidence as passed. The command also writes a `## Completion Record` for merge
+links, verification notes, and final evidence.
 
 Every completion record includes a concrete outcome label:
 
@@ -150,7 +153,11 @@ Valid status values: `pending`, `in-progress`, `design-complete`, `complete`,
 
 ## Phase Validation
 
-Archon spawns a **Phase Validator** agent at the end of each build or wire phase to confirm exit conditions before the campaign advances. The validator reads the phase plan, checks actual file state, and returns `pass` or `fail` with a specific reason. On `fail`, Archon re-enters the phase rather than advancing — preventing partially-complete phases from silently propagating into later work.
+Archon spawns a **Phase Validator** agent at the end of each build or wire phase
+to compare the HANDOFF claims with the declared exit conditions. The validator
+does not inspect the workspace or run commands; deterministic checks and Exit
+Evidence establish objective truth. Only current, subject-bound `passed`
+evidence with complete required coverage unlocks a dependent phase.
 
 The validator is invoked as a read-only Haiku sub-agent:
 
@@ -167,30 +174,40 @@ Agent(
 Each phase row carries a `validator_retries_remaining: 3` budget. On `fail`,
 Archon decrements the counter and re-delegates the phase to a fresh sub-agent
 with the validator's `conditions_failed` and `suggestions` appended to the
-original prompt. When the budget hits zero, the phase is marked `partial`, a
-`validator_halt` entry is logged to the Decision Log, and the campaign
-advances; validator failure alone never parks a campaign.
+original prompt. Timeout or malformed output is an immutable `unknown`
+observation and consumes the bounded retry budget. When the budget hits zero,
+Archon logs `validator_halt`, preserves the failed/unknown observations, and
+invokes the acting Arbiter for a binding holistic decision when applicable.
+Arbiter block or unavailability holds the phase, its dependents, and terminal
+completion. `partial` describes progress only and never satisfies a dependency.
 
 **Holistic escalation (tier-aware validation).** The Phase Validator is the *mechanical* judge — it
 reasons about whether the HANDOFF credibly claims the exit conditions were met, and its `fail` is
 retryable. For an *irreducibly holistic* call — "is this work actually sound, correct, coherent?", or
-the binding accept/reject after the retry budget is exhausted (where Archon would otherwise accept its
-own `partial`) — escalate instead to the strong-tier **`arbiter`** agent (`agents/arbiter.md`). The
+the binding accept/reject after the retry budget is exhausted — escalate to the
+strong-tier **`arbiter`** agent (`agents/arbiter.md`). The
 arbiter *acts* (re-runs the objective gates itself rather than trusting prose) and its
 `verdict: "block"` is **binding** — Archon may not accept around it. Pair the arbiter with a model of
 a *different family* from the worker (decorrelated blind spots) and keep it strong: it runs once per
 artifact and is the floor of the loop. See `docs/JUDGE_TIERING.md` for which judge owns which decision
 and why a small model is right for mechanical reads but wrong for holistic quality.
 
-For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Phase Validators and require 2/3 agreement. A timed-out validator counts as `pass` to prevent indefinite blocking.
+For high-stakes control decisions (safe repair, rollback, or scope change),
+Archon may request three advisory votes and require two explicit parseable
+agreements. Timeout, malformed output, or an absent vote is `unknown`/abstain;
+missing quorum holds the decision. A vote cannot replace required evidence or
+override a binding Arbiter block.
 
-Campaigns can also declare an `## Exit Evidence` table. Run
+Campaigns declare an `## Exit Evidence` table with required rows for every
+phase. Run
 `node scripts/evidence-validate.js --file <campaign.md> --target phase:<n>`
 before advancing a phase. Required rows support file diffs, command results,
 test results, screenshots, browser route checks, doc updates, PR links, local
 review packages, review thread resolution, and hook status. Missing required
-evidence reports a repair task while retries remain, then blocks advancement
-when retries are exhausted.
+evidence is `unknown`: it reports a repair task while retries remain, then holds
+advancement when retries are exhausted. Held subjects are consolidated into one
+campaign-level human escalation while dependency-independent reversible work
+may continue.
 
 ## Policy Enforcement
 
@@ -222,15 +239,19 @@ Before each phase, Archon creates a checkpoint:
 git stash push --include-untracked -m "citadel-checkpoint-{campaign-slug}-phase-{N}"
 ```
 
-The stash ref is written to the campaign's Continuation State as
-`checkpoint-phase-N: stash@{0}`. If `git stash` fails, Archon logs
-`checkpoint-phase-N: none` and continues; checkpoint failure never blocks a
-phase.
+Resolve the created stash to a stable object ID and bind the checkpoint record
+to the campaign, phase, worktree, base revision, and dirty-tree digest; a mutable
+`stash@{0}` reference alone is insufficient. Checkpoint failure records
+`unknown/CHECKPOINT_UNAVAILABLE`. It may leave only Green,
+dependency-independent, workspace-reversible work runnable when the active
+policy makes checkpointing advisory. Amber/Red, shared-state, and nonrepeatable
+work remain held until a required checkpoint exists or a scoped human decision
+is recorded.
 
-To recover, Archon finds the checkpoint ref in Continuation State, runs
-`git stash pop <ref>` (or `git stash pop` if the ref is unavailable), runs
-typecheck to confirm a clean state, and logs the rollback to the Decision Log
-with what was restored and why.
+To recover, Archon verifies the checkpoint identity and binding, applies it
+without consuming the only copy, runs typecheck to confirm the expected state,
+and logs the rollback to the Decision Log. It never guesses a ref or falls back
+to an unqualified `git stash pop`.
 
 Within a live session, native rollback is preferred first: Claude Code
 checkpoints plus `/rewind` restore both conversation and files to the

@@ -66,7 +66,11 @@ test('all six v0.1 contract fixtures validate', () => {
 
 test('public contracts package exports the operations surface', () => {
   assert.equal(publicContracts.operations.PROTOCOL_VERSION, '0.1');
-  assert.equal(publicContracts.operations.validateOperationSpec, operations.validateOperationSpec);
+  assert.equal(typeof publicContracts.operations.validateOperationSpec, 'function');
+  assert.deepEqual(
+    publicContracts.operations.validateOperationSpec(fixtures.operation_spec),
+    operations.validateOperationSpec(fixtures.operation_spec),
+  );
 });
 
 test('canonical serialization sorts object keys and preserves array order', () => {

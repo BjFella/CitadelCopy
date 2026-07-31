@@ -11,6 +11,8 @@ const {
   sha256Digest,
   validateIntent,
 } = require('../core/operations');
+const config = require('../core/config');
+const CODEX_RUNTIME = require('../runtimes/codex/runtime');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const SERVER = path.join(REPO_ROOT, 'mcp-servers', 'citadel-state', 'index.js');
@@ -74,7 +76,11 @@ function drive(root, requests) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [SERVER], {
       cwd: REPO_ROOT,
-      env: { ...process.env, CITADEL_PROJECT_ROOT: root },
+      env: {
+        ...process.env,
+        CITADEL_PROJECT_ROOT: root,
+        CITADEL_RUNTIME: 'codex',
+      },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     const responses = new Map();
@@ -118,6 +124,36 @@ function drive(root, requests) {
 async function run() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-state-mcp-'));
   try {
+    const disabledRoot = path.join(root, 'default-bundles');
+    fs.mkdirSync(disabledRoot);
+    const disabled = await drive(disabledRoot, [
+      call(0, 'citadel_operation_list', {}),
+    ]);
+    assert.equal(disabled.get(0).error.code, -32003);
+    assert.equal(disabled.get(0).error.data.activation.status, 'unavailable');
+    assert.equal(disabled.get(0).error.data.activation.bundleId, 'operations');
+    assert.equal(
+      fs.existsSync(path.join(disabledRoot, '.citadel')),
+      false,
+      'MCP activation preflight must not mutate a default project',
+    );
+
+    const harness = config.createDefaultConfig();
+    harness.activation = {
+      ...harness.activation,
+      bundles: config.dependencyClosure(['operations']),
+      allowDegradedRuntime: true,
+    };
+    fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, '.claude', 'harness.json'),
+      `${JSON.stringify(harness, null, 2)}\n`,
+    );
+    config.reconcileEffectiveConfig(root, {
+      runtime: CODEX_RUNTIME,
+      reconciledAt: '2026-07-13T11:55:00.000Z',
+    });
+
     const operationDir = path.join(root, '.planning', 'operations', 'control');
     const campaignDir = path.join(root, '.planning', 'campaigns');
     fs.mkdirSync(operationDir, { recursive: true });

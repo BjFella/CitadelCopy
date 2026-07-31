@@ -12,27 +12,57 @@
 const fs = require('fs');
 const path = require('path');
 const activation = require('../core/telemetry/activation');
+const configControl = require('../core/config');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
-const PLANNING_DIRS = [
-  '.planning',
-  '.planning/campaigns',
-  '.planning/campaigns/completed',
-  '.planning/coordination',
-  '.planning/coordination/instances',
-  '.planning/coordination/claims',
-  '.planning/discoveries',
-  '.planning/fleet',
-  '.planning/fleet/briefs',
-  '.planning/fleet/outputs',
-  '.planning/intake',
-  '.planning/postmortems',
-  '.planning/research',
-  '.planning/screenshots',
-  '.planning/telemetry',
-];
+const PLANNING_DIRS_BY_BUNDLE = Object.freeze({
+  persistence: Object.freeze([
+    '.planning',
+    '.planning/campaigns',
+    '.planning/campaigns/completed',
+    '.planning/discoveries',
+    '.planning/fleet',
+    '.planning/fleet/briefs',
+    '.planning/fleet/outputs',
+    '.planning/postmortems',
+    '.planning/research',
+    '.planning/screenshots',
+    '.planning/telemetry',
+  ]),
+  parallel: Object.freeze([
+    '.planning/coordination',
+    '.planning/coordination/instances',
+    '.planning/coordination/claims',
+  ]),
+  operations: Object.freeze([
+    '.planning/intake',
+    '.planning/operations',
+  ]),
+  delivery: Object.freeze([
+    '.planning/deploy',
+    '.planning/pr-watch',
+  ]),
+});
+
+function activationAuthority() {
+  const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  const context = configControl.loadActivationContext(PROJECT_ROOT, { runtime });
+  const decision = configControl.preflightHook(context, 'init-project');
+  return {
+    allowed: ['enabled', 'degraded'].includes(decision.status),
+    decision,
+    bundles: context.receipt?.bundles?.effective || [],
+  };
+}
+
+function planningDirs(bundles) {
+  const selected = new Set(bundles);
+  return Object.entries(PLANNING_DIRS_BY_BUNDLE)
+    .filter(([bundle]) => selected.has(bundle))
+    .flatMap(([, directories]) => directories);
+}
 
 function shouldSyncScripts() {
   try {
@@ -117,13 +147,20 @@ function generateDelegate(scriptName) {
 
 function main() {
   try {
+    const authority = activationAuthority();
+    if (!authority.allowed) {
+      process.stderr.write(`[init-project] skipped: ${authority.decision.reasonCode}\n`);
+      return;
+    }
+    const effectiveBundles = new Set(authority.bundles);
+
     // 1. Create .planning/ directory tree
-    for (const dir of PLANNING_DIRS) {
+    for (const dir of planningDirs(authority.bundles)) {
       ensureDir(path.join(PROJECT_ROOT, dir));
     }
 
     // 1b. Sweep stale coordination claims from crashed sessions
-    try {
+    if (effectiveBundles.has('parallel')) try {
       const coordScript = path.join(PROJECT_ROOT, '.citadel', 'scripts', 'coordination.js');
       const sweepScript = path.join(PLUGIN_ROOT, 'scripts', 'coordination.js');
       const script = fs.existsSync(coordScript) ? coordScript : sweepScript;
@@ -143,11 +180,13 @@ function main() {
       copyDirIfMissing(pluginTemplates, projectTemplates);
     }
 
-    // 3. Copy intake template if missing
-    const intakeTemplate = path.join(PROJECT_ROOT, '.planning', 'intake', '_TEMPLATE.md');
-    const pluginIntakeTemplate = path.join(PLUGIN_ROOT, '.planning', 'intake', '_TEMPLATE.md');
-    if (!fs.existsSync(intakeTemplate) && fs.existsSync(pluginIntakeTemplate)) {
-      fs.copyFileSync(pluginIntakeTemplate, intakeTemplate);
+    // 3. Copy intake template only when Operations owns active state.
+    if (effectiveBundles.has('operations')) {
+      const intakeTemplate = path.join(PROJECT_ROOT, '.planning', 'intake', '_TEMPLATE.md');
+      const pluginIntakeTemplate = path.join(PLUGIN_ROOT, '.planning', 'intake', '_TEMPLATE.md');
+      if (!fs.existsSync(intakeTemplate) && fs.existsSync(pluginIntakeTemplate)) {
+        fs.copyFileSync(pluginIntakeTemplate, intakeTemplate);
+      }
     }
 
     // 4. Sync utility scripts to .citadel/scripts/ (version-gated to avoid unnecessary I/O)
@@ -200,7 +239,7 @@ function main() {
     checkStaleCommandResult();
 
     // 8. Daemon bootstrap — detect active daemon and prompt continuation
-    checkDaemonState();
+    if (effectiveBundles.has('operations')) checkDaemonState();
 
     // 9. Health line — one-line harness health summary
     printHealthLine();

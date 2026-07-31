@@ -19,6 +19,20 @@ const { createServer, createDataSource, deriveViews, resolveEvidencePath, startW
 const { sha256Digest } = require('../core/operations');
 const operations = require('../core/operations');
 const forks = require('../core/forks');
+const config = require('../core/config');
+
+const FULL_RUNTIME = Object.freeze({
+  id: 'dashboard-test-runtime',
+  capabilities: Object.freeze({
+    workspace: { support: 'full', notes: '' },
+    agents: { support: 'full', notes: '' },
+    worktrees: { support: 'full', notes: '' },
+    approvals: { support: 'full', notes: '' },
+    history: { support: 'full', notes: '' },
+    surfaces: { support: 'full', notes: '' },
+  }),
+  degradations: [],
+});
 
 let failures = 0;
 
@@ -44,6 +58,19 @@ function write(root, relativePath, content) {
 
 function cleanup(root) {
   try { fs.rmSync(root, { recursive: true, force: true }); } catch { /* best effort */ }
+}
+
+function enableDashboardMutations(root) {
+  const harness = config.createDefaultConfig();
+  harness.activation = {
+    ...harness.activation,
+    bundles: config.dependencyClosure(['parallel', 'operations']),
+  };
+  write(root, '.claude/harness.json', `${JSON.stringify(harness, null, 2)}\n`);
+  config.reconcileEffectiveConfig(root, {
+    runtime: FULL_RUNTIME,
+    reconciledAt: '2026-07-13T11:55:00.000Z',
+  });
 }
 
 function operationRecord(operationId, status, capabilities, revision = 3) {
@@ -250,6 +277,7 @@ async function main() {
   // 4. HTTP round-trip on an ephemeral port.
   const httpRoot = makeFixture('http');
   const outsideRoot = makeFixture('outside');
+  enableDashboardMutations(httpRoot);
   write(httpRoot, '.planning/handoffs/one.md', '# h\n');
   write(httpRoot, '.planning/operations/control/operation-pause.json', JSON.stringify(
     operationRecord('operation-pause', 'running', ['pause'])));
@@ -423,6 +451,7 @@ async function main() {
   const symlinkOutside = makeFixture('intent-symlink-outside');
   let symlinkServer;
   try {
+    enableDashboardMutations(symlinkRoot);
     write(symlinkRoot, '.planning/operations/control/operation-pause.json', JSON.stringify(
       operationRecord('operation-pause', 'running', ['pause'])));
     fs.mkdirSync(path.join(symlinkOutside, 'intents-target'), { recursive: true });

@@ -56,6 +56,35 @@ function main() {
     // Append to skill-usage.jsonl for /telemetry skill stats
     recordSkillUsage(skillName);
 
+    if (skillName) {
+      const activation = health.checkSkillActivation(skillName);
+      const decision = activation.decision;
+      health.logTiming('user-prompt-expansion', 0, {
+        event: 'skill-activation',
+        skill: skillName,
+        bundle: decision.bundleId,
+        status: decision.status,
+        reason_code: decision.reasonCode,
+      });
+      if (!['enabled', 'degraded'].includes(decision.status)
+        && decision.reasonCode !== 'ACTIVATION_OWNERSHIP_UNKNOWN') {
+        const apply = decision.plan?.applyCommand
+          ? ` Review and explicitly apply: ${decision.plan.applyCommand}`
+          : '';
+        health.logBlock(
+          'user-prompt-expansion',
+          'bundle-blocked',
+          `${skillName}:${decision.reasonCode}`,
+        );
+        process.stderr.write(
+          `[Citadel activation] /${skillName} is ${decision.status} `
+          + `(${decision.reasonCode}).${apply}\n`,
+        );
+        process.exit(2);
+        return;
+      }
+    }
+
     process.exit(0);
   });
 }

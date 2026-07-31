@@ -28,6 +28,7 @@ const fs            = require('fs');
 const path          = require('path');
 const os            = require('os');
 const { spawnSync, execFileSync } = require('child_process');
+const { filterHookTemplate } = require('../core/hooks/bundles');
 
 const CITADEL_ROOT  = path.resolve(__dirname, '..');
 const HOOKS_SRC     = path.join(CITADEL_ROOT, 'hooks_src');
@@ -144,24 +145,19 @@ test('settings.json is valid JSON', () => {
   }
 });
 
-test('all expected hook events registered', () => {
+test('default Core and Persistence hook events registered', () => {
   const settings = JSON.parse(fs.readFileSync(path.join(installDir, '.claude/settings.json'), 'utf8'));
-  const registered = Object.keys(settings.hooks || {});
-  const expected = [
-    'Setup',
-    'PreToolUse', 'PostToolUse', 'PostToolBatch', 'PostToolUseFailure',
-    'PreCompact', 'PostCompact', 'Stop', 'StopFailure',
-    'UserPromptSubmit', 'UserPromptExpansion',
-    'SessionStart', 'SessionEnd',
-    'SubagentStart', 'SubagentStop', 'TeammateIdle',
-    'PermissionRequest', 'PermissionDenied', 'InstructionsLoaded',
-    'FileChanged', 'CwdChanged', 'ConfigChange',
-    'Elicitation', 'ElicitationResult', 'Notification',
-    'TaskCreated', 'TaskCompleted',
-    'WorktreeCreate', 'WorktreeRemove',
-  ];
+  const registered = Object.keys(settings.hooks || {}).sort();
+  const template = JSON.parse(
+    fs.readFileSync(path.join(CITADEL_ROOT, 'hooks', 'hooks-template.json'), 'utf8'),
+  );
+  const expected = Object.keys(
+    filterHookTemplate(template, ['core', 'persistence']).template.hooks,
+  ).sort();
   const missing = expected.filter(e => !registered.includes(e));
   if (missing.length) return `missing events: ${missing.join(', ')}`;
+  const unexpected = registered.filter(e => !expected.includes(e));
+  if (unexpected.length) return `unexpected disabled-bundle events: ${unexpected.join(', ')}`;
 });
 
 test('hook commands reference real files', () => {
@@ -206,13 +202,15 @@ test('.planning/ directory tree created', () => {
   const dirs = [
     '.planning/campaigns',
     '.planning/campaigns/completed',
-    '.planning/intake',
     '.planning/telemetry',
     '.planning/fleet',
     '.planning/research',
   ];
   const missing = dirs.filter(d => !fileExists(initDir, d));
   if (missing.length) return `missing dirs: ${missing.join(', ')}`;
+  for (const absent of ['.planning/intake', '.planning/coordination']) {
+    if (fileExists(initDir, absent)) return `disabled bundle state was scaffolded: ${absent}`;
+  }
 });
 
 test('.citadel/scripts/ populated with delegates', () => {
@@ -676,9 +674,9 @@ test('user-prompt-expansion: exits 0 with no prompt', () => {
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
 });
 
-test('user-prompt-expansion: exits 0 with skill name', () => {
+test('user-prompt-expansion: exits 0 with enabled Core skill name', () => {
   const r = fireHook('user-prompt-expansion.js',
-    { skill_name: 'marshal', original_prompt: '/marshal fix auth' },
+    { skill_name: 'review', original_prompt: '/review fix auth' },
     rDir
   );
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
@@ -954,6 +952,7 @@ test('intake-scanner: exits 0 with no intake items or staged wiki', () => {
 });
 
 test('intake-scanner: surfaces staged wiki findings message', () => {
+  fs.mkdirSync(path.join(rDir, '.planning', 'intake'), { recursive: true });
   // Create a staging file that is newer than any wiki index
   const stagingDir = path.join(rDir, '.planning', 'wiki', '_staging');
   fs.mkdirSync(stagingDir, { recursive: true });

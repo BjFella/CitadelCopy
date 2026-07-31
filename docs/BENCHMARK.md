@@ -1,5 +1,19 @@
 # Product-proof benchmark
 
+## Version-2 real-user instrument
+
+`core/product-proof/` and `scripts/product-proof-trial.js` extend the existing
+engineering benchmark without changing schema 1. Version 2 freezes matched
+scenario pairs, runtime/model/OS strata, metric gates, randomization identity,
+and a deterministic balanced AB/BA assignment commitment. Reports use every
+randomized attempt in the denominator and evaluate accepted completion through
+a deterministic paired-bootstrap 95% interval. A false passed claim blocks the
+gate.
+
+The v2 implementation proves the instrument only. External repository owners
+must select the confirmatory tasks and blindly judge mode-stripped outputs
+before a comparative product claim is possible.
+
 Citadel's product benchmark compares a bare agent with the same agent operating through
 Citadel. The published fixture report is **engineering contract evidence, not a product
 win**. It deliberately misses the utility threshold and keeps the real milestone open.

@@ -4,7 +4,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { reconcileEffectiveConfig } = require('../core/config');
 const { installCodexHooks } = require('../runtimes/codex/generators/install-hooks');
+const codexRuntime = require('../runtimes/codex/runtime');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
@@ -14,6 +16,10 @@ const PROJECT_ROOT = args.find((a) => !a.startsWith('-')) || process.cwd();
 
 function main() {
   try {
+    const resolved = reconcileEffectiveConfig(PROJECT_ROOT, { runtime: codexRuntime });
+    if (resolved.receipt.status === 'blocked') {
+      throw new Error(`Harness config blocks hook installation: ${resolved.receipt.errors.join('; ')}`);
+    }
     const hooksTemplatePath = path.join(CITADEL_ROOT, 'hooks', 'hooks-template.json');
     const hooksTemplate = JSON.parse(fs.readFileSync(hooksTemplatePath, 'utf8'));
     const adapterScriptPath = path.join(CITADEL_ROOT, 'hooks_src', 'codex-adapter.js');
@@ -27,6 +33,7 @@ function main() {
       adapterScriptPath,
       existingHooks,
       outputPath,
+      effectiveBundles: resolved.receipt.bundles.effective,
     });
 
     if (JSON_OUTPUT) {
@@ -35,12 +42,14 @@ function main() {
         installed: result.installed,
         skipped: result.skipped,
         warnings: result.warnings || [],
+        effectiveBundles: resolved.receipt.bundles.effective,
       }, null, 2) + '\n');
       return;
     }
 
     console.log(`Citadel Codex hooks installed to ${outputPath}`);
     console.log(`  ${result.installed.length} Citadel hooks translated for Codex`);
+    console.log(`  Product bundles: ${resolved.receipt.bundles.effective.join(', ')}`);
     if (result.skipped.length > 0) {
       console.log(`  ${result.skipped.length} hook mappings skipped due to missing Codex lifecycle equivalents`);
     }

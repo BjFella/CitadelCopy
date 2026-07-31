@@ -13,6 +13,7 @@ const {
   submitIntent,
   validateControlResult,
 } = require('../../core/operations');
+const configControl = require('../../core/config');
 
 const PROJECT_ROOT = fixedProjectRoot(process.env.CITADEL_PROJECT_ROOT || process.cwd());
 const MUTATION_BASE_PROPERTIES = Object.freeze({
@@ -179,9 +180,31 @@ function rejectedMutation(args, action) {
   return request;
 }
 
+function activationSkillForTool(name) {
+  if (name === 'citadel_status') return 'dashboard';
+  if (name === 'citadel_workflow_prompt') return 'do';
+  return 'archon';
+}
+
+function activationForTool(name) {
+  const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  const context = configControl.loadActivationContext(PROJECT_ROOT, { runtime });
+  return configControl.preflightSkill(context, activationSkillForTool(name));
+}
+
 function handleTool(name, args) {
   const definition = TOOL_DEFS.find((entry) => entry.name === name);
   if (!definition) return { error: { code: -32601, message: `Unknown tool: ${name}` } };
+  const activation = activationForTool(name);
+  if (!['enabled', 'degraded'].includes(activation.status)) {
+    return {
+      error: {
+        code: -32003,
+        message: 'Citadel product bundle is not active for this tool',
+        data: { activation },
+      },
+    };
+  }
   const errors = validateArguments(args, definition.inputSchema);
   const specificAction = name.startsWith('citadel_operation_')
     && !['citadel_operation_list', 'citadel_operation_get'].includes(name)
@@ -229,8 +252,10 @@ function respond(id, result) {
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, result })}\n`);
 }
 
-function respondError(id, code, message) {
-  process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } })}\n`);
+function respondError(id, code, message, data) {
+  const error = { code, message };
+  if (data !== undefined) error.data = data;
+  process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error })}\n`);
 }
 
 function handleRequest(req) {
@@ -256,7 +281,9 @@ function handleRequest(req) {
       return;
     }
     const handled = handleTool(params.name, params.arguments === undefined ? {} : params.arguments);
-    if (handled.error) respondError(id, handled.error.code, handled.error.message);
+    if (handled.error) {
+      respondError(id, handled.error.code, handled.error.message, handled.error.data);
+    }
     else respond(id, handled.result);
     return;
   }
@@ -265,7 +292,18 @@ function handleRequest(req) {
     return;
   }
   if (method === 'resources/read' && isPlainObject(params) && params.uri === 'citadel://status') {
-    respond(id, { contents: [{ uri: 'citadel://status', mimeType: 'application/json', text: JSON.stringify(status(true), null, 2) }] });
+    const handled = handleTool('citadel_status', { includeFiles: true });
+    if (handled.error) {
+      respondError(id, handled.error.code, handled.error.message, handled.error.data);
+      return;
+    }
+    respond(id, {
+      contents: [{
+        uri: 'citadel://status',
+        mimeType: 'application/json',
+        text: handled.result.content[0].text,
+      }],
+    });
     return;
   }
   if (id !== undefined) respondError(id, -32601, `Unknown method: ${method}`);

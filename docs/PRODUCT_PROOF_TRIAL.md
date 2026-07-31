@@ -1,6 +1,27 @@
-# Citadel activation cohort
+# Real User Proof v2 and the legacy activation cohort
 
-Citadel has public attention. This cohort asks a harder question: do people reach a verified handoff, resume the work, and return after seven days?
+The version-2 instrument separates:
+
+1. a counterbalanced bare-versus-Citadel controlled utility trial;
+2. meaningful D7/D30 retention based on another canonically verified task; and
+3. receipt-owned exit and restore evidence.
+
+Run `node scripts/product-proof-trial.js help` for the local-only v2 workflow.
+Every v2 report remains `claim_status: instrument_only` and
+`utility_claim: false` until an independently run, preregistered cohort supplies
+the required human evidence. Assignment failures, timeouts, abandonments, and
+missing records remain in intention-to-treat denominators. Public previews
+suppress cells smaller than five and make no network request.
+
+The schema-1 activation cohort below remains readable for compatibility. Its
+`return_session` field is a legacy session-reopen diagnostic and can no longer
+satisfy meaningful D7 retention.
+
+## Legacy schema-1 activation cohort
+
+Citadel has public attention. This legacy cohort asks whether people reach a
+handoff, resume work, and reopen a session. It does not establish verified
+comparative utility or meaningful task retention.
 
 The cohort is voluntary, public, and privacy-minimal. Failures count. Missing evidence stays unknown. A star, clone, or successful fixture is not counted as human activation.
 
@@ -46,9 +67,11 @@ The schema rejects extra fields. It cannot contain prompts, repository names, pa
 
 Posting is not anonymous. GitHub shows the account that wrote the comment. The bundle itself contains no GitHub username or other personal identity.
 
-## Milestone and denominators
+## Legacy instrumentation thresholds
 
-The cohort is ready for a product decision only when all six gates pass:
+These six thresholds can show that the legacy activation funnel has enough
+observations to inspect. They cannot authorize a product-utility or meaningful
+retention claim:
 
 | Gate | Target | Denominator |
 |---|---:|---|
@@ -59,7 +82,15 @@ The cohort is ready for a product decision only when all six gates pass:
 | Seven-day return | 15% | Successful installs observed for at least seven days |
 | Install or route failure | 10% maximum | Shared install attempts |
 
-Before 25 submissions, the status is `collecting`. After 25 submissions but before 25 are seven-day eligible, it is `observing`. A mature passing cohort is `ready`. A mature failed threshold is `needs_attention`.
+Before 25 submissions, the diagnostic status is `collecting`. After 25
+submissions but before 25 are seven-day eligible, it is `observing`. The legacy
+labels `ready` and `needs_attention` mean only that this diagnostic funnel has
+or has not met its historical thresholds. They are never a Real User Proof v2
+gate.
+
+Likewise, `scripts/product-proof-cohort.js` is retained for schema-1
+compatibility. It emits `claim_status: superseded_instrument_only`,
+`utility_claim: false`, and can no longer set `milestone_ready`.
 
 This is an opt-in cohort, not a census. Install failures that cannot run the share command are underrepresented, so the failure rate must not be described as the failure rate of every clone or installation.
 

@@ -29,6 +29,7 @@ user confirmation.
 | P-005 | Never modify `.claude/harness.json` during an automated campaign without explicit user confirmation | archon, fleet |
 | P-006 | Files listed in `harness.json.protectedFiles` may not be edited by agents | all |
 | P-007 | Never push to a remote repository during a campaign without user confirmation | archon, fleet |
+| P-008 | Only current, subject-bound `passed` evidence with complete required coverage may authorize a required dependency, terminal success, delivery, or merge; timeout, malformed output, missing evidence, partial progress, exhausted retries, absent votes, and required-checkpoint failure cannot authorize them | all |
 
 ## Tier 2: Engineering Rules (Best Practices — Warn Before Proceeding)
 
@@ -53,7 +54,7 @@ Override acceptable and does not require logging.
 | W-002 | Campaign files must be updated after every phase before advancing to the next | archon |
 | W-003 | Scope claims in `.planning/coordination/` must be released when a campaign completes | archon |
 | W-004 | Fleet agents must not read another agent's worktree working files during the same wave | fleet |
-| W-005 | Phase advancement requires passing phase validator (or exhausted retries with partial marking) | archon, fleet |
+| W-005 | Held gates block only their dependent subgraph; dependency-independent reversible work may continue, and unresolved subjects are aggregated into one human escalation per run | archon, fleet |
 | W-006 | Telemetry writes must include `_hash` and `_hash_v: 1` fields (see audit immutability) | all |
 
 ---
@@ -78,6 +79,10 @@ The policy-enforcer receives:
 3. Context (campaign slug, agent type, session state)
 
 It returns a JSON verdict: `allow` or `block` with the rule ID and reason.
+Timeout, malformed output, or an absent verdict is
+`unknown/POLICY_RESULT_UNAVAILABLE`; the proposed Red operation remains held and
+joins the run's single human escalation. Policy unavailability never grants
+authority.
 
 ### Self-enforced (orchestrator protocol)
 Orchestrators apply W-001 through W-006 as part of their own protocol.

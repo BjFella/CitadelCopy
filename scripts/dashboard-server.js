@@ -21,6 +21,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 const { collectDashboard } = require('./dashboard');
+const configControl = require('../core/config');
 const { listLoops } = require('../core/loops/registry');
 const { report: activationReport } = require('../core/telemetry/activation');
 const {
@@ -729,6 +730,12 @@ function createServer(options) {
     return address && typeof address === 'object' ? `http://${BIND_HOST}:${address.port}` : null;
   }
 
+  function productActivation(skillId) {
+    const runtime = configControl.detectRuntimeContract(projectRoot);
+    const context = configControl.loadActivationContext(projectRoot, { runtime });
+    return configControl.preflightSkill(context, skillId);
+  }
+
   function readIntentBody(req, res, callback) {
     let size = 0;
     let body = '';
@@ -771,6 +778,17 @@ function createServer(options) {
       const contentType = String(req.headers['content-type'] || '').toLowerCase();
       if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/.test(contentType)) {
         json(res, 415, { outcome: 'rejected', reason_code: 'CONTENT_TYPE_REJECTED' });
+        return;
+      }
+      const activation = productActivation(
+        route === '/api/fork-selections' ? 'fleet' : 'archon',
+      );
+      if (!['enabled', 'degraded'].includes(activation.status)) {
+        json(res, 409, {
+          outcome: 'blocked',
+          reason_code: 'PRODUCT_BUNDLE_INACTIVE',
+          activation,
+        });
         return;
       }
       readIntentBody(req, res, (body) => {
@@ -843,12 +861,18 @@ function createServer(options) {
 
     if (route.startsWith('/api/')) {
       if (route === '/api/control') {
+        const operationsActivation = productActivation('archon');
+        const parallelActivation = productActivation('fleet');
         json(res, 200, {
           schema: 1,
           nonce: processNonce,
           actions: ['pause', 'resume', 'stop', 'retry'],
           writes: 'immutable-intents-only',
           fork_actions: ['select'],
+          activation: {
+            operations: operationsActivation,
+            parallel: parallelActivation,
+          },
         });
         return;
       }

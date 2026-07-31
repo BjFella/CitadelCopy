@@ -1,8 +1,9 @@
 'use strict';
 
 module.exports = Object.freeze({
-  ...require('../../core/contracts'),
+  ...require('./vendor/contracts'),
   app: require('./app'),
-  operations: require('../../core/operations'),
-  schemaVersion: require('../../core/telemetry/schema').SCHEMA_VERSION,
+  controlPlane: require('./control-plane'),
+  operations: require('./vendor/operations'),
+  schemaVersion: require('./vendor/telemetry/schema').SCHEMA_VERSION,
 });

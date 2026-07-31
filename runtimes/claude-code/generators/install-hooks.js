@@ -12,6 +12,7 @@ const {
   readJson,
   writeJson,
 } = require('../../../core/hooks/install');
+const { filterHookTemplate } = require('../../../core/hooks/bundles');
 const { selectSupportedClaudeHookEvents } = require('./hook-support');
 
 function resolveClaudeHooks(citadelRoot, hooksTemplatePath) {
@@ -45,16 +46,18 @@ function installClaudeHooks(options = {}) {
   ensureDir(path.join(projectRoot, '.claude'));
 
   const resolved = resolveClaudeHooks(citadelRoot, hooksTemplatePath);
+  const bundleFilter = filterHookTemplate(resolved, options.effectiveBundles);
+  const selected = bundleFilter.template;
   const compatibility = selectSupportedClaudeHookEvents({
-    templateEvents: Object.keys(resolved.hooks || {}),
+    templateEvents: Object.keys(selected.hooks || {}),
     hookProfile: options.hookProfile,
     claudeVersion: options.claudeVersion,
     claudeBin: options.claudeBin,
   });
   const generated = {
-    ...resolved,
+    ...selected,
     hooks: Object.fromEntries(
-      Object.entries(resolved.hooks || {}).filter(([event]) => compatibility.supportedEvents.includes(event))
+      Object.entries(selected.hooks || {}).filter(([event]) => compatibility.supportedEvents.includes(event))
     ),
   };
   const existing = readJson(settingsPath, {});
@@ -82,6 +85,7 @@ function installClaudeHooks(options = {}) {
     preservedCount: countPreservedHooks(mergedHooks, 'hooks_src/'),
     citadelRoot,
     compatibility,
+    bundleFilter,
   };
 }
 

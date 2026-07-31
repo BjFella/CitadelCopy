@@ -13,4 +13,16 @@ any data.
   additional services, accounts, or network calls.
 - The interactive demo site is static and sets no cookies.
 
+## Real User Proof v2
+
+The v2 trial store is local under `.planning/product-proof/v2/` and is ignored
+by Git by default. Exact schemas reject prompts, paths, repository names,
+commands/output, source, diffs, usernames, email, credentials, tokens, and
+secrets. Detailed signed receipts remain local.
+
+`share-preview` creates an aggregate-only file, suppresses cells smaller than
+five, and makes no network request. Sharing remains a separate manual choice.
+`purge` removes only the v2 trial store inside the selected project; it does not
+remove application files or other `.planning` state.
+
 Questions: open an issue at https://github.com/SethGammon/Citadel/issues.

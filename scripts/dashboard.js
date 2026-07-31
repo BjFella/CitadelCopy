@@ -15,6 +15,7 @@ const { getCoordinationStatus } = require('../core/coordination/instances');
 const { getClaimStatus } = require('../core/coordination/claims');
 const { readCostDashboard } = require('./telemetry-stats');
 const { listReadinessReports } = require('../core/worktree/readiness');
+const configControl = require('../core/config');
 
 const DEFAULT_RECENT_LIMIT = 10;
 const ROUTINE_QUOTA_CAP = 15;
@@ -685,12 +686,18 @@ function readHealth(projectRoot) {
   const hookConfig = readJson(path.join(projectRoot, 'hooks', 'hooks.json')) ||
     readJson(path.join(projectRoot, '.claude', 'hooks.json')) ||
     readJson(path.join(projectRoot, '.claude', 'settings.json'));
-  const harness = readJson(path.join(projectRoot, '.claude', 'harness.json')) ||
-    readJson(path.join(projectRoot, '.Codex', 'harness.json')) ||
-    {};
+  const runtime = configControl.detectRuntimeContract(projectRoot);
+  const effective = configControl.loadActivationContext(projectRoot, { runtime });
+  const loaded = configControl.readConfigFile(projectRoot);
+  const harness = effective.usable
+    && effective.receipt?.authority.valid
+    && loaded.raw
+    && typeof loaded.raw === 'object'
+    ? loaded.raw
+    : {};
   const trust = harness.trust || {};
-  const sessions = Number(trust.sessions_completed || 0);
-  const campaigns = Number(trust.campaigns_completed || 0);
+  const sessions = Number(trust.sessionsCompleted ?? trust.sessions_completed ?? 0);
+  const campaigns = Number(trust.campaignsCompleted ?? trust.campaigns_completed ?? 0);
 
   let level = 'novice';
   if (sessions >= 20 && campaigns >= 2) level = 'trusted';
@@ -703,6 +710,11 @@ function readHealth(projectRoot) {
     trustLevel: level,
     trustSessions: sessions,
     trustCampaigns: campaigns,
+    activationStatus: effective.receipt?.status || effective.status,
+    activationReasonCode: effective.reasonCode,
+    effectiveConfigPersisted: effective.persisted !== false,
+    profile: effective.receipt?.profile?.id || null,
+    activeBundles: effective.receipt?.bundles?.effective || [],
   };
 }
 
@@ -1438,6 +1450,9 @@ function renderDashboard(snapshot) {
   lines.push(`  Circuit breaker trips this session: ${snapshot.health.circuitBreakerTripsThisSession}`);
   lines.push(`  Audit entries today:                ${snapshot.health.auditEntriesToday}`);
   lines.push(`  Hooks installed:                    ${snapshot.health.hooksInstalled}`);
+  lines.push(`  Effective config:                   ${snapshot.health.activationStatus} (${snapshot.health.activationReasonCode})`);
+  lines.push(`  Execution profile:                  ${snapshot.health.profile || 'unresolved'}`);
+  lines.push(`  Active product bundles:             ${snapshot.health.activeBundles.join(', ') || 'none'}`);
   lines.push(`  Trust level:                        ${snapshot.health.trustLevel} (${snapshot.health.trustSessions} sessions, ${snapshot.health.trustCampaigns} campaigns)`);
 
   lines.push('');
