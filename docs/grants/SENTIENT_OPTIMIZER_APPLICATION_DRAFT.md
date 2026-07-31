@@ -2,175 +2,265 @@
 
 Status: internal draft, not approved or submitted
 
+Observed against Sentient's public program: 2026-07-30
+
 ## Project
 
-**Citadel Optimizer: Outcome-Aware Economic Routing for Open Agents**
+**Citadel Optimizer: Verifiable Economic Control for Open Agents**
 
-Citadel learns how to execute multi-step agent work for the lowest total cost
-while preserving independently verified outcomes across competing agent
-stacks.
+Citadel is building an open controller and evaluation layer that finds cheaper
+paths through models, agents, tools, retries, and stopping decisions while an
+independent verifier holds the required outcome constant.
+
+This application does not claim that the current controller already saves
+money. Its first signed actual-run matrix rejected that claim. The funding
+request is to turn the proven evaluation substrate and preserved negative
+result into a general controller that can demonstrate savings without grading
+its own work.
 
 ## Sentient request addressed
 
 This proposal directly addresses Sentient Foundation's
 [Token and Economic Optimization for Agents](https://sentient.foundation/product-requests)
-request. The request calls for a layer that automatically chooses models,
-agents, and tools, attaches to any agent stack, and accounts for fees beyond
+request. The request asks for a layer that automatically chooses models,
+agents, and tools, attaches to any agent stack, and accounts for costs beyond
 tokens.
 
 Sentient's [grant program](https://sentient.foundation/grants) currently states
-that $42 million is committed, public-goods grants take no equity or claim on
-the work, and applications are reviewed on a rolling basis. The site does not
-publish a per-project maximum. The amount below is our proposed budget, not an
-inferred entitlement.
+that `$42M` is committed, public-goods grants take no equity or claim on the
+work, applications are open and reviewed on a rolling basis, and compute and
+engineering support may accompany funding. The site does not publish a
+per-project maximum. The amount below is a proposed budget, not an inferred
+entitlement.
 
 ## Problem
 
-Agent stacks optimize for task completion but usually make economic decisions
-piecemeal. A builder selects a model, a harness spawns agents, tools consume
-subscription quota or metered calls, retries accumulate, and the resource
-footprint is discovered afterward.
+An agent that completes a task wastefully and a cheap agent that fails are both
+economically bad. Existing stacks usually treat routing, retries, agent count,
+tool use, and verification as separate decisions. That makes savings claims
+easy to game:
 
-Cheap routing alone is insufficient. It can look economical by failing tasks,
-silently accepting partial work, substituting a different model, or excluding
-failed attempts from cost. The missing public layer is a controller that
-changes the execution path while an independent verifier holds the outcome
-constant.
+- count only the successful retry;
+- ignore setup, tool, or human cost;
+- call unknown cost zero;
+- accept a partial patch as completion;
+- request one model and execute another;
+- optimize against tests the controller can weaken;
+- compare unlike tasks or change the holdout after seeing results.
+
+The missing public good is not another prompt classifier. It is an economic
+controller coupled to a proof contract that can reject fake savings.
 
 ## Product
 
-Citadel Optimizer:
+Citadel Optimizer has two inseparable parts.
 
-- performs bounded read-only reconnaissance before expensive work;
-- infers task capability needs;
-- chooses an executor, capability tier, topology, agent count, and tool budget;
-- watches progress and verification;
+The controller:
+
+- performs bounded read-only reconnaissance;
+- estimates task capability requirements;
+- chooses an executor, model tier, topology, agent count, tools, and budget;
+- watches progress and independent verification;
 - continues, escalates, splits, or stops;
-- learns capability profiles from non-holdout outcomes;
+- learns only from eligible non-holdout outcomes.
+
+The proof layer:
+
+- binds requested and observed model identities;
 - records model, tool, compute, retry, and human cost with provenance;
-- refuses to call unknown cost zero;
-- binds decisions, observed execution, receipts, artifacts, and final
-  verification into a reproducible proof record.
+- refuses to coerce unknown cost to zero;
+- freezes tasks, policies, repositories, verifiers, and holdouts before runs;
+- signs decisions, receipts, artifacts, and outcomes;
+- reproduces the report from privacy-safe raw evidence;
+- fails closed on missing, duplicate, substituted, or tampered records.
 
-It is designed as open infrastructure under an existing MIT-licensed project,
-not a private routing API.
+It is open infrastructure inside an existing MIT-licensed project, not a
+private routing API.
 
-## Why Citadel is a credible base
+## What is already proven
 
-Citadel already has the expensive substrate that a trustworthy optimizer needs:
+Citadel already supplies the operating substrate:
 
-- explicit executor profiles across Claude and Codex;
+- explicit Claude and Codex executor profiles;
 - requested-versus-observed model proof;
 - isolated Operation Fork worktrees;
-- signed receipt bindings and tamper rejection;
+- signed receipts and tamper rejection;
 - deterministic comparison and gated landing;
 - durable operation state and recovery;
-- public proof-bundle machinery;
-- a repository with hundreds of commits and an existing user/install base.
+- public proof-bundle machinery.
 
-That substrate does not itself prove economic optimization. The new optimizer
-is separate code with separate contracts, policies, benchmark identities, and
-failure gates.
+The optimizer work adds a separate controller, actual-run protocol, scenario
+identity, policy identity, cost model, public-random holdout, and submission
+gate.
+
+The frozen subscription-backed matrix completed:
+
+| Evidence | Result |
+|---|---:|
+| Signed CLI cells | 120 / 120 |
+| Cells reaching a model | 84 |
+| Real model attempts | 87 |
+| Verified completions | 33 |
+| Failed cells | 51 |
+| Setup-unknown cells | 36 |
+| Aggregate model-cell runtime | 590.857 minutes |
+| Known list-price-normalized comparison cost | $114.575324 |
+| Adversarial false passes | 0 |
+
+All 120 Ed25519 attestations verify. The exact models, executor profile
+digests, runtime adapter, pricing snapshot, calibration record, quota
+authorization, and precommitted drand selection are bound into the report.
+
+Report:
+`optimizer-report-sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9`
+
+Proof bundle:
+`sha256:1e694ca4ba96190a8cb320ca13f4ae402c3001bfabffa104966460e3a60a9fb7`
+
+The list-price normalization is a comparison unit, not Seth's subscription
+invoice.
+
+## The negative result
+
+The precommitted performance gate did not pass.
+
+- Adaptive and prompt-only each verified 6/12 held-out cells.
+- Adaptive's known-cost held-out median was `$0.948231`.
+- Prompt-only's known-cost held-out median was `$0.522119`.
+- The 36 pre-model setup failures make the full economic metric unknown.
+- Unknown cost was not discarded or counted as savings.
+
+The current heuristic therefore did not beat prompt-only routing. On one safety
+scenario, prompt-only matched adaptive's 3/3 completion while costing less and
+running in roughly half the median time. On one cleanup scenario, adaptive
+matched frontier's 3/3 completion while prompt-only passed 2/3. That is a
+useful routing signal, but not a general economic result.
+
+The matrix also exposed benchmark defects:
+
+- Nano ID's frozen pnpm setup is incompatible with the pinned workspace file,
+  producing 36 setup failures before any model ran;
+- one p-limit scenario's verifier did not preserve task-level failure detail;
+- one Citadel scenario's exact-file contract rejected plausible fixes even
+  when its configured verifier passed;
+- fallback and escalation fields need clearer attempt and route-sequence
+  semantics.
+
+We are preserving this result unchanged. A new method must receive a new
+identity rather than rewriting the failed matrix.
+
+## Why this result strengthens the funding case
+
+The failed hypothesis is not the proposed product. The durable asset is the
+ability to make optimizer claims falsifiable across agent stacks.
+
+The completed work reduces grant risk in ways a routing demo cannot:
+
+- it proves the team can launch and bind exact models across two runtimes;
+- it proves signed actual-run evidence can survive independent reconstruction;
+- it demonstrates that cheap failures, unknown costs, and tampering do not
+  become savings;
+- it reveals concrete controller and benchmark defects before grant funds are
+  used to scale them;
+- it provides a public negative baseline against which a funded controller
+  must improve.
+
+A grant would fund the part still unproven: a controller that learns enough
+about real operations to outperform prompt-only routing across more stacks,
+including open and local executors.
 
 ## Novelty boundary
 
 We are not claiming the first model router.
 
-[Not Diamond](https://docs.notdiamond.ai/docs/what-is-model-routing) already
-routes queries for quality, cost, and latency. The
-[SWE-Router paper](https://arxiv.org/abs/2607.00053) already shows that partial
-trajectory information can improve escalation decisions in software work.
+[Not Diamond](https://docs.notdiamond.ai/docs/what-is-model-routing) routes
+queries for quality, cost, and latency. The
+[SWE-Router paper](https://arxiv.org/abs/2607.00053) studies escalation using
+partial software trajectories.
 
-The proposed contribution to test is narrower and broader at the same time:
-whole-operation economic control across model, agent count, topology, tools,
-retries, and stopping, constrained by independent verified completion and
-strict end-to-end cost provenance.
+Citadel's contribution to test is whole-operation control across model,
+runtime, agent count, topology, tools, retries, and stopping, constrained by
+independent verified completion and strict end-to-end cost provenance. Its
+public value exists only if another harness can inspect the decision and
+reproduce the result.
 
-## Current evidence
+## Funded work
 
-Already implemented:
+### 1. Repair the evaluation contract
 
-- a separate optimizer core and actual-run protocol;
-- a frozen 10-scenario, 3-repository, 4-policy, 3-repetition matrix;
-- prompt-only and adaptive policies;
-- bounded repository probes;
-- training-only profile learning with holdout rejection;
-- strict vendor-reported, price-derived, tool-reported, and unknown cost;
-- adversarial tamper, incomplete, model-substitution, and crash cases;
-- signed-run verification and fail-closed submission gates.
+- add setup compatibility preflights before quota authorization;
+- separate task tests from unrelated repository tooling;
+- replace brittle exact-file checks with task-owned artifact contracts;
+- make attempt counts and escalation sequences unambiguous;
+- publish benchmark-version migration rules that preserve negative results.
 
-Current fixture simulations validate report math only. They are not model
-performance evidence. Exact model IDs, canonical executor digests, the runtime
-adapter, and a list-price normalization are frozen. A four-profile
-subscription-backed calibration verified exact model identity, receipts, and
-known cost sources, while all four task verifiers failed. The local Ed25519
-run-attestation public key is also frozen. Precommitted drand round `6333716`
-selected `citadel-short-executor-proof`; the preliminary matrix and its clean
-hosted verification remain open.
-The list-price normalization is a common comparison unit, not a claim that
-Seth's subscription is billed per run.
+### 2. Build the controller that the first matrix falsified
 
-The selection request is bound to the frozen scenario-set identity and was
-public before League of Entropy drand round `6333716`. Three committed relays
-returned the same beacon, the exact rule selected
-`citadel-short-executor-proof`, and the official pinned client verified the BLS
-signature. This removes human discretion and did not require favors,
-engagement, model quota, or a private selector.
+- calibrate capability profiles from eligible prior outcomes;
+- estimate completion probability and total expected cost, not token price
+  alone;
+- use repository evidence to decide when cheap starts are plausible;
+- escalate only on precommitted progress and verification signals;
+- learn stopping rules that include failed-attempt cost;
+- expose decisions through a stack-neutral adapter contract.
 
-A no-model forensic reproduction found that the original calibration verifier
-failed on unrelated repository tooling before reaching the task tests. The
-exact calibration scenario set is archived with its record. The actual matrix
-is re-frozen with a task-focused verifier that fails on the pinned queue bug and
-passes a bounded reference repair touching both expected artifacts. Future run
-records retain bounded, path- and secret-redacted verifier and patch receipts,
-and the standalone bundle verifies the completed calibration record, the
-forensic record, and archived calibration scenario set.
+### 3. Generalize beyond the first test surface
 
-A two-run, frontier-only diagnostic pilot then completed across Claude Opus 5
-and GPT-5.6 Sol. Both exact-model and execution-receipt gates passed. Claude
-changed `index.js` and passed all 22 task tests; Codex made no patch and failed
-the verifier. The immutable pilot record remains failed because the original
-manifest also required an unnecessary `test.js` edit. A digest-bound zero-call
-forensic replay preserves that false negative, archives the exact pilot
-scenario set, and narrows only the future matrix copy to `index.js`. The bundle
-verifies all three scenario sets, both raw records, and both forensic records.
-Pilot evidence remains explicitly excluded from comparative performance and
-savings claims.
+- add open and local model executors;
+- cover multiple harnesses, languages, repositories, task categories, tool
+  types, and topologies;
+- include latency, paid tools, local compute, retries, and bounded human
+  intervention;
+- publish privacy-safe raw records, signed bundles, and one-command
+  reconstruction.
 
-## Evaluation
+### 4. Prove adoption
 
-Pre-application evidence gate:
+- integrate at least one agent stack outside Citadel through the public
+  adapter;
+- make the proof layer usable without adopting Citadel's orchestration model;
+- document both positive and negative results.
 
-- at least 20% lower held-out median cost than always-frontier;
-- no loss of verified completions on the frozen preliminary holdout;
-- adaptive beats prompt-only;
-- zero unknown cost used as savings;
-- zero adversarial false passes;
-- attested actual runs from a clean checkout.
+No outside reviewer or private selector is required. Clean hosted automation
+is the independent verifier for checked-in evidence; optional third-party
+reruns remain optional.
 
-Funded target:
+## Evidence gates
 
-- at least 30% lower end-to-end cost;
+Current engineering gate:
+
+- complete signed matrix: passed;
+- exact model and executor bindings: passed;
+- strict cost provenance: passed;
+- zero adversarial false passes: passed;
+- first controller performance gate: failed.
+
+Funded performance target:
+
+- at least 30% lower end-to-end cost than always-frontier;
 - at least 95% of frontier verified completion;
-- more runtime families, model tiers, tool types, and topologies;
-- clean hosted reproduction of the report from public privacy-safe raw evidence.
+- adaptive must beat prompt-only;
+- zero unknown cost used as savings;
+- clean hosted reconstruction from public privacy-safe evidence;
+- result holds across more than the original three repositories and two
+  proprietary runtime families.
 
-If the preliminary gate fails, we will publish the negative result and revise
-or stop the economic claim.
+The target is not a promise that the current heuristic already satisfies it.
+If a future precommitted controller fails, that negative result will also be
+published.
 
-## Open-source deliverables by evidence gate
+## Open-source deliverables
 
-1. **Execution-ready**: completed. Frozen model bindings, runtime adapter, and
-   cost sources passed a bounded subscription-quota calibration; the
-   run/runtime envelope and 0/4 task-verifier result are recorded.
-2. **Preliminary proof**: complete attested matrix, held-out comparison, raw
-   records, limitations, and one-command verifier.
-3. **Independent proof**: public-random selected scenario, clean hosted
-   verification, public keys, and signed proof bundle.
-4. **Generalized controller**: learned profiles across more stacks, tool and
-   topology decisions, and public adapter contracts.
-5. **Adoption proof**: integrations that let another open harness use the
-   controller without rewriting its stack.
+1. **Frozen negative baseline**: complete. Signed 120-cell matrix, raw records,
+   report, limitations, public holdout, and locally verified proof bundle.
+2. **Benchmark v2**: setup preflights, task-scoped verifiers, route-sequence
+   receipts, and versioned migration rules.
+3. **General controller**: calibrated expected-cost policy across more
+   executors, tools, retries, and topologies.
+4. **Stack-neutral adapter**: another open harness can use the controller and
+   proof contract without rewriting its orchestration.
+5. **Independent proof**: clean hosted reproduction and public,
+   privacy-safe actual-run evidence.
 
 Advancement is evidence-gated rather than calendar-gated.
 
@@ -180,39 +270,50 @@ Proposed public-goods grant: **$150,000**.
 
 | Use | Amount |
 |---|---:|
-| Core controller and runtime engineering | $60,000 |
-| Model, tool, and compute evaluation | $30,000 |
-| Verification hardening and adversarial evaluation | $20,000 |
-| Open adapters and harness integrations | $15,000 |
-| Documentation, demo, and results surface | $15,000 |
+| Controller and runtime engineering | $55,000 |
+| Model, tool, and compute evaluation | $35,000 |
+| Benchmark and verification hardening | $25,000 |
+| Open/local executors and stack integrations | $15,000 |
+| Documentation and public results surface | $10,000 |
 | Administration and contingency | $10,000 |
 | **Total** | **$150,000** |
 
-The request is larger than a prototype budget because the main deliverable is
-credible comparative evidence across vendors, not just routing code. Compute
-credits from Sentient could reduce the cash evaluation line.
+The request is larger than a prototype budget because the deliverable is
+credible comparative evidence across stacks and cost types, not another
+routing demonstration. Sentient compute credits could reduce the cash
+evaluation line.
 
 ## Why Sentient should fund it
 
-- It maps directly to a named request rather than stretching Citadel toward an
-  adjacent theme.
-- The output is inspectable infrastructure and open evals, so other agent
-  stacks can reuse both positive and negative findings.
+- It maps exactly to a named Request for Products.
+- The controller, evals, raw evidence, and negative findings remain open public
+  goods.
+- The first matrix proves that Citadel's gate rejects its own claim rather than
+  manufacturing a success.
 - Citadel already supplies execution, recovery, receipts, and verification,
-  reducing the risk that the grant funds another paper router with no durable
-  operating substrate.
-- The benchmark is designed to punish fake savings.
-- The proposal has explicit falsification gates and does not present fixtures
-  as results.
-- Lowering the cost of open agents compounds across every application built on
-  top of them.
+  reducing the amount of grant funding spent rebuilding harness basics.
+- The funded work adds open and local executors, better matching Sentient's
+  accessibility and ownership goals than the proprietary-only first matrix.
+- A reusable economic proof layer benefits every open agent stack, including
+  those that do not adopt Citadel.
+
+## Risks and honest limits
+
+- The current adaptive controller is not competitive with prompt-only routing.
+- The first matrix covers coding work in only three repositories.
+- Thirty-six cells never reached a model because the setup preflight was
+  insufficient.
+- Current runtime evidence comes from proprietary subscription-backed CLIs.
+- No user adoption evidence yet shows that another harness wants this layer.
+
+The funded milestones are designed to resolve those facts, not hide them.
 
 ## Application blockers
 
 Do not submit until:
 
-- the actual preliminary matrix closes or honestly fails;
-- the committed public beacon selects a scenario and a clean hosted runner
-  independently verifies the selection and proof bundle;
-- the demo and results page link to actual proof rather than fixtures;
-- Seth reviews and approves the final wording and submission.
+- the committed proof bundle passes the clean GitHub-hosted verification job;
+- the public results page shows the actual negative result rather than the
+  fixture;
+- all links and exact identities are checked from the final commit;
+- Seth reviews and explicitly approves the final wording and submission.

@@ -522,7 +522,9 @@ function main() {
   ));
   assert(publicIndex.includes('href="optimizer.html">Optimizer Proof</a>'));
   assert(optimizerPage.includes('Engineering contract only'));
-  assert(optimizerPage.includes('Real savings are not yet proven'));
+  assert(optimizerPage.includes('current routing claim failed'));
+  assert(optimizerPage.includes('120 / 120 signed'));
+  assert(optimizerPage.includes('PRELIMINARY_PERFORMANCE_GATE_OPEN'));
   assert(optimizerPage.includes('Fixture math exercises a 23.2507%'));
   assert.strictEqual((optimizerPage.match(/class="policy-tab"/g) || []).length, 4);
 

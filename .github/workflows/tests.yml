@@ -28,6 +28,9 @@ jobs:
       - name: Verify committed beacon BLS signature
         if: ${{ hashFiles('benchmarks/optimizer-proof/external-selection.json') != '' }}
         run: node scripts/optimizer-drand-verify.js
+      - name: Verify committed optimizer proof bundle
+        if: ${{ hashFiles('benchmarks/optimizer-proof/proof-bundle/manifest.json') != '' }}
+        run: node scripts/optimizer-proof-bundle.js verify benchmarks/optimizer-proof/proof-bundle
 
   citadel-action-consumer:
     name: reusable Citadel verification action

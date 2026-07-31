@@ -480,8 +480,8 @@
       </div>
       <aside class="claim-card" aria-label="Current claim boundary">
         <div class="claim-label">Current claim boundary</div>
-        <p>The controller and proof contract are implemented. Real savings are not yet proven.</p>
-        <code>status: engineering-contract-only<br />actual-run: blocked<br />calibration: 4 recorded / 6 total calls</code>
+        <p>The signed actual matrix is complete. The proof contract passed and the current routing claim failed.</p>
+        <code>status: engineering-contract-only<br />actual-run: 120 / 120 signed<br />performance gate: failed</code>
       </aside>
     </header>
 
@@ -489,7 +489,7 @@
       <div class="proof-stat"><strong>10</strong><span>frozen scenarios</span></div>
       <div class="proof-stat"><strong>3</strong><span>public repositories</span></div>
       <div class="proof-stat"><strong>4</strong><span>economic policies</span></div>
-      <div class="proof-stat"><strong>120</strong><span>actual runs when approved</span></div>
+      <div class="proof-stat"><strong>120</strong><span>completed actual-run cells</span></div>
     </div>
 
     <section id="policies">
@@ -499,7 +499,8 @@
           The benchmark holds task and verification constant while changing
           the economic policy. Explore the same Nano ID task under each policy.
           The adaptive view uses a deterministic fixture probe here so the UI
-          remains a demo, not a hidden model call.
+          remains a demo, not a hidden model call. The actual Nano ID cells
+          failed setup before any model ran and are not presented as results.
         </p>
       </div>
 
@@ -572,15 +573,17 @@
             <li>4/4 exact model, receipt, and cost-source calibration gates passed; 0/4 original task verifiers passed.</li>
             <li>No-model forensics found the original verifier failed before task tests; the matrix now uses a task-focused verifier proven against the bug and a reference repair.</li>
             <li>Future failed attempts retain bounded, path- and secret-redacted verifier and patch receipts.</li>
+            <li>120/120 matrix cells completed and all actual-run attestations verify.</li>
+            <li>The engineering gate passed with zero adversarial false passes.</li>
           </ul>
         </article>
         <article class="truth-card blocked">
-          <h3>Still requires real-world evidence</h3>
+          <h3>Not demonstrated</h3>
           <ul>
-            <li>The separately approved live matrix; public-random holdout selection is complete.</li>
-            <li>Measured cost reduction across live model runs.</li>
-            <li>Frontier completion retained on held-out tasks.</li>
-            <li>Clean hosted verification of the signed proof bundle.</li>
+            <li>Any matrix-level cost reduction.</li>
+            <li>Adaptive routing better than prompt-only routing.</li>
+            <li>A setup-complete benchmark across all three repositories.</li>
+            <li>Clean hosted verification of this committed signed proof bundle.</li>
             <li>Usefulness beyond the three frozen repositories.</li>
           </ul>
         </article>
@@ -595,17 +598,18 @@
 
     <section id="blockers">
       <div class="section-heading">
-        <h2>The gate stays shut until reality catches up.</h2>
+        <h2>The proof did its job by saying no.</h2>
         <p>
-          The actual-run command checks these conditions before any model-backed
-          execution. A fixture, manual edit, or relabeled record cannot bypass
-          them.
+          The matrix is complete, but its precommitted performance conditions
+          are not. A fixture, partial cost ledger, or relabeled failure cannot
+          turn this result into a savings claim.
         </p>
       </div>
       <div class="blockers">
-        <div class="blocker"><b>ACTUAL_RUNS_REQUIRED</b><span>The 120-run matrix has not executed, so the fixture cannot support a savings claim.</span></div>
-        <div class="blocker"><b>MATRIX_NOT_STARTED</b><span>The beacon selected citadel-short-executor-proof and the exact subscription envelope is approved, but no matrix cell has run yet.</span></div>
-        <div class="blocker"><b>CLEAN_MATRIX_VERIFICATION_REQUIRED</b><span>The beacon proof passed on a clean hosted runner; the matrix bundle cannot be verified until the approved matrix exists.</span></div>
+        <div class="blocker"><b>PRELIMINARY_PERFORMANCE_GATE_OPEN</b><span>Adaptive verified 6/12 held-out cells, equal to prompt-only, with a higher descriptive known-cost median.</span></div>
+        <div class="blocker"><b>UNKNOWN_SETUP_COST</b><span>All 36 Nano ID cells failed setup before a model call, so unknown cost remains unknown and blocks a savings calculation.</span></div>
+        <div class="blocker"><b>BENCHMARK_V2_REQUIRED</b><span>Setup preflights, task-scoped verifiers, artifact contracts, and route-sequence semantics need a new frozen method identity.</span></div>
+        <div class="blocker"><b>CLEAN_HOSTED_VERIFICATION_PENDING</b><span>The 46-file proof bundle verifies locally; the committed bundle still needs the clean GitHub-hosted job.</span></div>
       </div>
     </section>
 
@@ -615,10 +619,11 @@
         <h2>Make open agents cheap by default without grading their own homework.</h2>
         <p>
           This directly targets Sentient Foundation's Token and Economic
-          Optimization for Agents request. The proposal is not that Citadel is
-          already best in class. The proposal is a falsifiable controller,
-          open benchmark, and proof discipline that can show whether whole-operation
-          optimization works.
+          Optimization for Agents request. Citadel is not claiming to be best
+          in class: its first controller failed the performance gate. The grant
+          thesis is an open controller and proof discipline that preserves
+          negative results, repairs the benchmark under a new identity, and can
+          establish whether whole-operation optimization works.
         </p>
         <div class="links">
           <a class="button primary" href="OPTIMIZER_BENCHMARK.md">Read the method</a>
@@ -637,7 +642,7 @@
 
   <footer>
     <div class="shell">
-      Citadel Optimizer proof surface · observed 2026-07-29 · official Claude and Codex CLIs launch · no model calls were made to produce the displayed fixture.
+      Citadel Optimizer proof surface · observed 2026-07-30 · 120 signed actual-run cells · current claim: engineering contract only.
     </div>
   </footer>
 

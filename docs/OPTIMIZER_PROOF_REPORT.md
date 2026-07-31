@@ -4,126 +4,193 @@ Observed: 2026-07-30
 
 ## Answer
 
-The optimizer calibration and diagnostic pilot are complete and digest-bound.
-The optimizer is not performance-proven and is not submission-ready.
+The frozen optimizer matrix is complete, signed, and locally reproducible.
+The engineering contract passed. The performance hypothesis did not.
 
-## What passed locally
+Citadel cannot currently claim that its adaptive policy reduces real agent
+cost, beats prompt-only routing, or is ready for a performance-based grant
+submission. The useful result is a falsifiable proof system that rejected its
+own routing claim and preserved the failures needed to design the next method.
 
-- 10 frozen scenarios across 3 public repositories
-- 4 frozen policies and 3 repetitions, producing a 120-record fixture matrix
-- strict cost provenance and unknown-cost semantics
-- deterministic prompt-only and adaptive routing
-- bounded read-only repository probing
-- adaptive escalation and stop decisions
-- holdout exclusion from capability learning
-- report rejection of missing, duplicate, forged, or tampered records
-- zero simulated adversarial false passes
-- signed-run tamper rejection
-- bounded, path- and secret-redacted verifier-output and patch receipts before temporary
-  workspace cleanup
-- proof-bundle verification of the completed calibration record, its archived
-  scenario set, and the no-model forensic record
-- proof-bundle verification of the completed diagnostic plan, immutable failed
-  record, archived pilot scenario set, and zero-call forensic replay
-- existing product-benchmark identity unchanged
-- existing executor-profile acceptance test unchanged and passing
+## Actual matrix
 
-The deterministic fixture happens to exercise a 23.2507% held-out median-cost
-reduction with no simulated verified-completion loss. That number is a report
-math fixture. It is not evidence that real models save money.
+Seth Gammon authorized the exact subscription-backed envelope at
+`2026-07-30T20:44:02.628Z`:
 
-## Current doctor
+- 120 CLI cells;
+- at most 162 model attempts;
+- at most 7,230 aggregate timeout-minutes;
+- no dollar spending amount because the runs used existing subscriptions.
 
-| Gate | State |
-|---|---|
-| Claude Code launch | Available, version 2.1.206 |
-| Codex CLI launch | Available through official global CLI, version 0.146.0 |
-| Desktop-bundled Codex path | Visible but access denied; not used as the automation path |
-| Exact model IDs | Frozen: GPT-5.6 Luna, Claude Sonnet 5, Claude Opus 5, GPT-5.6 Sol |
-| Executor profile digests | Bound to canonical Operation Fork profiles |
-| Runtime adapter | Self-contained and bound by source digest |
-| Codex price basis | Official API list-price normalization, observed 2026-07-29 |
-| Calibration | Passed 4/4 identity, receipt, and cost-source gates; 0/4 task verifiers passed |
-| Diagnostic pilot | Completed 2/2 identity and receipt gates; raw record failed; Claude's 22-test pass was an artifact-gate false negative |
-| Holdout selector | `citadel-short-executor-proof`, selected by precommitted drand round 6333716; three relays agreed and the BLS signature verified |
-| Local run-attestation public key | Rotated before any matrix run because the original private key was unavailable; replacement private key stored outside the repository and public rotation record checked in |
-| Clean hosted verification | Beacon selection passed on GitHub-hosted runner; matrix bundle verification awaits the unrun matrix |
-| Model calls made across calibration attempts | 6 total; 4 in the completed record |
-| Model calls made in diagnostic pilot | 2 total; no rerun |
+The completed run stayed inside every cap:
 
-Citadel's Windows launcher prefers the reviewed npm entrypoint over an
-inaccessible Windows Store desktop executable. Calibration, the local
-attestation key, public-random holdout selection, and the exact subscription
-quota authorization are complete. No matrix run has started.
+| Measure | Actual |
+|---|---:|
+| Signed matrix cells | 120 / 120 |
+| Cells that reached a model | 84 |
+| Real model attempts, counted from verification receipts | 87 / 162 |
+| Aggregate model-cell runtime | 590.857 minutes |
+| Passed and independently verified | 33 |
+| Failed | 51 |
+| Unknown because setup failed before a model | 36 |
+| Known list-price-normalized comparison cost | $114.575324 |
 
-The method and public-random selection request were published before drand round
-`6333716`. All three committed relays agreed; the exact rule selected
-`citadel-short-executor-proof`, and `drand-client@1.4.2` verified the BLS
-signature. No human selector was involved and no matrix run has started.
+The normalized comparison cost is not a cash charge or subscription invoice.
+It is the common list-price basis frozen before the matrix.
+
+Failure classification is preserved, not collapsed:
+
+| Classification | Cells |
+|---|---:|
+| Passed | 33 |
+| `EXPECTED_ARTIFACTS_NOT_CHANGED` | 23 |
+| `VERIFICATION_FAILED` | 28 |
+| `SETUP_FAILED` | 36 |
+
+## Policy result
+
+All policies contain 30 cells. Each policy has 21 known-cost cells and 9
+unknown-cost setup failures.
+
+| Policy | Verified | Real model attempts | Known normalized cost |
+|---|---:|---:|---:|
+| Always frontier | 11 / 30 | 21 | $34.838471 |
+| Always cheap | 0 / 30 | 21 | $4.312938 |
+| Prompt only | 10 / 30 | 21 | $39.561832 |
+| Adaptive | 12 / 30 | 24 | $35.862083 |
+
+The four held-out scenarios produced:
+
+| Policy | Held-out verified | Known-cost median |
+|---|---:|---:|
+| Always frontier | 5 / 12 | $0.655518 |
+| Always cheap | 0 / 12 | $0.069684 |
+| Prompt only | 6 / 12 | $0.522119 |
+| Adaptive | 6 / 12 | $0.948231 |
+
+Those known-cost medians are descriptive only. Three held-out cells per policy
+have unknown cost, so the report correctly refuses to compute the economic
+savings metric.
+
+The preliminary performance gate remains open because:
+
+- adaptive did not beat prompt-only on held-out verified completions;
+- adaptive's known-cost held-out median was higher than prompt-only;
+- 36 setup failures left cost unknown;
+- unknown cost cannot be treated as zero or excluded from a savings claim.
+
+The engineering gate passed: the matrix is complete, all 120 attestations
+verify, exact model and executor bindings verify, cost provenance remains
+strict, and no adversarial case produced a false pass.
+
+## What the scenarios actually say
+
+- `citadel-short-executor-proof`: frontier, prompt-only, and adaptive each
+  passed 3/3. Prompt-only had the lowest known-cost median of those successful
+  policies. Adaptive added no demonstrated value.
+- `citadel-long-cost-provenance`: frontier and adaptive passed 3/3. Adaptive
+  selected the frontier profile directly, so its lower observed median is run
+  variance, not evidence that routing saved cost.
+- `citadel-safety-model-proof`: prompt-only and adaptive both passed 3/3.
+  Prompt-only's median was `$0.648209` in 3.49 minutes versus adaptive's
+  `$0.941569` in 7.39 minutes. The frozen adaptive heuristic over-routed.
+- `p-limit-cleanup-pending`: frontier and adaptive passed 3/3; prompt-only
+  passed 2/3. This is one positive frontier-selection case, not enough to
+  rescue the matrix-level claim.
+- `p-limit-short-clear-queue` failed under every policy. Adaptive escalated
+  from workhorse to frontier in every repetition and still failed.
+- `p-limit-context-cancel` changed the expected artifacts under frontier,
+  prompt-only, and adaptive, but all 12 verifier runs exited unsuccessfully
+  without task-level failure detail in the bounded receipt. Treat this as a
+  benchmark/verifier investigation, not a comparative model result.
+- `citadel-context-receipt-recovery` failed the artifact contract in all 12
+  cells even though the configured verifier passed in all 12. Agents often
+  changed plausible recovery files outside the frozen three-file expectation.
+  This manifest is not reliable enough for a capability conclusion.
+- All 36 Nano ID cells failed setup before any model call.
+
+## Zero-model forensics
+
+The Nano ID failure is reproducible at pinned ref
+`1a1fee4610061c63e2429eb5c22a35e3634c1d03`.
+
+The frozen setup command:
+
+```text
+corepack pnpm install --frozen-lockfile
+```
+
+fails under Corepack's pnpm `9.12.1` with:
+
+```text
+ERROR packages field missing or empty
+```
+
+That commit's `pnpm-workspace.yaml` has `allowBuilds` and
+`minimumReleaseAgeExclude`, but no `packages` field. These are setup
+compatibility failures, not model failures. They remain unknown in the frozen
+report.
+The post-matrix zero-model reproduction is recorded in
+[`actual-forensics/nanoid-setup.json`](../benchmarks/optimizer-proof/actual-forensics/nanoid-setup.json).
+
+Two record-shape limitations were also exposed:
+
+- setup fallback records say `attempts: 1` despite containing no verification
+  receipt and making no model call; therefore the actual model-attempt count is
+  the receipt count, 87, not the top-level sum, 123;
+- after adaptive escalation, top-level `selected_profile_id` is the terminal
+  profile; the receipt sequence is authoritative for the executed route.
+
+These defects are documented rather than silently repaired inside the frozen
+method. A future benchmark version must correct them with a new identity.
+
+## Reproducible artifacts
+
+- Report:
+  `optimizer-report-sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9`
+- Proof bundle:
+  `sha256:1e694ca4ba96190a8cb320ca13f4ae402c3001bfabffa104966460e3a60a9fb7`
+- Bundle contents: 46 digest-bound files
+- Local bundle verification: valid; 46/46 files verified; report,
+  calibration, diagnostic pilot, and forensic records reproduced
+- Public-random holdout: `citadel-short-executor-proof`, selected by
+  precommitted drand round `6333716`
+- Clean hosted bundle verification: pending this commit's GitHub job
+
+The report's `generated_at` field is derived from the latest matrix
+`started_at`, not the wall-clock time at which the report command was run.
 
 ## Claim boundary
 
-Safe current claim:
+Safe claim:
 
-> Citadel now contains a separate, reproducible engineering contract for
-> outcome-aware economic routing. Its precommitted public beacon selected
-> `citadel-short-executor-proof`; the frozen comparative matrix is approved but
-> remains unrun. Clean hosted verification remains required before a grant
-> claim.
+> Citadel implements a signed, fail-closed engineering contract for evaluating
+> outcome-aware economic routing. Its first frozen 120-cell actual matrix
+> falsified the current adaptive performance claim: the controller did not
+> beat prompt-only routing, and setup and manifest defects block a savings
+> estimate.
 
-Unsafe current claims:
+Unsafe claims:
 
 - Citadel reduces real agent cost;
-- Citadel retains frontier quality;
+- Citadel retains frontier quality at lower cost;
 - Citadel is best in class;
 - the Sentient performance target has been met;
 - the grant package is ready to submit.
 
-## Next evidence, not next feature
+## What should happen next
 
-The first calibration attempt stopped after two calls because Claude's final
-summary omitted model identity. Its local session stream retained the exact
-model, so the adapter now binds the final session ID to that stream and rejects
-mixed or mismatched session evidence.
+Do not rerun or reinterpret this matrix. Preserve it as the negative baseline.
 
-A second start stopped before any model call because Windows could not launch
-the frozen `npm.cmd` setup through `spawnSync` with `shell: false`. The benchmark
-runner now resolves reviewed `npm`, `npx`, and `corepack` shims to their
-JavaScript entrypoints and still avoids a command interpreter.
+The next benchmark identity should:
 
-The revised 4-run subscription-backed calibration completed across all four
-profiles. Every requested model matched the observed model, every receipt
-verified, and every cost source was known. The normalized comparison total was
-`$3.534060`, not a subscription invoice. Aggregate elapsed runtime was
-1,439,995 ms.
+1. make setup compatibility a preflight gate before authorization;
+2. replace brittle exact-file expectations with task-owned artifact contracts;
+3. isolate task verification from unrelated repository-wide tooling;
+4. make attempt and route-sequence semantics unambiguous;
+5. add enough tasks to distinguish a controller from prompt-only routing;
+6. precommit a controller hypothesis that can earn value through calibrated
+   cheap starts, evidence-based escalation, and avoided frontier calls.
 
-All four task verifiers failed. A no-model reproduction established that the
-original `npm test` verifier failed on unrelated lint and TypeScript tooling
-before reaching the queue tests. A task-focused AVA invocation then failed on
-the actual queue bug, and a bounded reference repair touching `index.js` and
-`test.js` passed all 22 tests with no unhandled rejection. The archived
-calibration scenario set preserves what actually ran; the corrected actual
-matrix has a new frozen scenario-set identity. The 0/4 calibration result is
-therefore not interpretable as model quality and supplies no savings evidence.
-
-The authorized diagnostic pilot completed both frontier runs in 741,708 ms.
-Its normalized comparison total was `$2.191393`, not a subscription invoice.
-Both requested models matched their observed identities and both execution
-receipts verified. Claude changed `index.js` and all 22 AVA tests passed, while
-Codex made no patch and the verifier failed.
-
-The immutable pilot record remains failed with `NO_TASK_VERIFIER_PASS` because
-the manifest required both `index.js` and `test.js` to change. The pinned
-repository already contained the regression test, so this rejected a valid
-implementation and rewarded unnecessary test churn. The exact pilot scenario
-set and raw record are archived unchanged. A digest-bound, zero-call forensic
-replay narrows only the future matrix manifest to `index.js`; it classifies the
-Claude run as task-verified and leaves the Codex run failed. This proves the
-evidence path can carry a real verifier pass but supplies no savings claim.
-
-The next gate is collection and verification of the already committed public
-beacon round. The full matrix remains separately quota-gated.
-
-Official API list prices remain a normalization basis for comparing routes.
-They are not a claim about Seth's invoice or the marginal cost of a
-subscription-backed run.
+Until a new precommitted matrix passes those gates, the grant thesis is the
+open evaluation and controller research program, not proven economic savings.

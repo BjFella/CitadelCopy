@@ -15,9 +15,54 @@ policies and must not rewrite, reinterpret, or reuse that frozen result.
 - 6 task categories
 - 4 policies: always-frontier, always-cheap, prompt-only, and adaptive
 - 3 repetitions per policy and scenario
-- 120 actual runs when the matrix is authorized
+- 120 completed, signed actual-run cells
 - 4 holdout scenarios excluded from profile calibration
 - 2 runtime families and 3 capability/cost tiers
+
+## Actual result
+
+The authorized subscription-backed matrix completed on 2026-07-30:
+
+- 120/120 signed cells;
+- 84 cells reached a model;
+- 87 real model attempts, counted from verification receipts;
+- 33 passed, 51 failed, and 36 remained unknown after setup failed before a
+  model ran;
+- 590.857 aggregate model-cell runtime minutes;
+- `$114.575324` known list-price-normalized comparison cost, not a cash charge
+  or subscription invoice;
+- 0 adversarial false passes.
+
+The engineering gate passed and the performance gate did not. Adaptive and
+prompt-only each verified 6/12 held-out cells, while adaptive's descriptive
+known-cost median was `$0.948231` versus prompt-only's `$0.522119`. Three
+held-out cells per policy have unknown cost, so the report correctly refuses
+to compute savings.
+
+All 36 Nano ID cells failed the frozen setup command before any model call.
+A zero-model replay at the pinned ref reproduces `ERROR packages field missing
+or empty` under pnpm `9.12.1`; the pinned `pnpm-workspace.yaml` has no
+`packages` field. These remain setup-unknown, not model failures.
+
+The frozen matrix also exposed two record-shape limitations. Setup fallback
+records report one top-level attempt despite having no verification receipt,
+and adaptive escalation leaves the terminal profile in
+`selected_profile_id`. Count real model attempts from receipts and read the
+receipt sequence as the executed route. These limitations require a new
+benchmark identity; this matrix is preserved unchanged.
+
+Canonical artifacts:
+
+- [`actual-runs/actual-runs.jsonl`](actual-runs/actual-runs.jsonl)
+- [`actual-report.json`](actual-report.json)
+- [`proof-bundle/manifest.json`](proof-bundle/manifest.json)
+- [`actual-forensics/nanoid-setup.json`](actual-forensics/nanoid-setup.json)
+
+Report:
+`optimizer-report-sha256:f43285ff9254b84a49ae8e4e7c02f278716ed4c09db4e30307d7678c75420aa9`
+
+Proof bundle:
+`sha256:1e694ca4ba96190a8cb320ca13f4ae402c3001bfabffa104966460e3a60a9fb7`
 
 The checked-in executor set binds exact public model IDs, the reviewed
 self-contained runtime adapter, and the canonical Operation Fork executor
@@ -105,7 +150,9 @@ digest-bound and remain excluded from performance claims.
 authorization at `2026-07-30T20:44:02.628Z`; it caps the frozen matrix at 120
 CLI cells, 162 model attempts, and 7,230 aggregate timeout-minutes. The timeout
 figure is a fail-safe ceiling, not expected duration or a dollar estimate.
-No matrix run predates that approval.
+No matrix run predates that approval. The completed matrix used 120 CLI cells,
+87 receipt-backed model attempts, and 590.857 aggregate model-cell runtime
+minutes.
 `optimizer-matrix-run.js` writes an intent before each cell, validates every
 signed result, resumes completed cells, and refuses to retry an ambiguous cell
 automatically. This prevents a crash from silently spending quota twice.
