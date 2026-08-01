@@ -26,6 +26,12 @@ assert.match(actionYaml, /main: scripts\/action-verify\.js/);
 assert.match(testsYaml, /citadel-action-consumer:/);
 assert.match(testsYaml, /permissions:\n      contents: read/);
 assert.match(testsYaml, /uses: \.\//);
+const consumerBlock = testsYaml.slice(
+  testsYaml.indexOf('  citadel-action-consumer:'),
+  testsYaml.indexOf('\n  repository-memory:'),
+);
+assert.match(consumerBlock, /fetch-depth: 0/, 'action consumer needs repository history for source-bound verification');
+assert.match(consumerBlock, /persist-credentials: false/, 'action consumer must not retain checkout credentials');
 for (const match of testsYaml.matchAll(/^\s*- uses:\s*(\S+)/gm)) {
   const target = match[1];
   if (target.startsWith('./')) continue;
