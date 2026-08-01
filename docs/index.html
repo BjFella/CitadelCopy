@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Citadel is the progressive operating layer for Claude Code and Codex: start with /do, then add durable state, coordination, and verifiable operation control only when the work needs it." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23070b12%22/><path d=%22M8 8h16v5H13v6h11v5H8z%22 fill=%22%2345ddff%22/></svg>" />
   <title>Citadel | The operating layer for Claude Code and Codex</title>
   <style>
     :root {
@@ -2963,9 +2964,6 @@
         goToScreen(0);
       });
     });
-
-    // Focus input on load
-    setTimeout(() => input.focus(), 100);
 
     // ─── Side panels ──────────────────────────────────────────────────────
     let activePanel = null;
