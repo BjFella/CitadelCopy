@@ -1,0 +1,145 @@
+# Sentient Typeform answer pack
+
+Status: internal, paste-ready draft; not submitted
+
+Observed form: `https://form.typeform.com/to/IRj7WaKH`, checked 2026-08-01.
+
+This file maps the live Grant track exactly. It separates final project wording
+from applicant facts that Seth must confirm before submission.
+
+## Applicant fields
+
+| Live field | Paste-ready value | Status |
+|---|---|---|
+| Email | `[SETH EMAIL]` | Seth confirmation required |
+| Role | `Engineer / Builder` | Recommended selection |
+| City, country | `[CITY, COUNTRY]` | Seth confirmation required |
+
+## Project fields
+
+### What problem are you solving, and why now?
+
+AI-agent optimization is usually measured at the model-call level even though
+cost and failure happen across the whole operation: decomposition, models,
+tools, retries, context, verification, recovery, and human intervention. That
+creates two failures. A system can look cheap while wasting work elsewhere, and
+it can claim success without proving that the declared route ran or that a
+verifier outside the routed model accepted the artifact.
+
+This matters now because coding agents are becoming persistent, multi-model,
+and recursive. Open stacks such as Sentient ROMA make whole-operation control
+possible, but the ecosystem still lacks a neutral contract connecting the plan,
+observed execution, complete cost boundary, and verified outcome. Citadel is
+that control and evidence layer. It freezes the operation contract, records
+what actually ran, keeps unknown cost unknown, accepts a model-external verdict,
+and produces a signed bundle that can be reconstructed offline.
+
+The machinery is already working. Citadel has published actual-run ROMA and
+local-model studies, including negative results where plausible routing ideas
+used more energy or missed their precommitted savings gates. The grant funds
+the remaining scientific and engineering work: learning an adaptive policy
+that improves expected verified-operation value across stacks and hardware,
+then testing it under frozen completion, cost, integrity, and reproducibility
+gates.
+
+### Who does this help?
+
+Citadel helps maintainers and teams operating open AI agents, especially those
+who cannot afford to treat frontier-model usage, retries, and failed operations
+as an unmeasured blank check. Agent-stack authors get a versioned conformance
+contract instead of a proprietary integration. Researchers get frozen methods,
+privacy-safe cells, signed receipts, deterministic verifiers, and retained
+negative results. Everyday Claude Code and Codex users get a simple `/do` entry
+point first, with control and evidence available only when their work needs it.
+
+The intended downstream benefit is reliable coding-agent capability at lower
+end-to-end cost. Citadel does not claim that benefit yet: the funded evaluation
+must reach the published completion and savings gates before making it.
+
+### In one line, what are you building?
+
+`An open control layer that proves whether AI agents finished and what it cost.`
+
+Character count: 78 of 80.
+
+### Who is building this, and why is the team right?
+
+Seth Gammon is Citadel's solo builder and maintainer. He has taken it from a
+working Claude Code harness into an MIT-licensed operating and evidence layer
+for Claude Code, Codex, local Ollama models, and a pinned Sentient ROMA binding.
+The public repository currently has 808 stars and 510 commits, but the stronger
+qualification is the shipped proof discipline: preregistered methods, signed
+actual-run cells, model-external repository verification, explicit unknown-cost
+handling, and multiple negative findings preserved instead of marketed away.
+That combination of product implementation and adversarial self-evaluation is
+the core work this grant requires.
+
+Observation boundary: GitHub counts checked on 2026-08-01. Refresh immediately
+before submission.
+
+### What is open, what gets worse if it closed tomorrow, and for whom?
+
+Citadel's MIT-licensed code, operation contracts, runtime adapters, deterministic
+verifiers, benchmark methods, privacy-safe raw cells, signed bundles, reports,
+and beginner documentation are public. Users keep their repository state and
+receipts; no Citadel account or hosted evidence service is required.
+
+If development stopped tomorrow, the published code and evidence would remain
+usable, but the neutral cross-stack optimizer program would stop before it
+reached representative scale. Open-stack operators would continue choosing
+between vendor-specific telemetry and routing claims that can ignore retries,
+tool cost, local compute, failed verification, or provider substitution. The
+loss would fall most on independent maintainers, resource-constrained teams,
+open-agent stack authors, and researchers who need comparable evidence without
+giving one vendor custody of their operations.
+
+### Demo or trial link
+
+`https://sethgammon.github.io/Citadel/`
+
+Supporting review path is in the PDF and at:
+`https://github.com/SethGammon/Citadel/blob/main/docs/grants/EVALUATOR_START_HERE.md`
+
+## Track and grant fields
+
+| Live field | Paste-ready value | Status |
+|---|---|---|
+| Track | `Grant` | Final |
+| Funding range | `> $50k` | Matches $150,000 proposal |
+| Supporting document | `output/pdf/citadel-sentient-grant-packet.pdf` | Upload after final visual check |
+| How did you hear about us? | `[HOW SETH HEARD ABOUT SENTIENT]` | Seth confirmation required |
+
+### What would the grant unlock?
+
+A $150,000 public-goods grant over nine months would turn Citadel's working
+control and falsification machinery into a representative, multi-stack economic
+optimizer. The work is evidence-gated and released in three go/no-go tranches.
+
+First, we will freeze at least 60 unique artifact-producing repository
+operations and close the end-to-end cost boundary, including provider charges,
+local compute, tools, setup, failures, and bounded human intervention. Second,
+we will harden the Sentient ROMA adapter and add two additional open-agent
+stacks to one conformance SDK. Third, we will build an expected
+verified-operation controller that prices likely verification, escalation, and
+recovery rather than merely choosing a smaller model. Finally, we will run a
+prospective multi-stack evaluation and publish the raw privacy-safe evidence,
+signed receipts, one-command offline reconstruction, beginner `/do` path, and a
+bounded opt-in onboarding cohort.
+
+The primary target is fixed in advance: at least 80% absolute verified-operation
+completion, at least 95% of a valid always-frontier completion rate, at least
+30% lower measured end-to-end cost, zero false passes, and no unknown cost used
+as savings. If Citadel misses, the negative result, reusable contracts and data,
+failure analysis, and unused-funds accounting remain public deliverables.
+
+## Final human confirmations
+
+- [ ] Confirm applicant email.
+- [ ] Confirm city and country.
+- [ ] Confirm `Engineer / Builder` as the role selection.
+- [ ] Confirm how Seth heard about Sentient.
+- [ ] Approve the final $150,000 amount.
+- [ ] Approve this wording and the rendered PDF.
+- [ ] Explicitly authorize submission of the external Typeform.
+
+No form has been submitted by preparing this file.

@@ -20,6 +20,13 @@ operations. The narrow thesis is:
 5. [Grant draft](SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md): the request, public
    deliverables, budget, and risks.
 
+Application support: the required eight-page PDF is generated at
+[`output/pdf/citadel-sentient-grant-packet.pdf`](../../output/pdf/citadel-sentient-grant-packet.pdf),
+with its render source in
+[`scripts/render-sentient-grant-packet.py`](../../scripts/render-sentient-grant-packet.py).
+The live-form audit and exact claim boundary are in
+[`SUBMISSION_READINESS.md`](SUBMISSION_READINESS.md).
+
 ## Ninety-second technical review
 
 Run these without model access:

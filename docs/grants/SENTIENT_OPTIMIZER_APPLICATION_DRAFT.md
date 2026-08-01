@@ -494,15 +494,17 @@ Those are the exact uncertainties the funded milestones address.
 ## Applicant and adoption evidence
 
 SethGammon owns and maintains the public MIT repository. On 2026-08-01 the
-GitHub page showed 808 stars, 79 forks, and 480 commits. Those are public
-interest and delivery signals, not users or installations. The adoption path is
+GitHub page showed 808 stars, 79 forks, and 510 commits. Those are public
+interest and repository-history signals, not users, installations, or Seth's
+authored-work count. The adoption path is
 an existing Claude Code or Codex user starting with `/do`, then an external
 stack builder implementing the conformance adapter; ROMA is the current
 example. A funded, bounded opt-in cohort of 15-20 external operators measures
 governed first-operation completion, including failed installs and abandonment;
-it does not govern the optimizer performance gate. Legal recipient,
-jurisdiction, nine-month availability, and private biographical claims remain
-explicit submission blockers. See
+it does not govern the optimizer performance gate. Applicant email,
+city/country, how Seth heard about Sentient, and submission authority remain
+human-owned Typeform inputs. Legal and payment details may follow during due
+diligence but were not fields in the observed application path. See
 [`APPLICANT_AND_ADOPTION.md`](APPLICANT_AND_ADOPTION.md).
 
 ## Public deliverables
@@ -520,12 +522,15 @@ explicit submission blockers. See
 
 Do not submit until:
 
-- the application-readiness branch is merged and all hosted checks pass;
-- the final public pages, evidence manifest, and repository links are checked
-  after merge;
-- the two-minute walkthrough and three-image application kit are captured from
-  the merged public site;
+- this final application package is merged and all hosted checks pass;
+- the public Pages site, evidence manifest, evaluator path, and PDF links are
+  checked after merge;
+- applicant email, city/country, and how Seth heard about Sentient are entered;
 - Seth reviews and explicitly approves the requested amount and wording;
 - Seth explicitly approves submitting the application.
 
 No outside reviewer, outreach campaign, or third-party selector is required.
+
+The exact live form map and paste-ready payload are in
+[`TYPEFORM_ANSWER_PACK.md`](TYPEFORM_ANSWER_PACK.md). The supporting upload and
+final audit are in [`SUBMISSION_READINESS.md`](SUBMISSION_READINESS.md).

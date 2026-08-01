@@ -117,6 +117,7 @@
     "application:media:walkthrough": "python scripts/render-application-walkthrough.py",
     "application:media:verification": "python scripts/render-live-verification-demo.py",
     "application:media:test": "node scripts/test-application-media.js",
+    "application:package:test": "node scripts/test-sentient-application-package.js",
     "onboarding:fresh-clone": "node scripts/fresh-clone-onboarding-proof.js run",
     "onboarding:fresh-clone:verify": "node scripts/fresh-clone-onboarding-proof.js verify",
     "site:smoke": "node scripts/hosted-site-smoke.js",

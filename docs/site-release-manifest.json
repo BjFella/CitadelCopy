@@ -74,13 +74,13 @@
     },
     {
       "path": "grants/APPLICANT_AND_ADOPTION.md",
-      "bytes": 3206,
-      "digest": "sha256:17464370b0eb1ad48b75619722db9d9e643b4495a8a91ff38dc43fbb4fed2a02"
+      "bytes": 3316,
+      "digest": "sha256:c92bf2a28ace5d9e9fdb1abbeecc2408d792a86808328f54ed95ab0bfa7110f9"
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 3036,
-      "digest": "sha256:ced9989d65c55f82bd6fba044fab4600ea0cadb226204aed799c43bcb98b1809"
+      "bytes": 3588,
+      "digest": "sha256:e08f0ac07ecf806973b13e046887cd877108293b95f0071bab658d5fe5b21e27"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
@@ -99,8 +99,8 @@
     },
     {
       "path": "grants/EVALUATOR_START_HERE.md",
-      "bytes": 3159,
-      "digest": "sha256:63d016202e90baebb00fbd94c2f9d9e4e773f3e576eed7dc14e776ff4de12a3c"
+      "bytes": 3551,
+      "digest": "sha256:1b17221641eb2136a8aae6930810838b34627c6f27c470717c5feb12f8e7bff2"
     },
     {
       "path": "grants/MILESTONES_AND_BUDGET.md",
@@ -124,13 +124,23 @@
     },
     {
       "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
-      "bytes": 25410,
-      "digest": "sha256:79725c98e281072062c0135bfa677cf3439575f497d5f8ff42a024db0052b06d"
+      "bytes": 25749,
+      "digest": "sha256:92416a7992cd6decc9bff0fdba07fb99f6c14ad15ec8abad9c46aa4c5ade5b80"
+    },
+    {
+      "path": "grants/SUBMISSION_READINESS.md",
+      "bytes": 5088,
+      "digest": "sha256:2253f39c711d380a3035a6816d732117448074027ffe7f4d406ec07fec22ccd5"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
       "bytes": 4136,
       "digest": "sha256:970a8a43f94695b2a722412f28f58ae6c7d86bd0f96da427880a2c0f0358d3f9"
+    },
+    {
+      "path": "grants/TYPEFORM_ANSWER_PACK.md",
+      "bytes": 7175,
+      "digest": "sha256:a6809f6385b311f300626d9ba6f5be68f8c4378bfbbcd6c94ff13a416487ed6e"
     },
     {
       "path": "index.html",
@@ -183,5 +193,5 @@
       "digest": "sha256:fe6a87df64bb6248b53a182bee63f7eb288e9128e669caf96e8b9ee26bc27f05"
     }
   ],
-  "source_digest": "sha256:d656b11616bfc5a8cf3eb13ce086554484166c09f191f4558b23836b12d494d1"
+  "source_digest": "sha256:358a5458a1ce4a7802425bea3ae2c97303fb0f1c34901a1ceb9fce35c86d5339"
 }

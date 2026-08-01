@@ -21,6 +21,8 @@ const FILES = [
   'docs/grants/EVALUATOR_START_HERE.md',
   'docs/grants/DEMO_SCRIPT.md',
   'docs/grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md',
+  'docs/grants/SUBMISSION_READINESS.md',
+  'docs/grants/TYPEFORM_ANSWER_PACK.md',
 ];
 
 const FORBIDDEN = [
@@ -52,6 +54,7 @@ const canonicalGateFiles = [
   'docs/grants/MILESTONES_AND_BUDGET.md',
   'docs/grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md',
   'docs/grants/EVALUATOR_START_HERE.md',
+  'docs/grants/TYPEFORM_ANSWER_PACK.md',
   'docs/grants/DEMO_SCRIPT.md',
   'docs/research.html',
   'docs/evidence.html',

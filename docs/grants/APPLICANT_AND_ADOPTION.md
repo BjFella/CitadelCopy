@@ -12,7 +12,7 @@ Observed 2026-08-01:
 - Current maintainer model: one maintainer and release authority, disclosed as
   a bus-factor risk rather than presented as a team.
 - License: MIT.
-- Public repository metrics: **808 stars, 79 forks, and 480 commits** on the
+- Public repository metrics: **808 stars, 79 forks, and 510 commits** on the
   GitHub repository page. These are interest and delivery signals, not active
   users, successful installations, retention, or revenue.
 - Local Git history begins at commit `6c043814f403ab34fac16ac81f5d37233b84358b`
@@ -52,13 +52,14 @@ successful completion must all be published in aggregate. Clone, star, page
 view, and plugin registration are not adoption outcomes. Cohort results measure
 onboarding and use; they do not govern the optimizer performance gate.
 
-## Must be confirmed before submission
+## Applicant facts and later due diligence
 
-- Legal applicant name and grant recipient type.
-- Country/jurisdiction, tax status, and payment details.
-- Whether nine months at the proposed full-time allocation is available.
+- The live application requires applicant email and city/country.
+- Legal recipient type, tax status, and payment details were not requested on
+  the observed Typeform path, but may be required during later due diligence.
+- Nine-month availability should be confirmed before accepting any award.
 - Relevant personal delivery history beyond what the repository itself proves.
 - Preferred public contact and any conflicts or prior Sentient relationship.
 
-These fields are intentionally unresolved. The repository is not evidence for
-private identity, availability, legal status, or biography.
+These facts remain human-owned. The repository is not evidence for private
+identity, availability, legal status, or biography.
