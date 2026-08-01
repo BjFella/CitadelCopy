@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Citadel controls complete agent operations and proves what actually ran. A frozen 24-cell diagnostic against Sentient ROMA, Codex, and local Ollama models." />
+  <meta name="description" content="Citadel controls complete coding-agent operations, preserves failures, and independently verifies what actually ran. Inspect the prospective runtime cell and signed evidence history." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23070a0f%22/><path d=%22M8 8h16v5H13v6h11v5H8z%22 fill=%22%2353e2ff%22/></svg>" />
-  <title>Citadel Operation Control | Signed ROMA proof</title>
+  <title>Citadel Operation Control | Real-runtime proof</title>
   <style>
     :root {
       --ink: #f5f7fb;
@@ -412,51 +412,104 @@
       .button:hover { transform: none; }
     }
   </style>
+  <link rel="stylesheet" href="site-system.css" />
 </head>
-<body>
-  <nav>
-    <div class="shell nav-inner">
-      <a class="brand" href="index.html">CITADEL</a>
-      <span class="status">Signed actual run</span>
-      <div class="nav-links">
-        <a href="#control">Control plane</a>
-        <a href="#result">Result</a>
-        <a href="#boundary">Claim boundary</a>
-        <a href="https://github.com/SethGammon/Citadel">GitHub</a>
+<body class="site-page site-proof site-operation">
+  <div class="site-scroll-progress" aria-hidden="true"><span></span></div>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <div class="site-nav-inner">
+      <a class="site-brand" href="index.html"><span class="site-brand-mark">C</span><span>Citadel</span></a>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="index.html#product-story">How it works</a>
+        <a class="site-nav-link" href="index.html#proof">Proof</a>
+        <a class="site-nav-link" href="operation-control.html" aria-current="page">Operation Control</a>
+        <a class="site-nav-link" href="optimizer.html">Optimizer</a>
+        <a class="site-nav-link" href="research.html">Research</a>
       </div>
+      <div class="site-nav-actions">
+        <a class="site-nav-github" href="https://github.com/SethGammon/Citadel">GitHub</a>
+        <a class="site-nav-cta" href="#prospective">Latest proof</a>
+        <button class="site-nav-toggle" type="button" data-site-nav-toggle aria-expanded="false" aria-controls="site-nav-mobile">Menu</button>
+      </div>
+    </div>
+    <div class="site-nav-mobile" id="site-nav-mobile" data-site-nav-mobile hidden>
+      <a class="site-nav-link" href="index.html">Overview</a>
+      <a class="site-nav-link" href="#prospective">Latest proof</a>
+      <a class="site-nav-link" href="#control">Control contract</a>
+      <a class="site-nav-link" href="#result">Earlier ROMA result</a>
+      <a class="site-nav-link" href="#boundary">Claim boundary</a>
+      <a class="site-nav-link" href="optimizer.html">Optimizer</a>
+      <a class="site-nav-link" href="research.html">Research program</a>
     </div>
   </nav>
 
   <main class="shell">
     <header class="hero">
       <div>
-        <div class="eyebrow">Stack-neutral agent operation control</div>
+        <div class="eyebrow">Outcome-aware operation control</div>
         <h1>Control the operation. <span>Prove what ran.</span></h1>
         <p class="hero-copy">
-          Citadel sits above an agent stack and binds its model assignments,
-          decomposition, concurrency, retries, tools, timeouts, and escalation
-          to a signed plan. <strong>A separate verifier decides whether the work
-          actually completed.</strong>
+          Citadel binds the requested model, topology, tools, worktree, artifact
+          scope, receipts, and verifier into one operation. <strong>The agent does
+          the work. A separate contract decides what the result proves.</strong>
         </p>
       </div>
       <aside class="claim-card" aria-label="Current claim boundary">
         <div class="claim-label">Current claim boundary</div>
-        <h2>Evidence passed. Efficiency did not.</h2>
+        <h2>Integration passed. Savings remain unproven.</h2>
         <p>
-          Citadel doubled the always-local completion rate in this six-task
-          diagnostic, but used the same number of strong whole-operation
-          attempts. The precommitted optimizer hypothesis therefore failed.
+          One preregistered Claude Code cell completed a real repository change,
+          matched its requested model and topology, and passed an independent
+          verifier. Two infrastructure failures remain visible.
         </p>
-        <code>freeze sha256:f1ecf932...2ded5<br />bundle sha256:95b49d26...7b719</code>
+        <code>v2 prospective: 1 / 3 passed<br />history: 120 signed cells<br />comparative gate: open</code>
       </aside>
     </header>
 
-    <div class="proof-strip" aria-label="Frozen diagnostic summary">
-      <div class="proof-stat"><strong>24 / 24</strong><span>frozen measured cells</span></div>
-      <div class="proof-stat"><strong>0</strong><span>false passes</span></div>
-      <div class="proof-stat"><strong>4 / 6</strong><span>Citadel verified local completions</span></div>
-      <div class="proof-stat"><strong>2 / 6</strong><span>direct 7B local completions</span></div>
+    <div class="proof-strip" aria-label="Current operation-control evidence summary">
+      <div class="proof-stat"><strong>120</strong><span>signed historical cells</span></div>
+      <div class="proof-stat"><strong>3</strong><span>preregistered runtime attempts</span></div>
+      <div class="proof-stat"><strong>1</strong><span>independently verified result</span></div>
+      <div class="proof-stat"><strong>0</strong><span>adversarial false passes</span></div>
     </div>
+
+    <section id="prospective">
+      <div class="section-heading">
+        <div><div class="proof-kicker">Current proof · prospective v2</div><h2>One real task passed. The failures stayed evidence.</h2></div>
+        <p>
+          The frozen controller invoked a public coding-agent runtime against a
+          fresh public clone, reconciled the requested model and direct topology,
+          required the declared test file to change, then handed the repository
+          to an independent verifier. Attempts that never reached model work were
+          retained instead of silently disappearing from the result.
+        </p>
+      </div>
+      <div class="prospective-panel">
+        <div class="proof-kicker">Published attempts</div>
+        <div class="attempt-grid">
+          <article class="attempt-card">
+            <span class="attempt-state">Failed</span>
+            <h3>Codex via WindowsApps</h3>
+            <p>Launch failed in 353 ms. No model or repository work was observed, so no completion was claimed.</p>
+          </article>
+          <article class="attempt-card">
+            <span class="attempt-state">Failed</span>
+            <h3>Claude in restricted sandbox</h3>
+            <p>The runtime exited nonzero after 185.6 seconds. Provider output remains private and the report records no model work.</p>
+          </article>
+          <article class="attempt-card passed">
+            <span class="attempt-state">Passed</span>
+            <h3>Claude on a fresh public clone</h3>
+            <p>Exact model and topology matched, the required artifact changed, and the independent verifier exited zero.</p>
+          </article>
+        </div>
+        <div class="evidence-note">
+          <strong>Honest economics</strong>
+          <span>Actual cash and marginal cash are unknown. Market-equivalent telemetry is $0.704256 and is labeled as such, never presented as spend.</span>
+          <a href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/operation-control-v2/prospective/RESULTS.md">Inspect results →</a>
+        </div>
+      </div>
+    </section>
 
     <section id="control">
       <div class="section-heading">
@@ -469,22 +522,28 @@
         </p>
       </div>
       <div class="control-flow" aria-label="Citadel operation control flow">
-        <article class="flow-step"><small>01 / INPUT</small><h3>Frozen task</h3><p>Prompt, answer digest, stack commit, model manifests, and policy order are bound before execution.</p></article>
-        <article class="flow-step"><small>02 / PLAN</small><h3>Signed controls</h3><p>Per-module models, depth, concurrency, subtask ceiling, token budgets, tools, retries, and timeout.</p></article>
-        <article class="flow-step"><small>03 / STACK</small><h3>Sentient ROMA</h3><p>A thin adapter configures the pinned recursive solver without replacing its planning or execution logic.</p></article>
-        <article class="flow-step"><small>04 / OBSERVE</small><h3>Provider truth</h3><p>Configured modules, actual model calls, tokens, tools, nodes, status, and partial timeout evidence.</p></article>
-        <article class="flow-step"><small>05 / VERIFY</small><h3>Outcome receipt</h3><p>A deterministic verifier, content-addressed cells, and an Ed25519 bundle decide what can be claimed.</p></article>
+        <article class="flow-step"><small>01 / REQUEST</small><h3>Freeze intent</h3><p>Task, repository commit, required artifacts, executor profiles, attempt limits, and verifier are fixed before work.</p></article>
+        <article class="flow-step"><small>02 / SELECT</small><h3>Bind controls</h3><p>Requested model, topology, tools, worktree, timeouts, privacy, and cost lens become an inspectable contract.</p></article>
+        <article class="flow-step"><small>03 / EXECUTE</small><h3>Use the real stack</h3><p>Claude Code, Codex, ROMA, or another adapter does the work without Citadel impersonating its planning logic.</p></article>
+        <article class="flow-step"><small>04 / OBSERVE</small><h3>Reconcile reality</h3><p>Requested and observed model, receipts, changed paths, duration, tokens, and available cost evidence are compared.</p></article>
+        <article class="flow-step"><small>05 / VERIFY</small><h3>Bound the claim</h3><p>An independent repository verifier and signed report decide whether the operation passed, failed, or remains unknown.</p></article>
       </div>
     </section>
 
     <section id="result">
       <div class="section-heading">
-        <h2>A result that is useful because it can say no.</h2>
+        <div><div class="proof-kicker">Earlier evidence · ROMA diagnostic</div><h2>A result that is useful because it can say no.</h2></div>
         <p>
           Six previously unexecuted tasks ran under four frozen policies. Codex
           was the frontier reference. Qwen2.5-Coder 3B and 7B ran locally through
           Ollama. Citadel controlled Sentient's pinned ROMA stack module by module.
         </p>
+      </div>
+      <div class="proof-strip" aria-label="Earlier frozen ROMA diagnostic summary" style="margin-bottom:28px;">
+        <div class="proof-stat"><strong>24 / 24</strong><span>frozen measured cells</span></div>
+        <div class="proof-stat"><strong>0</strong><span>false passes</span></div>
+        <div class="proof-stat"><strong>4 / 6</strong><span>Citadel verified local completions</span></div>
+        <div class="proof-stat"><strong>2 / 6</strong><span>direct 7B local completions</span></div>
       </div>
       <div class="table-scroll" role="region" aria-label="Frozen policy result table" tabindex="0">
         <table class="result-table" data-testid="operation-result-table">
@@ -590,5 +649,6 @@
   <footer>
     <div class="shell">Citadel operation-control proof · observed 2026-07-31 · signed actual run · evidence passed · performance hypothesis failed.</div>
   </footer>
+  <script src="site-system.js"></script>
 </body>
 </html>

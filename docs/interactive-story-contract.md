@@ -1,19 +1,22 @@
-# Citadel Interactive Product Story v2
+# Citadel Public Experience Contract v3
 
-Operation Fork is now a first-class product story beside routing and durable
-resume. The page must show one objective branching into Claude Code and Codex,
-the shared contract, branch evidence, and the honest comparison outcome. A user
-must be able to switch the same fixture between complete proof and a missing
-receipt, with the latter becoming `Insufficient evidence`, never a winner.
+The public site now has one progressive story across the product overview,
+Operation Control, Optimizer, and Research surfaces. A visitor must understand
+the useful first command before seeing the advanced machinery, then be able to
+follow every major claim to a bounded result or an explicit open gate.
+
+Native document scrolling is part of the contract. Wheel and touch input must
+never be intercepted to simulate pages, sections must be directly linkable, and
+the visible scrollbar and progress rail must communicate real page position.
 
 ## Experience identity
 
 | Variable | Status | Decision |
 |---|---|---|
-| Name | Decided | Citadel Interactive Product Story |
-| Purpose | Decided | Let a stranger operate a deterministic Citadel journey and inspect why each state changes |
-| Current problem | Decided | The existing site explains routing well but does not let visitors experience persistence, evidence, fleet coordination, or delivery proof as one system |
-| Mode | Decided | Major refinement of the existing public site |
+| Name | Decided | Citadel Public Experience |
+| Purpose | Decided | Let a stranger reach first value through `/do`, then inspect persistence, control, verification, economics, and research evidence |
+| Current problem | Decided | Citadel's complexity and strongest proof were scattered across surfaces, while custom scroll hid the story from ordinary browsing |
+| Mode | Decided | Unified public product and research system |
 
 ## User and emotional contract
 
@@ -37,7 +40,17 @@ receipt, with the latter becoming `Insufficient evidence`, never a winner.
 | Deploy steward | Decided | Serialized mainline gate |
 | Medieval ornament | Rejected | The metaphor changes structure and motion, not the page into fantasy art |
 
-## Story sequence
+## Progressive complexity
+
+1. **Level 1: Do.** `/do <request>` selects the lightest capable lane and verifies the result.
+2. **Level 2: Continue.** `/do next` restores the next action from repository state in a fresh session.
+3. **Level 3: Coordinate.** Campaigns and fleets expose durable phases, isolated worktrees, evidence, and landing order.
+4. **Level 4: Control.** Operation Control binds runtime identity, topology, tools, artifacts, economics, and independent verification.
+
+Most users can remain at levels one and two. Advanced vocabulary must not be a
+prerequisite for first value.
+
+## Interactive story sequence
 
 1. **Choose a scenario.** The visitor selects a typo, review, persistent feature, fleet migration, or deploy lane.
 2. **Route the request.** The tier cascade explains each evaluated gate and why it stopped.
@@ -90,12 +103,13 @@ Every proof receipt contains:
 
 | Layer | Decision |
 |---|---|
-| Global shell | Lightweight navigation with product, proof, install, release, and GitHub anchors |
-| Hero | One command input, scenario presets, and bounded proof strip |
+| Global shell | Shared sticky navigation with overview, operation, optimizer, research, GitHub, and one contextual action |
+| Hero | Plain operating promise, four-level map, bounded proof strip, and direct first-value action |
 | Journey stage | Left timeline, central operating surface, right repository inspector on desktop |
 | Mobile | One column with state tabs; no horizontal miniature desktop |
 | Proof gallery | Receipt grid with one expanded artifact at a time |
 | Installation | Runtime tabs followed by setup and first verified command |
+| Research | Evidence ladder, falsifiable milestones, funded targets, and demonstrated/not-demonstrated boundary |
 
 ## Visual language
 
@@ -133,7 +147,9 @@ Rules:
 
 ## Responsiveness and accessibility
 
-- Complete layouts at 1440px, 1024px, 768px, and 380px
+- Complete layouts at 1440px, 1024px, 768px, and 390px
+- No horizontal document overflow at any accepted width
+- Native vertical scrolling with a visible custom scrollbar; tables may scroll horizontally inside a labeled region
 - Keyboard path covers scenario selection, playback, inspector tabs, proof expansion, runtime tabs, and copy buttons
 - Status always uses icon or text in addition to color
 - `prefers-reduced-motion` retains all information
@@ -157,6 +173,9 @@ Rules:
 | Evidence unknown | required | required | required | required | required |
 | Deploy replay | required | required | required | required | required |
 | Install tabs | required | required | required | not applicable | required |
+| Operation prospective proof | required | required | required | required | required |
+| Optimizer evidence ledger | required | required | required | required | required |
+| Research milestones | required | required | required | required | required |
 
 ## Provisional and unknown decisions
 
@@ -178,3 +197,9 @@ The experience is ready only when a first-time visitor can answer these question
 5. What happens when evidence is missing?
 6. What real proof supports the claims?
 7. How do I install it for my runtime and reach one verified success?
+
+A technical evaluator must also be able to answer:
+
+8. What has Citadel demonstrated prospectively?
+9. Which performance and economic claims remain open?
+10. What specific research result would funding buy?
