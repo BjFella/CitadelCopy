@@ -33,6 +33,11 @@
 - [x] Capture three final application images and rendered social preview.
 - [x] Verify sitemap, metadata, keyboard path, video playback, and local desktop/mobile layouts.
 - [x] Confirm final responsive and console-clean checks on the merged hosted site.
+- [x] Map every live Sentient Grant-track form field to a paste-ready answer.
+- [x] Render the required eight-page supporting PDF from a tracked source.
+- [x] Inspect every rendered PDF page and verify extractable text, page count,
+  dimensions, metadata, and SHA-256.
+- [x] Publish a final claim-boundary and submission-readiness audit.
 
 Post-merge evidence for `6a7413180b408e3b7397b06da174a3f2c7228957`:
 [Tests #153](https://github.com/SethGammon/Citadel/actions/runs/30689491568),
@@ -51,3 +56,7 @@ page titles, images, and application media.
 No outside reviewer, pre-submission outreach campaign, sponsor, or third-party
 selector is a submission requirement. The opt-in operator cohort is funded
 post-award work, not evidence manufactured before submission.
+
+The live form contract, exact remaining human inputs, and upload digest are in
+[`SUBMISSION_READINESS.md`](SUBMISSION_READINESS.md). Paste-ready wording is in
+[`TYPEFORM_ANSWER_PACK.md`](TYPEFORM_ANSWER_PACK.md).
