@@ -502,8 +502,8 @@ stack builder implementing the conformance adapter; ROMA is the current
 example. A funded, bounded opt-in cohort of 15-20 external operators measures
 governed first-operation completion, including failed installs and abandonment;
 it does not govern the optimizer performance gate. Applicant email,
-city/country, how Seth heard about Sentient, and submission authority remain
-human-owned Typeform inputs. Legal and payment details may follow during due
+city/country, role selection, and submission authority remain human-owned
+Typeform inputs. Legal and payment details may follow during due
 diligence but were not fields in the observed application path. See
 [`APPLICANT_AND_ADOPTION.md`](APPLICANT_AND_ADOPTION.md).
 
@@ -525,7 +525,8 @@ Do not submit until:
 - this final application package is merged and all hosted checks pass;
 - the public Pages site, evidence manifest, evaluator path, and PDF links are
   checked after merge;
-- applicant email, city/country, and how Seth heard about Sentient are entered;
+- applicant email and city/country are entered, and the role selection is
+  confirmed;
 - Seth reviews and explicitly approves the requested amount and wording;
 - Seth explicitly approves submitting the application.
 

@@ -106,8 +106,13 @@ Supporting review path is in the PDF and at:
 |---|---|---|
 | Track | `Grant` | Final |
 | Funding range | `> $50k` | Matches $150,000 proposal |
-| Supporting document | `output/pdf/citadel-sentient-grant-packet.pdf` | Upload after final visual check |
-| How did you hear about us? | `[HOW SETH HEARD ABOUT SENTIENT]` | Seth confirmation required |
+| Supporting document | `output/pdf/citadel-sentient-grant-packet.pdf` | Verified; upload during final form pass |
+
+The combined Typeform definition also contains a `How did you hear about this
+program` question. It is not on the Grant path: when `Grant` is selected, the
+form's current branch logic jumps from the required supporting-document upload
+directly to the thank-you screen. Do not invent or enter an answer unless the
+live path changes before submission.
 
 ### What would the grant unlock?
 
@@ -137,7 +142,6 @@ failure analysis, and unused-funds accounting remain public deliverables.
 - [ ] Confirm applicant email.
 - [ ] Confirm city and country.
 - [ ] Confirm `Engineer / Builder` as the role selection.
-- [ ] Confirm how Seth heard about Sentient.
 - [ ] Approve the final $150,000 amount.
 - [ ] Approve this wording and the rendered PDF.
 - [ ] Explicitly authorize submission of the external Typeform.

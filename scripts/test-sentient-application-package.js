@@ -28,8 +28,29 @@ assert.ok(oneLine.length <= 80, `one-line answer exceeds Typeform limit: ${oneLi
 assert.match(answers, new RegExp(`Character count: ${oneLine.length} of 80\\.`));
 assert.ok(answers.includes(`\`${oneLine}\``), 'one-line answer and recorded count drifted');
 
-for (const placeholder of ['[SETH EMAIL]', '[CITY, COUNTRY]', '[HOW SETH HEARD ABOUT SENTIENT]']) {
+for (const placeholder of ['[SETH EMAIL]', '[CITY, COUNTRY]']) {
   assert.ok(answers.includes(placeholder), `missing human-owned placeholder: ${placeholder}`);
+}
+assert.ok(!answers.includes('[HOW SETH HEARD ABOUT SENTIENT]'), 'Grant path must not require the skipped how-heard field');
+assert.match(answers, /jumps from the required supporting-document upload\s+directly to the thank-you screen/i);
+assert.match(readiness, /Grant-branch logic jumps from the supporting\s+document field to the grant thank-you screen/i);
+
+for (const liveField of [
+  'Email',
+  'Role',
+  'City, country',
+  'What problem are you solving, and why now?',
+  'Who does this help?',
+  'In one line, what are you building?',
+  'Who is building this, and why is the team right?',
+  'What is open, what gets worse if it closed tomorrow, and for whom?',
+  'Demo or trial link',
+  'Track',
+  'Funding range',
+  'What would the grant unlock?',
+  'Supporting document',
+]) {
+  assert.ok(answers.includes(liveField), `paste-ready pack is missing live Grant field: ${liveField}`);
 }
 assert.match(answers, /No form has been submitted/i);
 assert.match(readiness, /Stop at the final submission action until Seth explicitly authorizes it/i);

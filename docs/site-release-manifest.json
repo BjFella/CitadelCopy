@@ -79,8 +79,8 @@
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 3588,
-      "digest": "sha256:e08f0ac07ecf806973b13e046887cd877108293b95f0071bab658d5fe5b21e27"
+      "bytes": 3864,
+      "digest": "sha256:cc20d98d8adb2c88be743dd75bb7317f81c5c4ef56b8b89cf65f92f78f8ad787"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
@@ -124,13 +124,13 @@
     },
     {
       "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
-      "bytes": 25749,
-      "digest": "sha256:92416a7992cd6decc9bff0fdba07fb99f6c14ad15ec8abad9c46aa4c5ade5b80"
+      "bytes": 25741,
+      "digest": "sha256:26a728cbc71bf78def20e5fa6a34ecf81e27c450b50ca5752851645482f5e2c4"
     },
     {
       "path": "grants/SUBMISSION_READINESS.md",
-      "bytes": 5088,
-      "digest": "sha256:2253f39c711d380a3035a6816d732117448074027ffe7f4d406ec07fec22ccd5"
+      "bytes": 5470,
+      "digest": "sha256:62bbeb4d326405e22a52bd01c5353be10e583011a5c03eb89c4d979dfb6cff42"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -139,8 +139,8 @@
     },
     {
       "path": "grants/TYPEFORM_ANSWER_PACK.md",
-      "bytes": 7175,
-      "digest": "sha256:a6809f6385b311f300626d9ba6f5be68f8c4378bfbbcd6c94ff13a416487ed6e"
+      "bytes": 7393,
+      "digest": "sha256:799b62fba16c39881c8ba0ee1a39287450ca67d1d1868ddbd0958d56a56f7bd6"
     },
     {
       "path": "index.html",
@@ -193,5 +193,5 @@
       "digest": "sha256:fe6a87df64bb6248b53a182bee63f7eb288e9128e669caf96e8b9ee26bc27f05"
     }
   ],
-  "source_digest": "sha256:358a5458a1ce4a7802425bea3ae2c97303fb0f1c34901a1ceb9fce35c86d5339"
+  "source_digest": "sha256:9038395e23f7ba3d819cf48fc4f5745d12b6bc126ed0780d4616a79d2f706bc9"
 }

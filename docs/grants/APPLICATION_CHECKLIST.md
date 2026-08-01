@@ -34,15 +34,19 @@
 - [x] Verify sitemap, metadata, keyboard path, video playback, and local desktop/mobile layouts.
 - [x] Confirm final responsive and console-clean checks on the merged hosted site.
 - [x] Map every live Sentient Grant-track form field to a paste-ready answer.
+- [x] Inspect the live Typeform branch logic and exclude the combined-form
+  `How did you hear` field that the Grant path skips after the required upload.
 - [x] Render the required eight-page supporting PDF from a tracked source.
 - [x] Inspect every rendered PDF page and verify extractable text, page count,
   dimensions, metadata, and SHA-256.
 - [x] Publish a final claim-boundary and submission-readiness audit.
 
-Post-merge evidence for `6a7413180b408e3b7397b06da174a3f2c7228957`:
-[Tests #153](https://github.com/SethGammon/Citadel/actions/runs/30689491568),
-[Pages deployment #158](https://github.com/SethGammon/Citadel/actions/runs/30689490997),
-and [Hosted Pages Smoke #1](https://github.com/SethGammon/Citadel/actions/runs/30689640454)
+Post-merge evidence for the application-package merge
+`333451e1b2b9e80b2965473c52db8125a74031e7`:
+[Tests #162](https://github.com/SethGammon/Citadel/actions/runs/30711082722),
+[Pages deployment #162](https://github.com/SethGammon/Citadel/actions/runs/30711082168),
+[HOL Plugin Scanner #182](https://github.com/SethGammon/Citadel/actions/runs/30711082703),
+and [Hosted Pages Smoke #5](https://github.com/SethGammon/Citadel/actions/runs/30711261304)
 all completed successfully on 2026-08-01. The hosted smoke exercised the final
 release manifest, responsive layouts, browser console, focus behavior, overflow,
 page titles, images, and application media.
