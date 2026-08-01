@@ -74,13 +74,13 @@
     },
     {
       "path": "grants/APPLICANT_AND_ADOPTION.md",
-      "bytes": 3316,
-      "digest": "sha256:c92bf2a28ace5d9e9fdb1abbeecc2408d792a86808328f54ed95ab0bfa7110f9"
+      "bytes": 3800,
+      "digest": "sha256:8a309ec06f0ea0e9a32275509c2b3289df8f0bd8efb0de4e6e7c843634917611"
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 4019,
-      "digest": "sha256:8fd7922b103fd2dd66b4685137e5cebaae6f81956dd8408f19a28ee64af35d60"
+      "bytes": 4200,
+      "digest": "sha256:ff3d2a5b5ffcbe57308cff7d4302a0f25009c73282c42c1409cace2fa3a29bff"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
@@ -94,18 +94,23 @@
     },
     {
       "path": "grants/DEMO_SCRIPT.md",
-      "bytes": 2075,
-      "digest": "sha256:27ce3da7caa0ae8b9053ffd665ccb3b60c6f4e1a96e69c7dc821446afbc458b6"
+      "bytes": 2396,
+      "digest": "sha256:90522d030a1bce54d4397a89d9baa29629fc3d2258188ac890c29bcac8fbc393"
     },
     {
       "path": "grants/EVALUATOR_START_HERE.md",
-      "bytes": 3551,
-      "digest": "sha256:1b17221641eb2136a8aae6930810838b34627c6f27c470717c5feb12f8e7bff2"
+      "bytes": 3747,
+      "digest": "sha256:2ecbcad2f018275cc13556004299c3ef53ec6cbe6f151a4c3e93139f381893b3"
+    },
+    {
+      "path": "grants/GITHUB_DELIVERY_EVIDENCE.md",
+      "bytes": 2732,
+      "digest": "sha256:89df0a4932b93a93f0687fc44b7f8b917eaa3b5d28718e34d54fbb39da120254"
     },
     {
       "path": "grants/MILESTONES_AND_BUDGET.md",
-      "bytes": 6491,
-      "digest": "sha256:2dd53eafc556a423d1395c6d5606dce20a88abeb4aeb9e47b47ffe9ee1caa344"
+      "bytes": 8648,
+      "digest": "sha256:1f682c1e6f1435f54003b4bf478efd902aa7641f1714b05e0a5f5bd1312b3aeb"
     },
     {
       "path": "grants/PUBLIC_GOODS_AND_GOVERNANCE.md",
@@ -124,13 +129,13 @@
     },
     {
       "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
-      "bytes": 25741,
-      "digest": "sha256:26a728cbc71bf78def20e5fa6a34ecf81e27c450b50ca5752851645482f5e2c4"
+      "bytes": 26254,
+      "digest": "sha256:732c618f607855bd73d6024a21c7e2f8545f5ce06ef450e71b4c21d4393991cd"
     },
     {
       "path": "grants/SUBMISSION_READINESS.md",
-      "bytes": 6162,
-      "digest": "sha256:37687db4dc4e5659aa6bd52dcc42bc02cebf6a3d6ed899039bfc31028ae66368"
+      "bytes": 6939,
+      "digest": "sha256:d17ec71a6026aec33651c176617c7d8764cb34c325cd68908e27417cfe934121"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -139,8 +144,8 @@
     },
     {
       "path": "grants/TYPEFORM_ANSWER_PACK.md",
-      "bytes": 7393,
-      "digest": "sha256:799b62fba16c39881c8ba0ee1a39287450ca67d1d1868ddbd0958d56a56f7bd6"
+      "bytes": 8021,
+      "digest": "sha256:ae179d0fd851d427f584b9232be1d7b17897719c8e66e3ced0c5df1b470c73cd"
     },
     {
       "path": "index.html",
@@ -193,5 +198,5 @@
       "digest": "sha256:fe6a87df64bb6248b53a182bee63f7eb288e9128e669caf96e8b9ee26bc27f05"
     }
   ],
-  "source_digest": "sha256:ae62da145d4d8c40c1dcf6321894e58ab753c05f140078ab3b090c3cbb61da94"
+  "source_digest": "sha256:b7819ef078111404b843a819a27eb3dcc2953594b1d259e8f3d222fc0ad2cbba"
 }

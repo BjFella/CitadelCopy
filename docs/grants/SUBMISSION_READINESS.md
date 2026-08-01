@@ -50,8 +50,8 @@ The mandatory supporting document is ready at:
 
 - format: PDF, 16:9 landscape;
 - pages: 8;
-- size: 971,050 bytes;
-- SHA-256: `019dbef9189d6727f9417676ce6a6a766b8535854b997eef15cceab8776ebdf9`;
+- size: 972,188 bytes;
+- SHA-256: `148da44b029d54d50eb4f89cb4c706857bd24131e706a98ec244f1a11cb750f6`;
 - source renderer: `scripts/render-sentient-grant-packet.py`;
 - visual QA: all eight pages rendered to PNG and inspected at both 72 and 96
   DPI, including the normal-viewer scale that exposed the original legibility
@@ -69,12 +69,16 @@ failed optimizer performance gates. It does not claim current economic savings.
 | Applicant role | Engineer / Builder |
 | Track | Grant |
 | Funding range | Greater than $50,000 |
-| Request | $150,000 over nine months |
+| Request | Up to $150,000 over nine months |
 | Public demo | `https://sethgammon.github.io/Citadel/` |
 | Supporting review path | `docs/grants/EVALUATOR_START_HERE.md` |
 
-The $150,000 request reconciles exactly to the single canonical cost basis and
-five milestone allocations in [`MILESTONES_AND_BUDGET.md`](MILESTONES_AND_BUDGET.md).
+The not-to-exceed $150,000 request reconciles exactly through a category-by-
+milestone matrix in [`MILESTONES_AND_BUDGET.md`](MILESTONES_AND_BUDGET.md).
+The labor rate has a public market reference; compute, hosting, hardware,
+measurement, compatibility, accessibility, and contingency have quantity or
+invoice ceilings. Grant-supplied compute credits reduce cash draw
+dollar-for-dollar and unused funds remain unspent.
 
 ## Evidence claims allowed in the application
 
@@ -92,9 +96,13 @@ five milestone allocations in [`MILESTONES_AND_BUDGET.md`](MILESTONES_AND_BUDGET
 - The representative repository pilot verified 6/12 cells for each policy with
   zero false passes and path violations, but its 7.1% energy reduction missed
   the frozen 20% gate and token use increased 13.2%.
-- GitHub showed 808 stars, 79 forks, and 510 repository commits on 2026-08-01.
-  These are dated public-interest and repository-history signals, not user,
-  installation, contribution, or economic-impact counts.
+- GitHub showed 808 stars, 79 forks, and 520 commits reachable from `main` on
+  2026-08-01. Of those, 496 were attributed to Seth's Git identity and 360 were
+  non-merge commits attributed to that identity. Owner-visible traffic for
+  2026-07-18 through 2026-07-31 reported 524 unique cloners and 380 unique
+  visitors. These are dated delivery and interest signals, not manually typed
+  code, users, installations, adoption, or economic-impact counts. See
+  [`GITHUB_DELIVERY_EVIDENCE.md`](GITHUB_DELIVERY_EVIDENCE.md).
 
 ## Claims not allowed
 
@@ -104,6 +112,7 @@ five milestone allocations in [`MILESTONES_AND_BUDGET.md`](MILESTONES_AND_BUDGET
 - Repetitions are independent task successes.
 - Unknown total economic cost is zero.
 - GitHub stars or commits equal active users, adoption, or Seth's authored work.
+- GitHub clone events or unique cloners equal installations or successful use.
 - Current external-stack adoption extends beyond the demonstrated ROMA binding.
 
 ## Optional pre-submission strengthening
@@ -125,7 +134,9 @@ Only four factual or authority inputs remain outside the repository:
   submission.
 
 No outside reviewer, sponsor, operator outreach, external task selector, or
-pre-award cohort is required. The funded cohort is post-award work.
+recruited cohort is required or promised. Funded onboarding proof uses clean
+reproducible environments. A funder-recruited community evaluation would require
+a written scope and budget amendment.
 
 ## Final submission sequence
 

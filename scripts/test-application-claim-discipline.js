@@ -19,6 +19,7 @@ const FILES = [
   'docs/grants/APPLICATION_MEDIA.md',
   'docs/grants/CLAIM_EVIDENCE_MATRIX.md',
   'docs/grants/EVALUATOR_START_HERE.md',
+  'docs/grants/GITHUB_DELIVERY_EVIDENCE.md',
   'docs/grants/DEMO_SCRIPT.md',
   'docs/grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md',
   'docs/grants/SUBMISSION_READINESS.md',
@@ -35,6 +36,7 @@ const FORBIDDEN = [
   [/5\s*\/\s*5\s+passed/gi, 'Fresh-clone stages completed; doctor semantic health is unknown.'],
   [/independent(?:ly)?\s+(?:verifier|verified|graded)/gi, 'Say model-external or verifier outside the routed model.'],
   [/citadel improved this result/gi, 'V1 apparent savings reverse under matched-timeout sensitivity.'],
+  [/510\s+(?:repository\s+)?commits/gi, 'The merged main branch contains 520 commits.'],
 ];
 
 const failures = [];
@@ -87,14 +89,26 @@ const applicationDraft = fs.readFileSync(path.join(ROOT, 'docs/grants/SENTIENT_O
 assert.doesNotMatch(applicationDraft, /adaptive whole-operation control beats prompt-only routing/i);
 assert.match(applicationDraft, /Prompt-only paired differences remain a reported routing diagnostic, not a pass\s+condition/i);
 
+const budget = fs.readFileSync(path.join(ROOT, 'docs/grants/MILESTONES_AND_BUDGET.md'), 'utf8');
+assert.match(budget, /9 months x \$11,000\/month/);
+assert.match(budget, /900 operation cells/);
+assert.match(budget, /reduce the applicable cash draw dollar-for-dollar/i);
+assert.match(budget, /Cost-to-milestone crosswalk/);
+assert.match(budget, /\*\*Milestone total\*\*\s*\|\s*\*\*\$30,000\*\*\s*\|\s*\*\*\$28,000\*\*\s*\|\s*\*\*\$35,000\*\*\s*\|\s*\*\*\$32,000\*\*\s*\|\s*\*\*\$25,000\*\*\s*\|\s*\*\*\$150,000\*\*/);
+assert.doesNotMatch(budget, /15-20/);
+assert.doesNotMatch(budget, /\| Bounded opt-in operator cohort \|/i);
+assert.doesNotMatch(budget, /\$2,000[^\n]*honoraria|honoraria[^\n]*\$2,000/i);
+
 for (const relative of [
-  'docs/grants/MILESTONES_AND_BUDGET.md',
   'docs/grants/APPLICANT_AND_ADOPTION.md',
   'docs/grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md',
+  'docs/grants/SUBMISSION_READINESS.md',
+  'docs/grants/TYPEFORM_ANSWER_PACK.md',
 ]) {
   const value = fs.readFileSync(path.join(ROOT, relative), 'utf8');
-  assert.match(value, /15-20/, `${relative}: missing the bounded operator cohort size`);
-  assert.match(value, /\$2,000/, `${relative}: missing the operator cohort budget`);
+  assert.match(value, /520\s+commits|496\s+of\s+520\s+main-branch\s+commits/i, `${relative}: missing current main-branch delivery count`);
+  assert.match(value, /524 unique cloners/i, `${relative}: missing qualified 14-day clone signal`);
+  assert.match(value, /not\s+(?:users|installation|installations)|not\s+manually\s+typed\s+code/i, `${relative}: missing interest-signal boundary`);
 }
 
 assert.deepStrictEqual(failures, [], `Application claim-discipline failures:\n${failures.join('\n')}`);

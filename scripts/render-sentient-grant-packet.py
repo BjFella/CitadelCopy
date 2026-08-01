@@ -302,37 +302,25 @@ def slide_3(pdf: canvas.Canvas) -> None:
 def slide_4(pdf: canvas.Canvas) -> None:
     background(pdf, 4, "Actual-run evidence")
     eyebrow(pdf, "Pinned Sentient ROMA diagnostic", MARGIN, 442)
-    title(pdf, "The proof passed. The optimizer gate did not.", MARGIN, 400, 840, 35)
-    text_block(pdf, "A frozen 24-cell run compared frontier, prompt routing, direct open/local 7B, and Citadel-controlled ROMA.", MARGIN, 350, 820, 14, 19, MUTED)
+    title(pdf, "ROMA can emit reconstructable Citadel evidence.", MARGIN, 400, 840, 35)
+    text_block(pdf, "The frozen 24-cell diagnostic retired integration and proof risk while exposing the controller work the grant must fund.", MARGIN, 350, 820, 14, 19, MUTED)
 
-    headers = ["POLICY", "VERIFIED", "DURATION", "FRONTIER", "LOCAL / MODULE"]
-    rows = [
-        ["Frontier-only", "6 / 6", "47.7s", "6", "0"],
-        ["Prompt router", "3 / 6", "40.8s", "3", "3"],
-        ["Direct open/local 7B", "2 / 6", "13.2s", "0", "6"],
-        ["Citadel + ROMA", "4 / 6", "1042.8s", "0", "89 module calls"],
-    ]
-    x_positions = [88, 380, 500, 620, 744]
-    card(pdf, MARGIN, 158, 840, 166, CYAN)
-    pdf.setFillColor(CYAN)
-    pdf.setFont(FONT_BOLD, 10)
-    for x, head in zip(x_positions, headers):
-        pdf.drawString(x, 299, head)
-    row_y = 265
-    for idx, row in enumerate(rows):
-        if idx == 3:
-            pdf.setFillColor(CYAN_SOFT)
-            pdf.roundRect(80, row_y - 12, 794, 29, 6, fill=1, stroke=0)
-        pdf.setFillColor(INK)
-        pdf.setFont(FONT_BOLD if idx == 3 else FONT, 12)
-        for x, value in zip(x_positions, row):
-            pdf.drawString(x, row_y, value)
-        row_y -= 31
+    metric(pdf, 72, 300, 155, "24 / 24", "cells measured", GREEN)
+    metric(pdf, 286, 300, 155, "0", "false passes", GREEN)
+    metric(pdf, 500, 300, 155, "0", "control or integrity failures", GREEN)
+    metric(pdf, 714, 300, 165, "4", "policies compared", CYAN)
 
-    metric(pdf, 72, 118, 155, "24 / 24", "measured cells", GREEN)
-    metric(pdf, 286, 118, 155, "0", "false passes", GREEN)
-    metric(pdf, 500, 118, 155, "4 / 6", "Citadel local verified", CYAN)
-    metric(pdf, 714, 118, 165, "FAILED", "strong-attempt savings gate", AMBER)
+    card(pdf, MARGIN, 82, 408, 148, CYAN, CYAN_SOFT)
+    eyebrow(pdf, "Risk retired", 88, 203)
+    y = 173
+    y = bullet(pdf, "Pinned ROMA execution emitted requested and observed route identity.", 86, y, 350, CYAN, 11.5)
+    y = bullet(pdf, "A model-external artifact verifier decided completion.", 86, y - 4, 350, BLUE, 11.5)
+    bullet(pdf, "Signed receipts reconstruct offline without a Citadel service.", 86, y - 4, 350, GREEN, 11.5)
+
+    card(pdf, 492, 82, 408, 148, AMBER, AMBER_SOFT)
+    eyebrow(pdf, "Funded risk", 520, 203, AMBER)
+    text_block(pdf, "The initial Citadel + ROMA heuristic verified 4/6 cells in 1042.8s versus frontier 6/6 in 47.7s. It avoided no strong whole-operation attempts.", 520, 174, 345, 11.7, 15.5, INK, FONT, max_lines=4)
+    pill(pdf, "No savings claim - gate failed", 520, 101, AMBER, WHITE)
     source(pdf, "Evidence: benchmarks/roma-operation-control/published-run/REPORT.md  |  Verify: npm run operation-proof:verify")
 
 
@@ -353,15 +341,28 @@ def evidence_row(pdf: canvas.Canvas, y: float, tag: str, verdict: str, summary: 
 
 
 def slide_5(pdf: canvas.Canvas) -> None:
-    background(pdf, 5, "Claim discipline")
-    eyebrow(pdf, "Negative evidence is a deliverable", MARGIN, 442, AMBER)
-    title(pdf, "Citadel rejected its own easy story.", MARGIN, 400, 800, 38)
-    text_block(pdf, "Three frozen studies changed the plan instead of being marketed into a savings claim.", MARGIN, 348, 800, 14, 19, MUTED)
+    background(pdf, 5, "Delivery record")
+    eyebrow(pdf, "Built before funding", MARGIN, 442, GREEN)
+    title(pdf, "One maintainer already shipped the substrate.", MARGIN, 400, 840, 37)
+    text_block(pdf, "Citadel is a public system with continuing repository pull, not a grant-funded mockup.", MARGIN, 348, 800, 14, 19, MUTED)
 
-    evidence_row(pdf, 258, "V1 - timeout sensitivity", "NO SAVINGS CLAIM", "27/36 vs 24/36 verified. Apparent -9.9% energy reversed to +3.5% energy and +5.4% modeled cost after excluding one matched timeout pair.", CYAN, CYAN_SOFT)
-    evidence_row(pdf, 167, "V2 - capability profile", "ECONOMIC REGRESSION", "Equal 24/36 completion, but 12 verifier escalations produced +15.7% measured GPU energy and +16.4% modeled cost.", AMBER, AMBER_SOFT)
-    evidence_row(pdf, 76, "V3 - repository artifacts", "FROZEN GATE MISSED", "Both policies verified 6/12 cells. A 7.1% energy reduction missed the frozen 20% gate; token use increased 13.2%.", VIOLET, VIOLET_SOFT)
-    source(pdf, "Signed failures remain public under their original identities. Repetitions estimate timing variance, not independent task success.")
+    metric(pdf, 72, 300, 155, "134", "days public", GREEN)
+    metric(pdf, 270, 300, 175, "496 / 520", "main commits attributed to Seth", CYAN)
+    metric(pdf, 500, 300, 155, "808 / 79", "stars / forks", BLUE)
+    metric(pdf, 714, 300, 175, "524", "unique cloners in 14 days", VIOLET)
+
+    card(pdf, MARGIN, 82, 408, 148, CYAN, CYAN_SOFT)
+    eyebrow(pdf, "Working substrate", 88, 203)
+    y = 173
+    y = bullet(pdf, "Claude Code, Codex, Ollama, and a pinned Sentient ROMA binding.", 86, y, 350, CYAN, 11.5)
+    y = bullet(pdf, "49 workflows and 35 hooks across 29 lifecycle events.", 86, y - 4, 350, BLUE, 11.5)
+    bullet(pdf, "Windows, Linux, and macOS verification on every release path.", 86, y - 4, 350, GREEN, 11.5)
+
+    card(pdf, 492, 82, 408, 148, AMBER, AMBER_SOFT)
+    eyebrow(pdf, "Claim discipline", 520, 203, AMBER)
+    text_block(pdf, "Three frozen savings stories were rejected under the same public evidence contract. Those failures define the controller requirements instead of being marketed away.", 520, 174, 345, 11.7, 15.5, INK, FONT, max_lines=4)
+    pill(pdf, "Funding scales a working base", 520, 101, GREEN, WHITE)
+    source(pdf, "GitHub observed 2026-08-01. Clone window: 2026-07-18 to 2026-07-31. Clones are not installs, users, or adoption.")
 
 
 def slide_6(pdf: canvas.Canvas) -> None:
@@ -375,7 +376,7 @@ def slide_6(pdf: canvas.Canvas) -> None:
         ("02", "Adapter SDK", "Sentient ROMA plus two additional open stacks", "$28k", BLUE, BLUE_SOFT),
         ("03", "Expected-value controller", "Price verification, escalation, recovery, and failure", "$35k", VIOLET, VIOLET_SOFT),
         ("04", "Prospective evaluation", "Frozen multi-stack policy and statistical contract", "$32k", AMBER, AMBER_SOFT),
-        ("05", "Public proof and release", "Hosted reconstruction, /do docs, cohort, and maintenance", "$25k", GREEN, GREEN_SOFT),
+        ("05", "Public proof and release", "Hosted reconstruction, /do onboarding, support window, and maintenance", "$25k", GREEN, GREEN_SOFT),
     ]
     row_y = 294
     for number, heading, detail, amount, color, fill in milestones:
@@ -400,16 +401,16 @@ def slide_6(pdf: canvas.Canvas) -> None:
 def slide_7(pdf: canvas.Canvas) -> None:
     background(pdf, 7, "Budget and gates")
     eyebrow(pdf, "No-go rules are part of the product", MARGIN, 442, GREEN)
-    title(pdf, "Clear spend. Hard outcome gates.", MARGIN, 400, 800, 38)
+    title(pdf, "Capped spend. Hard outcome gates.", MARGIN, 400, 800, 38)
 
     card(pdf, MARGIN, 94, 410, 260, CYAN)
     eyebrow(pdf, "Cost basis", 88, 324)
     budget = [
         ("Maintainer labor", "$99,000"),
-        ("Compute and tools", "$27,000"),
-        ("Hosted reproducibility", "$7,000"),
-        ("Docs and accessibility", "$7,000"),
-        ("Operator cohort", "$2,000"),
+        ("Evaluation compute and tools", "$27,000"),
+        ("Hosted verification and retention", "$7,000"),
+        ("Reference hardware and measurement", "$7,000"),
+        ("Compatibility and accessibility costs", "$2,000"),
         ("Bounded contingency", "$8,000"),
     ]
     row_y = 292
@@ -436,7 +437,7 @@ def slide_7(pdf: canvas.Canvas) -> None:
     metric(pdf, 530, 190, 145, ">= 30%", "lower measured end-to-end cost", GREEN)
     metric(pdf, 724, 190, 145, "ZERO", "false passes and integrity failures", GREEN)
     pill(pdf, "Unknown cost cannot count as savings", 530, 112, AMBER, AMBER_SOFT)
-    source(pdf, "Tranches: $45k / $60k / $45k. Failed gates preserve evidence, analysis, reusable artifacts, and unused-funds accounting.")
+    source(pdf, "Tranches: $45k / $60k / $45k. Compute credits reduce cash draw dollar-for-dollar; unused funds remain unspent.")
 
 
 def slide_8(pdf: canvas.Canvas) -> None:

@@ -12,9 +12,15 @@ Observed 2026-08-01:
 - Current maintainer model: one maintainer and release authority, disclosed as
   a bus-factor risk rather than presented as a team.
 - License: MIT.
-- Public repository metrics: **808 stars, 79 forks, and 510 commits** on the
-  GitHub repository page. These are interest and delivery signals, not active
-  users, successful installations, retention, or revenue.
+- Public repository metrics: **808 stars, 79 forks, and 520 commits** reachable
+  from `main`. Of those commits, 496 are attributed to Seth's Git identity and
+  360 are non-merge commits attributed to that identity. These are delivery and
+  repository-history signals, not manually typed code, active users, successful
+  installations, retention, or revenue.
+- Owner-visible GitHub traffic for 2026-07-18 through 2026-07-31 reported 1,237
+  clone events from 524 unique cloners and 933 views from 380 unique visitors.
+  Automated tools may contribute. Clone traffic is not installation or adoption
+  evidence. See [`GITHUB_DELIVERY_EVIDENCE.md`](GITHUB_DELIVERY_EVIDENCE.md).
 - Local Git history begins at commit `6c043814f403ab34fac16ac81f5d37233b84358b`
   on 2026-03-20. The current evidence package includes frozen methods, signed
   raw cells, negative reports, adapters, hosted verification, and an evaluator
@@ -44,13 +50,14 @@ tools, retries, verification, and recovery are counted.
    closure, sensitivity analysis, and offline verification without contacting
    the maintainer.
 
-The funded adoption measure is a bounded, opt-in cohort of 15-20 external
-operators attempting a governed first operation. A $2,000 honoraria pool is
-explicitly budgeted; participant count, incentive, recruitment channel, runtime,
-attempted installs, time-to-first-operation, setup failures, abandonment, and
-successful completion must all be published in aggregate. Clone, star, page
-view, and plugin registration are not adoption outcomes. Cohort results measure
-onboarding and use; they do not govern the optimizer performance gate.
+The funded onboarding measure is a reproducible clean-environment matrix across
+Windows, macOS, and Linux with Claude Code and Codex paths, including setup
+duration, generated paths, doctor output, rollback, and first governed route.
+No recruited operator cohort or outreach program is promised. If Sentient later
+recruits a community evaluation cohort, its scope, consent, reporting, and
+funding require a written amendment. Clone, star, page-view, and plugin
+registration signals remain interest evidence and do not govern the optimizer
+performance gate.
 
 ## Applicant facts and later due diligence
 

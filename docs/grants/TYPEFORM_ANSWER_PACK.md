@@ -67,12 +67,14 @@ Character count: 78 of 80.
 Seth Gammon is Citadel's solo builder and maintainer. He has taken it from a
 working Claude Code harness into an MIT-licensed operating and evidence layer
 for Claude Code, Codex, local Ollama models, and a pinned Sentient ROMA binding.
-The public repository currently has 808 stars and 510 commits, but the stronger
-qualification is the shipped proof discipline: preregistered methods, signed
-actual-run cells, model-external repository verification, explicit unknown-cost
-handling, and multiple negative findings preserved instead of marketed away.
-That combination of product implementation and adversarial self-evaluation is
-the core work this grant requires.
+In 134 public days it reached 808 stars and 79 forks; 496 of 520 main-branch
+commits are attributed to Seth's Git identity, including 360 non-merge commits.
+GitHub's latest owner-visible 14-day window reported 524 unique cloners. Those
+are delivery and continuing-interest signals, not users or installations. The
+stronger qualification is what shipped: preregistered methods, signed actual-run
+cells, model-external repository verification, explicit unknown-cost handling,
+and negative findings preserved instead of marketed away. Funding scales a
+working substrate; it does not fund the first prototype.
 
 Observation boundary: GitHub counts checked on 2026-08-01. Refresh immediately
 before submission.
@@ -129,7 +131,14 @@ verified-operation controller that prices likely verification, escalation, and
 recovery rather than merely choosing a smaller model. Finally, we will run a
 prospective multi-stack evaluation and publish the raw privacy-safe evidence,
 signed receipts, one-command offline reconstruction, beginner `/do` path, and a
-bounded opt-in onboarding cohort.
+clean Windows, macOS, and Linux onboarding matrix. No recruited operator cohort
+or outreach program is promised.
+
+The request is a not-to-exceed budget. Nine months of maintainer labor is
+$99,000 at $11,000/month. Compute, hosting, reference hardware, measurement, and
+compatibility costs have published quantity ceilings and reconcile exactly to
+the five milestones. Grant-supplied compute credits reduce the applicable cash
+draw dollar-for-dollar, and unused funds remain unspent.
 
 The primary target is fixed in advance: at least 80% absolute verified-operation
 completion, at least 95% of a valid always-frontier completion rate, at least

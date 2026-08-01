@@ -169,3 +169,82 @@ durations remain 120 and 42 seconds.
 - [x] `npm run application:package:test` passed with the new byte count and
   SHA-256.
 - [x] Application claim, evidence, and site-release verification passed.
+
+---
+
+# Sentient grant PDF credibility triage - 2026-08-01
+
+## Summary
+
+- 3 issues found: 1 broken, 2 ugly; all 3 resolved.
+- Areas affected: pages 4, 5, and 7 plus their canonical application sources.
+- Screenshots reviewed: freshly rendered pages 4 and 5 at 96 DPI, with page 7
+  checked against its source budget and extracted PDF text.
+
+## BROKEN
+
+### [PDF-CB1] The displayed cost basis is not bottom-up auditable
+
+- **Screenshot:** current page 7.
+- **Expected:** each non-labor amount has a quantity, unit ceiling, credit
+  treatment, and an exact crosswalk to funded milestones.
+- **Actual:** compute and hosting lack unit models; documentation appears to
+  duplicate maintainer labor; an operator cohort is promised despite the
+  applicant's no-outreach boundary; milestone totals reconcile only by sum.
+- **Root cause:** the $150,000 total was allocated into planning envelopes
+  before direct-cost quantities were established.
+- **Status:** resolved - the budget now publishes capped quantities, credit
+  treatment, and an exact category-to-milestone crosswalk totaling $150,000.
+  Duplicate labor and the unfunded operator-cohort promise were removed.
+
+## UGLY
+
+### [PDF-CU1] Page 4 makes the failed heuristic the dominant ROMA takeaway
+
+- **Screenshot:** `tmp/pdfs/grant-audit-4.png`.
+- **Expected:** the page leads with the integration and proof risks already
+  retired, then states the remaining economic risk without hiding it.
+- **Actual:** the largest headline says the optimizer failed and the highlighted
+  row presents 4/6 at 1042.8 seconds beside frontier 6/6 at 47.7 seconds.
+- **Root cause:** diagnostic detail was promoted above the result the grant can
+  safely rely on.
+- **Status:** resolved - page 4 now leads with the reconstructable 24/24-cell
+  ROMA proof, zero false passes, and the integration risks retired. The failed
+  economic gate remains explicit in a subordinate funded-risk panel.
+
+### [PDF-CU2] Page 5 repeats failure instead of proving delivery capacity
+
+- **Screenshot:** `tmp/pdfs/grant-audit-5.png`.
+- **Expected:** one compact claim-discipline boundary supports a page showing
+  the shipped substrate, maintainer record, and continuing repository pull.
+- **Actual:** three full-width negative studies follow a failed-result page,
+  making the packet read like a postmortem rather than a fundable trajectory.
+- **Root cause:** evidence completeness was mistaken for narrative priority.
+- **Status:** resolved - page 5 now establishes the 134-day solo delivery
+  record, current repository footprint, and qualified 14-day interest signal.
+  It explicitly states that clone counts are not installs, users, or adoption.
+
+## Acceptance targets
+
+- Page 4 leads with 24/24 measured cells, zero false passes, ROMA control, and
+  offline reconstruction while retaining the exact failed economic boundary.
+- Page 5 uses dated, source-qualified delivery and GitHub signals without
+  calling clones installs, users, adoption, or manually authored code.
+- Page 7 contains no duplicate labor or unwanted cohort promise; every cost
+  category has a quantity model and every category-to-milestone total reconciles.
+- All eight pages remain readable at 72 DPI with no clipping, overflow, or
+  extractability regression.
+
+## Verification
+
+- [x] Inspected all eight freshly rendered pages at 96 DPI.
+- [x] Inspected changed pages 4, 5, and 7 at 72 DPI; no clipping, overflow, or
+  illegible body text was observed.
+- [x] Confirmed 8 pages at 960 by 540 points, 6,053 extractable characters,
+  zero replacement characters, and no encryption, forms, or JavaScript.
+- [x] `npm run application:package:test`, `application:claims:test`,
+  `application:evidence:check`, `application:media:test`, and
+  `site:release:verify` passed.
+- [x] The live Sentient Grant form check passed with 13 required fields and the
+  upload-to-thank-you branch.
+- [x] The full `npm test` suite passed on 2026-08-01.
