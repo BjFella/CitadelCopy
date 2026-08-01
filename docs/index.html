@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Citadel is the progressive operating layer for Claude Code and Codex: start with /do, then add durable state, coordination, and verifiable operation control only when the work needs it." />
   <title>Citadel | The operating layer for Claude Code and Codex</title>
   <style>
     :root {
@@ -1451,22 +1452,36 @@
       .scroll-cue svg:last-child { display: none; }
     }
   </style>
+  <link rel="stylesheet" href="site-system.css" />
 </head>
-<body>
+<body class="site-page site-home">
   <canvas id="bg-dots"></canvas>
-
-  <nav>
-    <a class="nav-logo" href="https://github.com/SethGammon/Citadel">CITADEL</a>
-    <span class="nav-sep">·</span>
-    <button class="nav-link" onclick="openPanel('skills')">Skills</button>
-    <button class="nav-link" onclick="openPanel('hooks')">Hooks</button>
-    <button class="nav-link" onclick="openPanel('campaigns')">Campaigns</button>
-    <a class="nav-link" href="operation-control.html">Operation Proof</a>
-    <a class="nav-link" href="optimizer.html">Optimizer Proof</a>
-    <div class="nav-right">
-      <span class="nav-badge">v1.3</span>
-      <a class="nav-star" id="nav-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
-      <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Install Citadel</a>
+  <div class="site-scroll-progress" aria-hidden="true"><span></span></div>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <div class="site-nav-inner">
+      <a class="site-brand" href="index.html"><span class="site-brand-mark">C</span><span>Citadel</span></a>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="#product-story">How it works</a>
+        <a class="site-nav-link" href="#proof">Proof</a>
+        <a class="site-nav-link" href="operation-control.html">Operation Proof</a>
+        <a class="site-nav-link" href="optimizer.html">Optimizer Proof</a>
+        <a class="site-nav-link" href="research.html">Research</a>
+        <button class="site-nav-link" type="button" onclick="openPanel('skills')">Explore</button>
+      </div>
+      <div class="site-nav-actions">
+        <a class="site-nav-github" id="nav-star" href="https://github.com/SethGammon/Citadel">GitHub</a>
+        <a class="site-nav-cta" href="#install-section">Install</a>
+        <button class="site-nav-toggle" type="button" data-site-nav-toggle aria-expanded="false" aria-controls="site-nav-mobile">Menu</button>
+      </div>
+    </div>
+    <div class="site-nav-mobile" id="site-nav-mobile" data-site-nav-mobile hidden>
+      <a class="site-nav-link" href="#product-story">How it works</a>
+      <a class="site-nav-link" href="#proof">Proof</a>
+      <a class="site-nav-link" href="operation-control.html">Operation Proof</a>
+      <a class="site-nav-link" href="optimizer.html">Optimizer Proof</a>
+      <a class="site-nav-link" href="research.html">Research program</a>
+      <button class="site-nav-link" type="button" onclick="openPanel('skills')">Explore capabilities</button>
+      <a class="site-nav-link" href="https://github.com/SethGammon/Citadel">GitHub repository</a>
     </div>
   </nav>
 
@@ -1475,27 +1490,38 @@
   <div id="screen-1">
 
   <!-- Hero -->
-  <div class="hero">
-    <div class="hero-eyebrow">
-      <span>The operating layer for Claude Code and Codex</span>
-      <span class="eyebrow-sep">·</span>
-      <span>Local · repo-native · inspectable</span>
-    </div>
-    <h1>Route the work.<br><span class="h1-sub">Keep what the agents learn.</span></h1>
-    <p>Citadel chooses the lightest capable workflow, verifies what happened, and preserves the next action in your repository.</p>
-    <div class="hero-proof" aria-label="Citadel product proof">
-      <span><strong>15/15</strong> PRs landed</span>
-      <span><strong>30/30</strong> hosted journeys</span>
-      <span><strong>2</strong> runtime surfaces</span>
-      <span><strong>3</strong> operating systems</span>
-    </div>
-    <div class="hero-outcomes" aria-label="Citadel first-success path">
-      <div class="hero-outcome"><span class="hero-outcome-step">01</span><span>Install into your repository</span></div>
-      <div class="hero-outcome"><span class="hero-outcome-step">02</span><span>Route one task with <code>/do</code></span></div>
-      <div class="hero-outcome"><span class="hero-outcome-step">03</span><span>Resume from disk with <code>/do next</code></span></div>
+  <div class="hero site-home-hero">
+    <div class="home-hero-grid">
+      <div class="home-hero-copy">
+        <div class="hero-eyebrow">The operating layer for Claude Code and Codex</div>
+        <h1>Start with <code>/do</code>.<br><span class="h1-sub">Scale when the work demands it.</span></h1>
+        <p>Citadel adds <strong>durable state, verification, recovery, and coordination</strong> around the coding agent you already use. No new IDE. No orchestration vocabulary to memorize.</p>
+        <div class="site-button-row">
+          <a class="site-button primary" href="#do-demo">Try the live router</a>
+          <a class="site-button" href="#product-story">See the work survive a session</a>
+        </div>
+        <div class="home-proof-line" aria-label="Citadel product proof">
+          <div class="home-proof-item"><strong>15/15</strong><span>PRs landed</span></div>
+          <div class="home-proof-item"><strong>30/30</strong><span>hosted journeys</span></div>
+          <div class="home-proof-item"><strong>120</strong><span>signed proof cells</span></div>
+          <div class="home-proof-item"><strong>0</strong><span>adversarial false passes</span></div>
+        </div>
+      </div>
+      <aside class="level-map" aria-label="Four progressive Citadel usage levels" data-site-reveal>
+        <div class="level-map-head"><span class="level-map-title">One entry point, four levels</span><span class="level-map-note">Most users stay at 1-2</span></div>
+        <div class="level-card active"><span class="level-number">01</span><span class="level-copy"><strong>Do the work</strong><span>Route a task and verify the result.</span></span><code class="level-command">/do &lt;request&gt;</code></div>
+        <div class="level-card"><span class="level-number">02</span><span class="level-copy"><strong>Keep going</strong><span>Resume the next action from repository state.</span></span><code class="level-command">/do next</code></div>
+        <div class="level-card"><span class="level-number">03</span><span class="level-copy"><strong>Coordinate</strong><span>Make long and parallel work visible and recoverable.</span></span><code class="level-command">campaign · fleet</code></div>
+        <div class="level-card"><span class="level-number">04</span><span class="level-copy"><strong>Control</strong><span>Constrain models, tools, privacy, cost, and proof.</span></span><code class="level-command">citadel operation</code></div>
+      </aside>
     </div>
   </div>
 
+  <section class="do-demo" id="do-demo" aria-labelledby="do-demo-title" data-site-reveal>
+  <div class="do-demo-heading">
+    <div><div class="section-kicker">Level 1 · Do</div><h2 id="do-demo-title">Describe the outcome. Citadel chooses the lane.</h2></div>
+    <p>This deterministic demo shows the routing decision. In a real repository, the selected workflow executes under your project rules and writes a handoff.</p>
+  </div>
   <!-- Search bar -->
   <div class="search-wrap">
     <div class="search-bar">
@@ -1662,13 +1688,20 @@
 
   </div><!-- /playground -->
 
+  <div class="hero-outcomes" aria-label="Citadel first-success path">
+    <div class="hero-outcome"><span class="hero-outcome-step">01</span><span>Install into your repository</span></div>
+    <div class="hero-outcome"><span class="hero-outcome-step">02</span><span>Route one task with <code>/do</code></span></div>
+    <div class="hero-outcome"><span class="hero-outcome-step">03</span><span>Resume from disk with <code>/do next</code></span></div>
+  </div>
+  </section>
+
   </div><!-- /screen-1 -->
 
   <div class="screen-2" id="screen-2">
 
   <section class="story-section" id="product-story" aria-labelledby="story-title">
     <div class="story-heading">
-      <div><h2 id="story-title">Operate a real Citadel journey</h2></div>
+      <div><div class="section-kicker">Level 2 · Continue</div><h2 id="story-title">Operate a real Citadel journey</h2></div>
       <p>Choose a task, step through the operating loop, and inspect the repository state that survives after the conversation ends.</p>
     </div>
     <div class="story-shell">
@@ -1709,7 +1742,7 @@
   <section class="operation-fork-section" id="operation-fork" aria-labelledby="operation-fork-title">
     <div class="operation-fork-inner">
       <div class="operation-fork-heading">
-        <div><h2 id="operation-fork-title">One objective. Two runtimes. One proof standard.</h2></div>
+        <div><div class="section-kicker">Level 3 · Coordinate</div><h2 id="operation-fork-title">One objective. Two runtimes. One proof standard.</h2></div>
         <p>Operation Fork runs Claude Code and Codex from the same commit, under the same workflow and verifier, then compares receipts instead of personalities.</p>
       </div>
       <div class="operation-fork-shell">
@@ -1757,6 +1790,7 @@
   <!-- Vertical tier cascade -->
   <div class="cascade-section">
     <div class="cascade-section-heading">
+      <div class="section-kicker">Under the hood</div>
       <h2>How routing works</h2>
     </div>
 
@@ -2966,111 +3000,29 @@
     });
 
     // ─── Cinematic scroll ─────────────────────────────────────────────────────
-    let currentScreen = 0, isTransitioning = false;
+    let currentScreen = 0;
 
-    // Set layout heights imperatively from measured nav
     function setupLayout() {
       const nav = document.querySelector('nav');
-      const navH = nav ? nav.offsetHeight : 48;
-      const pageH = window.innerHeight - navH;
-      document.documentElement.style.setProperty('--nav-h', navH + 'px');
-      const pageWrap = document.getElementById('page-wrap');
-      const screen1 = document.getElementById('screen-1');
-      const screen2 = document.getElementById('screen-2');
-      if (pageWrap) pageWrap.style.height = pageH + 'px';
-      if (screen1) screen1.style.height = pageH + 'px';
-      if (screen2) screen2.style.height = pageH + 'px';
+      document.documentElement.style.setProperty('--nav-h', `${nav ? nav.offsetHeight : 64}px`);
     }
     setupLayout();
     window.addEventListener('resize', setupLayout);
 
-    function easeInOutQuart(t) {
-      return t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
-    }
-
     function goToScreen(n) {
-      if (isTransitioning) return;
-      if (n === currentScreen) return;
-      const inner = document.getElementById('screens-inner');
-      const h = document.getElementById('page-wrap').clientHeight;
-      const startY = currentScreen * -h;
-      const endY = n * -h;
-      const diff = endY - startY;
-      isTransitioning = true;
-      const startTime = performance.now();
-      function tick(now) {
-        const t = Math.min((now - startTime) / 780, 1);
-        inner.style.transform = `translateY(${startY + diff * easeInOutQuart(t)}px)`;
-        if (t < 1) requestAnimationFrame(tick);
-        else {
-          inner.style.transform = `translateY(${endY}px)`;
-          currentScreen = n;
-          isTransitioning = false;
-          updateScrollCue();
-          if (n === 1 && !window._statsAnimated) { window._statsAnimated = true; animateStats(); }
-          if (n === 0) {
-            const s2 = document.getElementById('screen-2');
-            if (s2) s2.scrollTop = 0;
-          }
-        }
+      currentScreen = n === 0 ? 0 : 1;
+      const target = document.getElementById(currentScreen === 0 ? 'screen-1' : 'screen-2');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      target?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      if (currentScreen === 1 && !window._statsAnimated) {
+        window._statsAnimated = true;
+        animateStats();
       }
-      currentScreen = n;
-      updateScrollCue();
-      requestAnimationFrame(tick);
     }
 
-    // Wheel interception
-    let wheelAcc = 0, wheelTimer = null;
-    window.addEventListener('wheel', (e) => {
-      if (e.target.closest('.panel-body, .side-panel')) return;
-      if (isTransitioning) { e.preventDefault(); return; }
-      if (document.body.classList.contains('mode-result')) {
-        // Allow native scroll within screen-1; block everything else
-        if (e.target.closest('#screen-1')) return;
-        e.preventDefault(); return;
-      }
-      if (currentScreen === 1) {
-        const s2 = document.getElementById('screen-2');
-        const atTop = !s2 || s2.scrollTop <= 0;
-        if (e.deltaY < 0 && atTop) {
-          e.preventDefault();
-          goToScreen(0);
-        }
-        // else let screen-2 scroll naturally
-        return;
-      }
-      // On screen 1
-      e.preventDefault();
-      wheelAcc += e.deltaY;
-      clearTimeout(wheelTimer);
-      wheelTimer = setTimeout(() => { wheelAcc = 0; }, 300);
-      if (wheelAcc > 40) { wheelAcc = 0; goToScreen(1); }
-    }, { passive: false });
-
-    // Touch support
-    let touchStartY = 0;
-    window.addEventListener('touchstart', e => {
-      if (e.target.closest('.panel-body')) return;
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-    window.addEventListener('touchend', e => {
-      if (e.target.closest('.panel-body')) return;
-      if (isTransitioning || document.body.classList.contains('mode-result')) return;
-      const diff = touchStartY - e.changedTouches[0].clientY;
-      if (diff > 50 && currentScreen === 0) goToScreen(1);
-      else if (diff < -50 && currentScreen === 1) {
-        const s2 = document.getElementById('screen-2');
-        if (!s2 || s2.scrollTop <= 0) goToScreen(0);
-      }
-    }, { passive: true });
-
-    // Scroll cue
-    const scrollCue = document.getElementById('scroll-cue');
     function updateScrollCue() {
-      const show = currentScreen === 0 && !document.body.classList.contains('mode-result');
-      scrollCue.classList.toggle('visible', show);
+      // Retained for the router's state transitions; native scroll has no cue state.
     }
-    setTimeout(() => updateScrollCue(), 1200);
 
     // ─── Dot grid background (physics: liquid repulsion + spring) ─────────────
     (function () {
@@ -3211,38 +3163,9 @@
 
     // ─── scrollToInstall  -  bypasses cinematic snap ────────────────────────
     function scrollToInstall() {
-      const screen2 = document.getElementById('screen-2');
       const installEl = document.getElementById('install-section');
-      const doScroll = () => {
-        if (screen2 && installEl) {
-          screen2.scrollTo({ top: installEl.offsetTop, behavior: 'smooth' });
-        }
-      };
-      if (currentScreen !== 1) {
-        if (isTransitioning) return;
-        const inner = document.getElementById('screens-inner');
-        const h = document.getElementById('page-wrap').clientHeight;
-        const startY = currentScreen * -h;
-        const endY = -h;
-        const diff = endY - startY;
-        isTransitioning = true;
-        const startTime = performance.now();
-        function tick(now) {
-          const t = Math.min((now - startTime) / 780, 1);
-          inner.style.transform = `translateY(${startY + diff * easeInOutQuart(t)}px)`;
-          if (t < 1) { requestAnimationFrame(tick); }
-          else {
-            inner.style.transform = `translateY(${endY}px)`;
-            currentScreen = 1;
-            isTransitioning = false;
-            updateScrollCue();
-            doScroll();
-          }
-        }
-        requestAnimationFrame(tick);
-      } else {
-        doScroll();
-      }
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      installEl?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     }
 
     // ─── Idle placeholder cycling ─────────────────────────────────────────
@@ -3376,5 +3299,6 @@
         .catch(() => {});
     })();
   </script>
+  <script src="site-system.js"></script>
 </body>
 </html>
