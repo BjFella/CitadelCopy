@@ -105,7 +105,7 @@ function execute() {
       '--target', target, '--project-runtime', 'both', '--out', planFile, '--json'], { cwd: target });
     const plan = parseJson(planResult, 'adoption plan');
     if (!plan.confirmation || typeof plan.confirmation.token !== 'string') throw new Error('adoption plan did not expose an exact confirmation token');
-    steps.push({ id: 'governed-plan', status: 'passed', duration_ms: planResult.duration_ms, detail: `${plan.operations.length} file operations bound to ${plan.plan_digest}.` });
+    steps.push({ id: 'governed-plan', status: 'passed', duration_ms: planResult.duration_ms, detail: `${plan.effects.length} file operations bound to ${plan.plan_digest}.` });
 
     const applyResult = run(process.execPath, [path.join(clone, 'scripts', 'adopt.js'), 'apply', planFile,
       '--confirm', plan.confirmation.token, '--json'], { cwd: target });
