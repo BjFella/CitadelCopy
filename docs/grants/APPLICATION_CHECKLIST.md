@@ -22,10 +22,11 @@
 
 - [x] Progressive `/do`-first public site.
 - [x] Research and claim-boundary pages.
-- [x] Evaluator five-link entry point.
+- [x] Evaluator six-link entry point including dated delivery evidence.
 - [x] Claim-to-evidence and technical comparison matrices.
 - [x] Evidence-gated budget and risk register.
-- [x] Bounded 15-20 operator adoption cohort explicitly scoped and funded.
+- [x] Reproducible clean-environment onboarding matrix explicitly scoped and
+  funded without promising external recruitment.
 - [x] Public-goods and governance commitment.
 - [x] Two-minute demo script.
 - [x] Render the two-minute narrated walkthrough and retain its narration source.
@@ -59,9 +60,11 @@ page titles, images, and application media.
 - [ ] Seth approves the final application wording.
 - [ ] Seth explicitly approves submitting the external form.
 
-No outside reviewer, pre-submission outreach campaign, sponsor, or third-party
-selector is a submission requirement. The opt-in operator cohort is funded
-post-award work, not evidence manufactured before submission.
+No outside reviewer, pre-submission outreach campaign, sponsor, recruited
+operator cohort, or third-party selector is a submission requirement or funded
+promise. Funded onboarding proof uses reproducible clean environments. Any
+funder-recruited community evaluation requires a written scope and budget
+amendment.
 
 The live form contract, exact remaining human inputs, and upload digest are in
 [`SUBMISSION_READINESS.md`](SUBMISSION_READINESS.md). Paste-ready wording is in

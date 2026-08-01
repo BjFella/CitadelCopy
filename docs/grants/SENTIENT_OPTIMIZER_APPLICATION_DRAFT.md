@@ -429,10 +429,13 @@ reconcilable evidence.
 ## Evidence-gated milestones and requested funding
 
 The proposal is **$150,000 over nine months**, released in $45,000, $60,000,
-and $45,000 go/no-go tranches. The cost basis is $99,000 maintainer labor,
-$27,000 capped compute/tools, $7,000 hosted reproducibility, $7,000
-documentation/accessibility/release work, $2,000 for a bounded opt-in operator
-cohort, and $8,000 bounded contingency.
+and $45,000 go/no-go tranches. The bottom-up cost basis is $99,000 maintainer
+labor, $27,000 capped evaluation compute and tools, $7,000 hosted verification
+and retention, $7,000 reference hardware and measurement, $2,000 compatibility
+and accessibility direct costs, and $8,000 bounded contingency. Documentation,
+accessibility implementation, project management, and release labor are included
+in the maintainer line rather than charged twice. Grant-supplied compute credits
+reduce the applicable cash draw dollar-for-dollar.
 
 The single canonical milestone allocation, FTE/rate basis, dependencies,
 baseline matrix, statistical contract, tranche gates, and failure deliverables
@@ -493,19 +496,22 @@ Those are the exact uncertainties the funded milestones address.
 
 ## Applicant and adoption evidence
 
-SethGammon owns and maintains the public MIT repository. On 2026-08-01 the
-GitHub page showed 808 stars, 79 forks, and 510 commits. Those are public
-interest and repository-history signals, not users, installations, or Seth's
-authored-work count. The adoption path is
-an existing Claude Code or Codex user starting with `/do`, then an external
-stack builder implementing the conformance adapter; ROMA is the current
-example. A funded, bounded opt-in cohort of 15-20 external operators measures
-governed first-operation completion, including failed installs and abandonment;
-it does not govern the optimizer performance gate. Applicant email,
+SethGammon owns and maintains the public MIT repository. On 2026-08-01 it had
+808 stars, 79 forks, and 520 commits reachable from `main`; 496 were attributed
+to Seth's Git identity and 360 were non-merge commits attributed to that
+identity. GitHub's owner-visible 14-day traffic reported 524 unique cloners and
+380 unique visitors. Those are delivery and interest signals, not manually
+typed code, users, installations, adoption, or economic impact. The adoption
+path is an existing Claude Code or Codex user starting with `/do`, then an
+external stack builder implementing the conformance adapter; ROMA is the current
+example. Funded onboarding proof uses reproducible clean Windows, macOS, and
+Linux environments rather than a recruited operator cohort. It does not govern
+the optimizer performance gate. Applicant email,
 city/country, role selection, and submission authority remain human-owned
 Typeform inputs. Legal and payment details may follow during due
 diligence but were not fields in the observed application path. See
-[`APPLICANT_AND_ADOPTION.md`](APPLICANT_AND_ADOPTION.md).
+[`APPLICANT_AND_ADOPTION.md`](APPLICANT_AND_ADOPTION.md) and
+[`GITHUB_DELIVERY_EVIDENCE.md`](GITHUB_DELIVERY_EVIDENCE.md).
 
 ## Public deliverables
 

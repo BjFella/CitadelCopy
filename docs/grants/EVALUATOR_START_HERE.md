@@ -17,7 +17,10 @@ operations. The narrow thesis is:
    numbers generated from canonical artifacts.
 4. [Representative repository-operation pilot](../../benchmarks/representative-operation-pilot-v2/published-run/REPORT.md):
    the latest 24-cell shakedown across six artifact-producing fixture tasks.
-5. [Grant draft](SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md): the request, public
+5. [Delivery evidence](GITHUB_DELIVERY_EVIDENCE.md): dated maintainer-attributed
+   history, public interest, owner-visible traffic, and the exact boundaries on
+   what those counts do not prove.
+6. [Grant draft](SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md): the request, public
    deliverables, budget, and risks.
 
 Application support: the required eight-page PDF is generated at

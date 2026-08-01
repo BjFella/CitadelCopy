@@ -9,18 +9,35 @@ final application.
 
 | Cost basis | Quantity | Amount |
 |---|---:|---:|
-| Maintainer engineering and research labor | 9 months, one proposed full-time maintainer, blended $11,000/month | $99,000 |
-| Local hardware, provider inference, tool execution, and benchmark compute | Capped direct-cost pool; invoices and allocation rules published | $27,000 |
-| Hosted CI, artifact storage, site, and reproducibility infrastructure | Nine-month build plus 12-month post-grant maintenance reserve | $7,000 |
-| Documentation, accessibility, compatibility fixtures, and release packaging | Fixed work package | $7,000 |
-| Bounded opt-in operator cohort | Honoraria for 15-20 external operators; attempted installs and failures included | $2,000 |
+| Maintainer engineering, research, product, documentation, and release labor | 9 months x $11,000/month | $99,000 |
+| Evaluation compute, provider inference, paid tools, and controller calibration | Not-to-exceed pool for up to 900 primary operation cells plus bounded calibration; grant-supplied credits offset cash draw dollar-for-dollar | $27,000 |
+| Hosted verification and evidence retention | Up to $250/month for 21 months plus a $1,750 ceiling for storage, egress, monitoring, and domain costs | $7,000 |
+| Open-model reference hardware and measurement | One consumer reference workstation up to $6,500 plus power and measurement equipment up to $500 | $7,000 |
+| Compatibility and accessibility direct costs | OS/device test services, compatibility fixtures, and accessibility tooling; labor remains in the maintainer line | $2,000 |
 | Bounded contingency | Maximum 5.33%; unused funds remain unspent or are reallocated only with funder approval | $8,000 |
 | **Total** |  | **$150,000** |
 
-No outside reviewer or contractor is assumed in this budget. The only external
-participation is a bounded, opt-in 15-20 person operator cohort with disclosed
-honoraria. If the funder requires an independent audit, its scope and funding
-must be added explicitly rather than silently taken from benchmark compute.
+The labor rate is $132,000 annualized, approximately the
+[U.S. Bureau of Labor Statistics May 2024 median annual wage of $133,080 for
+software developers](https://www.bls.gov/ooh/computer-and-information-technology/software-developers.htm).
+It is compensation for one full-time maintainer and includes documentation,
+accessibility implementation, project management, and release work; those tasks
+are not charged again as separate labor.
+
+The compute ceiling is a capacity model, not a promise to spend the maximum.
+The primary evaluation can cover up to 60 unique operations x five policies x
+three compatible stack contexts, or 900 operation cells. Within the $27,000
+ceiling, no more than $18,000 may fund frontier/provider and paid-tool calls;
+the remaining $9,000 covers open-model cloud execution, controller calibration,
+and bounded failure reruns. Repetitions estimate variance and never become new
+independent task successes. Sentient or other grant-supplied compute credits
+reduce the applicable cash draw dollar-for-dollar. All direct costs are
+invoice-backed and published in aggregate with the final unused-funds account.
+
+No outside reviewer, contractor, recruited operator cohort, or honoraria pool is
+promised. If the funder later requires an independent audit or recruits a
+community evaluation cohort, that scope requires a written budget amendment; it
+will not be silently taken from benchmark compute.
 
 ## Milestones, dependencies, and acceptance gates
 
@@ -30,13 +47,27 @@ must be added explicitly rather than silently taken from benchmark compute.
 | 2. Adapter and conformance SDK | 2-4 | M1 operation schema and task contract | ROMA plus two additional open stacks satisfy one versioned contract for requested/observed identity, tools, artifacts, attempts, model-external verdicts, failure preservation, and cost lenses | $28,000 |
 | 3. Expected verified-operation controller | 4-6 | M1 data and M2 adapters | Held-out routing decisions are reproducible; the controller prices likely verification, escalation, and recovery; zero adversarial false passes | $35,000 |
 | 4. Multi-stack prospective evaluation | 6-8 | M1-M3 frozen release candidate | Always frontier first clears the baseline-validity floor: at least 80% verified overall and 70% in every preregistered task stratum. Citadel then must reach at least 80% absolute verified completion, at least 95% of that valid frontier rate, and at least 30% lower measured end-to-end cost, with cluster-aware uncertainty; every negative and unknown cell is published | $32,000 |
-| 5. Public proof, beginner path, and maintenance release | 8-9 | M4 terminal result | One command reconstructs reports from signed raw evidence; clean hosted verification passes; `/do` onboarding, adapter docs, governance, compatibility, and accessibility gates pass; a bounded opt-in cohort of 15-20 external operators reports governed first-operation completion with every attempted install and setup failure retained | $25,000 |
+| 5. Public proof, beginner path, and maintenance release | 8-9 | M4 terminal result | One command reconstructs reports from signed raw evidence; clean hosted verification passes; `/do` onboarding, adapter docs, governance, compatibility, and accessibility gates pass across clean Windows, macOS, and Linux environments; evidence retention and the maintenance window are live | $25,000 |
 | **Total** |  |  |  | **$150,000** |
 
-Allocation reconciles to the cost basis: $99,000 labor, $27,000 compute and
-tools, $7,000 hosted infrastructure, $7,000 release/accessibility work, $2,000
-operator-cohort honoraria, and $8,000 contingency. Milestone allocations are
-scheduling envelopes, not a second budget.
+### Cost-to-milestone crosswalk
+
+This matrix is the reconciliation between direct cost categories and milestone
+envelopes. Row and column totals must both remain equal to the canonical request.
+
+| Cost basis | M1 | M2 | M3 | M4 | M5 | Total |
+|---|---:|---:|---:|---:|---:|---:|
+| Maintainer labor | $18,000 | $20,000 | $24,000 | $18,000 | $19,000 | $99,000 |
+| Evaluation compute and tools | $6,000 | $3,000 | $7,000 | $10,000 | $1,000 | $27,000 |
+| Hosted verification and retention | $1,000 | $1,000 | $1,000 | $1,000 | $3,000 | $7,000 |
+| Reference hardware and measurement | $5,000 | $1,000 | $1,000 | $0 | $0 | $7,000 |
+| Compatibility and accessibility direct costs | $0 | $1,000 | $0 | $0 | $1,000 | $2,000 |
+| Bounded contingency | $0 | $2,000 | $2,000 | $3,000 | $1,000 | $8,000 |
+| **Milestone total** | **$30,000** | **$28,000** | **$35,000** | **$32,000** | **$25,000** | **$150,000** |
+
+Milestone allocations are scheduling envelopes, not a second budget. A category
+may draw less than its ceiling; an unused amount does not automatically move to
+another row or milestone.
 
 ## Tranches and go/no-go rules
 
@@ -86,5 +117,6 @@ are reported but are not a pass condition.
   substitutions are required.
 - Any post-result task, verifier, metric, or threshold change creates a new
   benchmark identity and preserves the prior result.
-- The operator cohort measures adoption and onboarding separately. Its outcomes
-  do not alter or govern the optimizer performance gate.
+- Beginner-path evidence comes from clean, reproducible install environments and
+  release fixtures. Stars, forks, clones, page views, voluntary feedback, or
+  other interest signals never alter or govern the optimizer performance gate.

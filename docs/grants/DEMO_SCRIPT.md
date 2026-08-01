@@ -25,15 +25,22 @@ compress the research story into fast terminal noise.
 - Switch to the failed attempts and show that they remain failed.
 - Caption: **A runtime cannot promote its own status into proof.**
 
-## 1:20-1:50 — The economic results
+## 1:20-1:40 — ROMA proof and the remaining risk
 
-- Open Research and show v1's 27/36 versus 24/36 frozen aggregate.
-- Immediately show the matched-timeout sensitivity: excluding one same-route
-  timeout pair reverses the direction to 3.5% more measured GPU energy and
-  5.4% more modeled GPU cost.
-- Show v2's cost regression and v3's repository-artifact integrity with failed
-  economic gates.
-- Caption: **The apparent v1 gain reversed under sensitivity; Citadel rejected all three savings stories.**
+- Open the pinned ROMA diagnostic and show 24/24 measured cells, zero false
+  passes, requested/observed route identity, and offline reconstruction.
+- State the boundary once: the initial heuristic verified 4/6 cells, avoided no
+  strong attempts, and missed its economic gate. Link the three complete
+  negative reports instead of narrating each one.
+- Caption: **The cross-stack evidence layer works; the economic controller is
+  the funded result.**
+
+## 1:40-1:50 — Delivery record
+
+- Show the dated repository evidence: 520 main-branch commits, 496 attributed
+  to Seth's Git identity, 808 stars, 79 forks, and 524 unique cloners in the
+  latest owner-visible 14-day window.
+- Caption: **Funding scales a shipped public substrate, not a first prototype.**
 
 ## 1:50-2:00 — Funding target
 
