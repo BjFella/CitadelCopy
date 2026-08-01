@@ -34,6 +34,7 @@ const checks = [
   ['hero shows the first-success path', html.includes('Citadel first-success path') && html.includes('/do next')],
   ['screen transition names its value', html.includes('See the work survive a session')],
   ['document uses native scrolling', siteCss.includes('body.site-home') && siteCss.includes('overflow-y: auto') && !html.includes('// Wheel interception')],
+  ['native-scroll landing does not autofocus below the hero', !html.includes('// Focus input on load') && !html.includes('setTimeout(() => input.focus(), 100)')],
   ['custom scrollbar and progress rail are explicit', siteCss.includes('*::-webkit-scrollbar-thumb') && siteCss.includes('scrollbar-color:') && html.includes('site-scroll-progress')],
   ['campaign scenario exists', html.includes('data-story-scenario="campaign"')],
   ['review scenario exists', html.includes('data-story-scenario="review"')],
