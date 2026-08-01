@@ -28,6 +28,16 @@ document field to the grant thank-you screen. That field belongs outside the
 observed Grant path and is not an applicant blocker. Recheck the branch logic,
 not only the combined field inventory, if the form changes.
 
+Run `npm run application:form:check` immediately before the final form pass.
+The read-only check fetches the public definition, verifies all 13 required
+Grant inputs and their types, confirms the 80-character limit and funding
+choices, proves the upload-to-thank-you branch, and requires a matching answer
+surface without entering or submitting response data.
+
+Observed live Grant contract fingerprint on 2026-08-01:
+`sha256:611739716b3eb5ad7b16a2e93778f91b9b8cc06ff5ffcbe2eb843c4683544dcd`.
+Any mismatch is a review stop, not an instruction to update the digest blindly.
+
 The live form did not ask for a legal entity, tax information, payment details,
 or a separate budget spreadsheet during this observed path. Reinspect if the
 form changes before submission.
@@ -118,7 +128,8 @@ pre-award cohort is required. The funded cohort is post-award work.
 ## Final submission sequence
 
 1. Confirm the two applicant facts and role selection above.
-2. Recheck the live Typeform for field or option drift.
+2. Run `npm run application:form:check` to reject live field, option, or branch
+   drift.
 3. Refresh the dated GitHub counts or remove them if they cannot be verified.
 4. Verify the public Pages site and evaluator path after this package merges.
 5. Re-render the PDF only if any public claim changes, then update its digest.

@@ -36,6 +36,8 @@
 - [x] Map every live Sentient Grant-track form field to a paste-ready answer.
 - [x] Inspect the live Typeform branch logic and exclude the combined-form
   `How did you hear` field that the Grant path skips after the required upload.
+- [x] Add a read-only live-form drift gate covering all 13 required Grant
+  fields, their types, the 80-character limit, funding choices, and branch exit.
 - [x] Render the required eight-page supporting PDF from a tracked source.
 - [x] Inspect every rendered PDF page and verify extractable text, page count,
   dimensions, metadata, and SHA-256.
