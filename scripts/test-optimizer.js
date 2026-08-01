@@ -1040,7 +1040,13 @@ function main() {
   assert.strictEqual(validateCli.status, 0, validateCli.stderr);
   const validation = JSON.parse(validateCli.stdout);
   assert.strictEqual(validation.valid, true);
-  assert.strictEqual(validation.actual_run_status, 'blocked');
+  const doctorCli = invoke(['doctor']);
+  assert.strictEqual(doctorCli.status, 0, doctorCli.stderr);
+  const doctorOutput = JSON.parse(doctorCli.stdout);
+  assert(['blocked', 'ready'].includes(doctorOutput.status));
+  assert.strictEqual(validation.actual_run_status, doctorOutput.status);
+  if (doctorOutput.status === 'ready') assert.deepStrictEqual(doctorOutput.blockers, []);
+  else assert(doctorOutput.blockers.length > 0);
   const calibrationCli = invoke(['calibration-plan']);
   assert.strictEqual(calibrationCli.status, 0, calibrationCli.stderr);
   const calibrationOutput = JSON.parse(calibrationCli.stdout);

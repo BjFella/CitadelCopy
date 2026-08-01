@@ -20,8 +20,13 @@ in [`TYPEFORM_ANSWER_PACK.md`](TYPEFORM_ANSWER_PACK.md):
 - Grant versus Investment track;
 - funding range;
 - what the grant unlocks;
-- required supporting document upload;
-- how the applicant heard about Sentient.
+- required supporting document upload.
+
+The combined form definition contains a later `How did you hear about this
+program` field, but the current Grant-branch logic jumps from the supporting
+document field to the grant thank-you screen. That field belongs outside the
+observed Grant path and is not an applicant blocker. Recheck the branch logic,
+not only the combined field inventory, if the form changes.
 
 The live form did not ask for a legal entity, tax information, payment details,
 or a separate budget spreadsheet during this observed path. Reinspect if the
@@ -103,7 +108,7 @@ Only four factual or authority inputs remain outside the repository:
 
 - [ ] applicant email;
 - [ ] city and country;
-- [ ] how Seth heard about Sentient;
+- [ ] confirmation that `Engineer / Builder` is the correct role selection;
 - [ ] Seth's explicit approval of the amount, wording, upload, and external
   submission.
 
@@ -112,11 +117,10 @@ pre-award cohort is required. The funded cohort is post-award work.
 
 ## Final submission sequence
 
-1. Confirm the three applicant facts above.
+1. Confirm the two applicant facts and role selection above.
 2. Recheck the live Typeform for field or option drift.
 3. Refresh the dated GitHub counts or remove them if they cannot be verified.
 4. Verify the public Pages site and evaluator path after this package merges.
 5. Re-render the PDF only if any public claim changes, then update its digest.
 6. Paste answers from `TYPEFORM_ANSWER_PACK.md` and upload the PDF.
 7. Stop at the final submission action until Seth explicitly authorizes it.
-
