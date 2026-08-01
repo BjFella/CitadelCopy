@@ -29,8 +29,8 @@
     },
     {
       "path": "assets/application/citadel-live-verification-demo.mp4",
-      "bytes": 237973,
-      "digest": "sha256:19d34fd7591f14f2194e3305d54bc858338dc10ef6d5ea8aa8bc20e1e7f415b4"
+      "bytes": 237995,
+      "digest": "sha256:8694a94b0e12d9a611e3ffb7ac6cdd778c35932b70cbe3a0aa04edf3ff9acc83"
     },
     {
       "path": "assets/application/citadel-sentient-walkthrough.mp4",
@@ -45,7 +45,7 @@
     {
       "path": "assets/application/live-verification-output.json",
       "bytes": 4065,
-      "digest": "sha256:ecbbfc5d83a45ea419db7ac40f27613c67e548db038a8b4c8fd32fe5f13cf06e"
+      "digest": "sha256:c7d72d80d82c2d7aed84ccad3774ca0be4bdcd4a3b61a6982de8a126d1883caf"
     },
     {
       "path": "assets/application/walkthrough-narration.txt",
@@ -183,5 +183,5 @@
       "digest": "sha256:72ee2abbae6b4a1f500abeebf803e149640fa9f53da04343606c648766065121"
     }
   ],
-  "source_digest": "sha256:ad4035ffbdb0de7a91ab607a20ec058cbf3609a94727a0023d9fa42089533d7b"
+  "source_digest": "sha256:530b140c7c74286055c85627d800fe14a1dd13728a6e935c8ea321176bb6bb0f"
 }

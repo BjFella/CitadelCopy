@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "kind": "citadel-recorded-verification-output",
-  "recorded_at": "2026-08-01T05:43:00.568764Z",
-  "source_revision": "07563daaa462785010e4590e0d7df468ccd8ab06",
+  "recorded_at": "2026-08-01T06:55:42.138328Z",
+  "source_revision": "3ec9c9e5057fcebe7c9470b2eac1c5d76f8985c1",
   "commands": [
     {
       "label": "Representative repository replay",
@@ -15,8 +15,8 @@
       "label": "Generated public evidence",
       "command": "npm run application:evidence:check",
       "exit_code": 0,
-      "output": "> citadel@1.3.0 application:evidence:check\n> node scripts/application-evidence.js check\n\napplication evidence check passed: sha256:659ac0f7b5e8516ba895169eda634824b511201485a330c9549f12d8d57b41b9",
-      "output_sha256": "ea509bb3f308d1ac6c4499b733f940e29ec10ec42ee1f638ebcbea2d2931aeb7"
+      "output": "> citadel@1.3.0 application:evidence:check\n> node scripts/application-evidence.js check\n\napplication evidence check passed: sha256:f05407839b4db5845b63562584f3755d90c6d8f7d48ea92772a8389329f97cf0",
+      "output_sha256": "1b2fed044f950178e6bb9595f0c4d5b851070a88215cc70c2e862a27d450dd09"
     },
     {
       "label": "Fresh-clone receipt replay",
@@ -26,5 +26,5 @@
       "output_sha256": "7f675c42fc48a4d8ecf35769f0defc1e57cc507d35d5c5fc272f17501d16bac7"
     }
   ],
-  "transcript_sha256": "46c7f29ec662c2278ac959ee581e4118e9393fa3cd601de4153df1782f684dcc"
+  "transcript_sha256": "36c9dac768ffb7a34c3c46df79a32e00d258f210c35bfb8027f62c488925ffbb"
 }
