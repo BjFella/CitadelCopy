@@ -4,6 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Citadel controls complete coding-agent operations, preserves failures, and independently verifies what actually ran. Inspect the prospective runtime cell and signed evidence history." />
+  <meta name="theme-color" content="#070b12" />
+  <link rel="canonical" href="https://sethgammon.github.io/Citadel/operation-control.html" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Citadel" />
+  <meta property="og:title" content="Citadel Operation Control | Real-runtime proof" />
+  <meta property="og:description" content="Inspect how Citadel binds requested execution to observed runtime facts, model-external verification, and signed receipts." />
+  <meta property="og:url" content="https://sethgammon.github.io/Citadel/operation-control.html" />
+  <meta property="og:image" content="https://sethgammon.github.io/Citadel/assets/citadel-social-preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://sethgammon.github.io/Citadel/assets/citadel-social-preview.png" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23070a0f%22/><path d=%22M8 8h16v5H13v6h11v5H8z%22 fill=%22%2353e2ff%22/></svg>" />
   <title>Citadel Operation Control | Real-runtime proof</title>
   <style>
@@ -415,6 +426,7 @@
   <link rel="stylesheet" href="site-system.css" />
 </head>
 <body class="site-page site-proof site-operation">
+  <a class="site-skip-link" href="#main-content">Skip to content</a>
   <div class="site-scroll-progress" aria-hidden="true"><span></span></div>
   <nav class="site-nav" aria-label="Primary navigation">
     <div class="site-nav-inner">
@@ -422,6 +434,7 @@
       <div class="site-nav-links">
         <a class="site-nav-link" href="index.html#product-story">How it works</a>
         <a class="site-nav-link" href="index.html#proof">Proof</a>
+        <a class="site-nav-link" href="evidence.html">Evidence</a>
         <a class="site-nav-link" href="operation-control.html" aria-current="page">Operation Control</a>
         <a class="site-nav-link" href="optimizer.html">Optimizer</a>
         <a class="site-nav-link" href="research.html">Research</a>
@@ -434,6 +447,7 @@
     </div>
     <div class="site-nav-mobile" id="site-nav-mobile" data-site-nav-mobile hidden>
       <a class="site-nav-link" href="index.html">Overview</a>
+      <a class="site-nav-link" href="evidence.html">Evidence index</a>
       <a class="site-nav-link" href="#prospective">Latest proof</a>
       <a class="site-nav-link" href="#control">Control contract</a>
       <a class="site-nav-link" href="#result">Earlier ROMA result</a>
@@ -443,7 +457,7 @@
     </div>
   </nav>
 
-  <main class="shell">
+  <main class="shell" id="main-content" tabindex="-1">
     <header class="hero">
       <div>
         <div class="eyebrow">Outcome-aware operation control</div>
@@ -456,20 +470,20 @@
       </div>
       <aside class="claim-card" aria-label="Current claim boundary">
         <div class="claim-label">Current claim boundary</div>
-        <h2>Integration passed. Savings remain unproven.</h2>
+        <h2>Integrity passed. Savings remain unproven.</h2>
         <p>
-          One preregistered Claude Code cell completed a real repository change,
-          matched its requested model and topology, and passed an independent
-          verifier. Two infrastructure failures remain visible.
+          A real Claude Code cell passed a model-external repository verifier.
+          The later 24-cell fixture shakedown preserved zero false passes and
+          zero path violations, while both of its economic gates failed.
         </p>
-        <code>v2 prospective: 1 / 3 passed<br />history: 120 signed cells<br />comparative gate: open</code>
+        <code>runtime prospective: 1 / 3 passed<br />repository pilot: 24 signed cells<br />economic target: not demonstrated</code>
       </aside>
     </header>
 
     <div class="proof-strip" aria-label="Current operation-control evidence summary">
       <div class="proof-stat"><strong>120</strong><span>signed historical cells</span></div>
       <div class="proof-stat"><strong>3</strong><span>preregistered runtime attempts</span></div>
-      <div class="proof-stat"><strong>1</strong><span>independently verified result</span></div>
+      <div class="proof-stat"><strong>1</strong><span>model-externally verified runtime result</span></div>
       <div class="proof-stat"><strong>0</strong><span>adversarial false passes</span></div>
     </div>
 
@@ -480,7 +494,7 @@
           The frozen controller invoked a public coding-agent runtime against a
           fresh public clone, reconciled the requested model and direct topology,
           required the declared test file to change, then handed the repository
-          to an independent verifier. Attempts that never reached model work were
+          to a deterministic verifier outside the routed model. Attempts that never reached model work were
           retained instead of silently disappearing from the result.
         </p>
       </div>
@@ -500,7 +514,7 @@
           <article class="attempt-card passed">
             <span class="attempt-state">Passed</span>
             <h3>Claude on a fresh public clone</h3>
-            <p>Exact model and topology matched, the required artifact changed, and the independent verifier exited zero.</p>
+            <p>Exact model and topology matched, the required artifact changed, and the model-external repository verifier exited zero.</p>
           </article>
         </div>
         <div class="evidence-note">
@@ -518,7 +532,7 @@
           Routing chooses a model. Orchestration launches a graph. Citadel's
           contribution is the enforceable contract around the complete
           operation: what may run, what actually ran, what it cost or could not
-          price, and whether an independent outcome contract accepted it.
+          price, and whether a model-external outcome contract accepted it.
         </p>
       </div>
       <div class="control-flow" aria-label="Citadel operation control flow">
@@ -526,7 +540,7 @@
         <article class="flow-step"><small>02 / SELECT</small><h3>Bind controls</h3><p>Requested model, topology, tools, worktree, timeouts, privacy, and cost lens become an inspectable contract.</p></article>
         <article class="flow-step"><small>03 / EXECUTE</small><h3>Use the real stack</h3><p>Claude Code, Codex, ROMA, or another adapter does the work without Citadel impersonating its planning logic.</p></article>
         <article class="flow-step"><small>04 / OBSERVE</small><h3>Reconcile reality</h3><p>Requested and observed model, receipts, changed paths, duration, tokens, and available cost evidence are compared.</p></article>
-        <article class="flow-step"><small>05 / VERIFY</small><h3>Bound the claim</h3><p>An independent repository verifier and signed report decide whether the operation passed, failed, or remains unknown.</p></article>
+        <article class="flow-step"><small>05 / VERIFY</small><h3>Bound the claim</h3><p>A repository verifier outside the routed model and a signed report decide whether the operation passed, failed, or remains unknown.</p></article>
       </div>
     </section>
 
@@ -599,7 +613,7 @@
           <ul>
             <li>A stack-neutral control contract bound to Sentient ROMA through a thin adapter.</li>
             <li>Exact requested and observed local model identities for every exercised module.</li>
-            <li>Independent verification with zero false passes across all 24 cells.</li>
+            <li>Model-external verification with zero false passes across all 24 cells.</li>
             <li>Partial evidence survives timeout and cannot become a pass.</li>
             <li>Citadel local completion was 66.7% versus 33.3% for direct 7B local.</li>
             <li>The complete proof reproduces offline from one command.</li>
@@ -639,9 +653,10 @@
       </article>
       <aside class="closing-card">
         <div class="claim-label">Funded research target</div>
-        <p><strong style="font-size:34px;">≥95%</strong><br />of frontier verified completion</p>
+        <p><strong style="font-size:34px;">≥80%</strong><br />absolute verified completion</p>
+        <p><strong style="font-size:34px;">≥95%</strong><br />of a valid frontier baseline</p>
         <p><strong style="font-size:34px;">≥30%</strong><br />lower measured end-to-end cost</p>
-        <p style="font:11px/1.6 var(--mono);">Targets, not current results.</p>
+        <p style="font:11px/1.6 var(--mono);">Frontier must first clear 80% overall and 70% per frozen stratum. Targets, not current results.</p>
       </aside>
     </section>
   </main>

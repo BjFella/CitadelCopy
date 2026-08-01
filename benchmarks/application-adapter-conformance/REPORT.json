@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "kind": "citadel-application-adapter-conformance",
-  "as_of": "2026-08-01T03:12:18.830Z",
+  "as_of": "2026-08-01T05:23:49.666Z",
   "contract": {
     "required": [
       "requested_identity",
@@ -32,7 +32,7 @@
       "evidence_level": "prospective-actual-run",
       "status": "passed-with-observed-runtime-failure",
       "requested_identity": "exact Qwen2.5-Coder manifest digests",
-      "observed_identity": "71/72 completed attempts; one timeout before model identity was observed",
+      "observed_identity": "75 attempts total; 74 identity-observed attempts and one timeout before model identity was observed",
       "outcome_verification": "exact canonical answer digest",
       "cost_lenses": {
         "provider_invoice": "known-zero",

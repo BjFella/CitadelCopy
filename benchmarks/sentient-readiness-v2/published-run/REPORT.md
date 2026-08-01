@@ -1,5 +1,10 @@
 # Citadel capability-profile local optimizer result
 
+> **Disclosure:** Read the preserved method and this signed result together
+> with the [v2 corrigendum](../CORRIGENDUM.md). It corrects the provenance,
+> task-template overlap, and repetition interpretation without changing the
+> frozen bundle or negative economic conclusion.
+
 Run: `sha256:ef69fc777ebd7bf68ba48fe4de9c36c3a30926d45bb459b78dad7a02898a24a8`  
 Freeze: `sha256:59f9b492ba72dd3f838f53eb7737983c91b859064f4d6cad8ab248090eb78f4d`  
 Window: 2026-08-01T03:44:38.936Z to 2026-08-01T03:53:36.633Z

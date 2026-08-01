@@ -5,9 +5,13 @@
 The benchmark exists to falsify or support one economic claim. It is not a
 general Citadel showcase.
 
-The funded target is at least 30% lower total operation cost while retaining at
-least 95% of always-frontier verified completions. The smaller pre-application
-gate is:
+The current funded target is at least 80% absolute verified completion, at
+least 95% of a valid always-frontier verified-operation rate, and at least 30%
+lower total operation cost. Always frontier is valid only if it verifies at
+least 80% overall and 70% in every preregistered task stratum. Prompt-only is a
+reported diagnostic, not part of that funded pass condition.
+
+The historical smaller pre-application gate frozen for the 120-cell matrix was:
 
 - at least 20% lower held-out median cost than always-frontier;
 - no loss of held-out verified completions in the frozen preliminary set;

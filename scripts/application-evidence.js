@@ -24,20 +24,32 @@ function artifact(relative, value = null) {
   return Object.freeze({ path: relative.replace(/\\/g, '/'), digest: digest(parsed) });
 }
 
+function textArtifact(relative) {
+  return Object.freeze({ path: relative.replace(/\\/g, '/'), digest: digest(normalized(relative)) });
+}
+
 function buildManifest() {
   const optimizer = readJson('benchmarks/optimizer-proof/actual-report.json');
   const optimizerV2 = readJson('benchmarks/operation-control-v2/REPORT.json');
   const roma = readJson('benchmarks/roma-operation-control/published-run/bundle.json');
   const prospective = readJson('benchmarks/operation-control-v2/prospective/RESULTS.json');
   const readiness = readJson('benchmarks/sentient-readiness/published-run/bundle.json');
+  const readinessSensitivity = readJson('benchmarks/sentient-readiness/SENSITIVITY.json');
+  const readinessClosure = readJson('benchmarks/sentient-readiness/DEPENDENCY_CLOSURE.json');
+  const capabilityProfile = readJson('benchmarks/sentient-readiness-v2/published-run/bundle.json');
+  const capabilityClosure = readJson('benchmarks/sentient-readiness-v2/DEPENDENCY_CLOSURE.json');
+  const measurementAudit = readJson('benchmarks/local-measurement-audit/REPORT.json');
+  const representative = readJson('benchmarks/representative-operation-pilot-v2/published-run/bundle.json');
   const onboarding = readJson('benchmarks/fresh-clone-onboarding/REPORT.json');
   const romaPolicies = Object.fromEntries(roma.summary.policies.map((entry) => [entry.policy_id, entry]));
   const readinessPolicies = Object.fromEntries(readiness.summary.policies.map((entry) => [entry.policy_id, entry]));
+  const capabilityPolicies = Object.fromEntries(capabilityProfile.summary.policies.map((entry) => [entry.policy_id, entry]));
+  const representativePolicies = Object.fromEntries(representative.summary.policies.map((entry) => [entry.policy_id, entry]));
   const manifest = {
     schema: 1,
     kind: 'citadel-public-evidence-manifest',
-    as_of: readiness.completed_at,
-    claim_policy: 'Every value is generated from a canonical committed artifact. Unknown is never converted to zero.',
+    as_of: representative.completed_at,
+    claim_policy: 'Every value in this manifest is generated from a canonical committed artifact. Public prose is separately contract-tested. Unknown is never converted to zero.',
     claims: {
       optimizer_history: {
         evidence_class: 'retrospective-actual-run',
@@ -80,39 +92,118 @@ function buildManifest() {
         evidence_result: readiness.summary.evidence_result,
         baseline_verified: readinessPolicies['always-strong-local'].verified,
         baseline_total: readinessPolicies['always-strong-local'].cells,
+        baseline_failed: readinessPolicies['always-strong-local'].failed,
+        baseline_unknown: readinessPolicies['always-strong-local'].unknown,
         adaptive_verified: readinessPolicies['citadel-adaptive-local'].verified,
         adaptive_total: readinessPolicies['citadel-adaptive-local'].cells,
+        adaptive_failed: readinessPolicies['citadel-adaptive-local'].failed,
+        adaptive_unknown: readinessPolicies['citadel-adaptive-local'].unknown,
         quality_ratio: readiness.summary.comparison.quality_ratio,
         gpu_energy_reduction: readiness.summary.comparison.gpu_energy_reduction,
         modeled_cost_reduction: readiness.summary.comparison.modeled_cost_reduction,
-        duration_reduction: readiness.summary.comparison.duration_reduction,
+        request_wall_duration_reduction: readiness.summary.comparison.duration_reduction,
         false_passes: readiness.summary.false_passes,
         integrity_failures: readiness.summary.integrity_failures,
+        gates: readiness.summary.gates,
+        sensitivity: {
+          omitted_pair: readinessSensitivity.omitted_pair,
+          gpu_energy_reduction: readinessSensitivity.sensitivity.gpu_energy_reduction,
+          modeled_gpu_cost_reduction: readinessSensitivity.sensitivity.modeled_gpu_cost_reduction,
+          request_wall_duration_reduction: readinessSensitivity.sensitivity.request_wall_duration_reduction,
+          conclusion: readinessSensitivity.conclusion,
+        },
+        dependency_closure: {
+          signed_execution_commit: readinessClosure.signed_execution_commit,
+          original_source_files: readinessClosure.original_source_files,
+          closed_source_files: readinessClosure.closed_source_files,
+          supplementary: true,
+        },
         actual_cash_status: readiness.summary.actual_end_to_end_cash_status,
+      },
+      capability_profile_followup: {
+        evidence_class: 'prospective-local-capability-profile-comparison',
+        cells: capabilityProfile.artifacts.length,
+        evidence_result: capabilityProfile.summary.evidence_result,
+        baseline_verified: capabilityPolicies['always-strong-local'].verified,
+        baseline_total: capabilityPolicies['always-strong-local'].cells,
+        profile_verified: capabilityPolicies['citadel-capability-profile-local'].verified,
+        profile_total: capabilityPolicies['citadel-capability-profile-local'].cells,
+        profile_failed: capabilityPolicies['citadel-capability-profile-local'].failed,
+        profile_unknown: capabilityPolicies['citadel-capability-profile-local'].unknown,
+        baseline_failed: capabilityPolicies['always-strong-local'].failed,
+        baseline_unknown: capabilityPolicies['always-strong-local'].unknown,
+        escalations: capabilityPolicies['citadel-capability-profile-local'].escalations,
+        quality_ratio: capabilityProfile.summary.comparison.quality_ratio,
+        gpu_energy_reduction: capabilityProfile.summary.comparison.gpu_energy_reduction,
+        modeled_cost_reduction: capabilityProfile.summary.comparison.modeled_cost_reduction,
+        request_wall_duration_reduction: capabilityProfile.summary.comparison.duration_reduction,
+        false_passes: capabilityProfile.summary.false_passes,
+        integrity_failures: capabilityProfile.summary.integrity_failures,
+        gates: capabilityProfile.summary.gates,
+        dependency_closure: {
+          signed_execution_commit: capabilityClosure.signed_execution_commit,
+          original_source_files: capabilityClosure.original_source_files,
+          closed_source_files: capabilityClosure.closed_source_files,
+          supplementary: true,
+        },
+        actual_cash_status: capabilityProfile.summary.actual_end_to_end_cash_status,
+      },
+      representative_repository_pilot: {
+        evidence_class: 'prospective-representative-repository-operation-shakedown',
+        cells: representative.artifacts.length,
+        unique_tasks: representative.summary.policies[0].unique_tasks,
+        timing_repetitions: 2,
+        evidence_result: representative.summary.evidence_result,
+        baseline_verified: representativePolicies['always-strong-local'].verified,
+        baseline_total: representativePolicies['always-strong-local'].cells,
+        profile_verified: representativePolicies['citadel-risk-profile-local'].verified,
+        profile_total: representativePolicies['citadel-risk-profile-local'].cells,
+        escalations: representativePolicies['citadel-risk-profile-local'].escalations,
+        gpu_energy_reduction: representative.summary.comparison.gpu_energy_reduction,
+        modeled_cost_reduction: representative.summary.comparison.modeled_gpu_cost_reduction,
+        token_reduction: representative.summary.comparison.token_reduction,
+        path_violations: representative.summary.path_violations,
+        false_passes: representative.summary.false_passes,
+        integrity_failures: representative.summary.integrity_failures,
+        gates: representative.summary.gates,
+        actual_cash_status: representative.summary.actual_end_to_end_cash_status,
       },
       fresh_clone_onboarding: {
         evidence_class: 'unattended-clean-clone-engineering-proof',
         status: onboarding.status,
-        steps_passed: onboarding.steps.filter((step) => step.status === 'passed').length,
+        stages_completed: onboarding.steps.filter((step) => step.status === 'passed').length,
         steps_total: onboarding.steps.length,
+        doctor_health: onboarding.steps.find((step) => step.id === 'doctor-command-executed').doctor_health,
         total_duration_ms: onboarding.total_duration_ms,
         source_commit: onboarding.source_commit,
         model_execution: onboarding.model_execution,
       },
     },
     boundaries: [
-      'The 120-cell optimizer result is retrospective and its performance gate failed.',
+      'The 120-cell optimizer result is retrospective and its performance gate remained open because cost coverage was incomplete.',
       'The 24-cell ROMA result proves control and evidence integration; its efficiency hypothesis failed.',
       'The Claude prospective cell proves one real runtime integration, not savings or broad reliability.',
-      'The 72-cell local comparison improved quality and reduced measured GPU energy, but failed the frozen 30 percent economic gates.',
-      'The fresh-clone proof exercises engineering onboarding without claiming real-user utility or model-task completion.',
+      'V1 recorded 27/36 versus 24/36 verified cells, but its apparent GPU savings reverse when one same-route timeout pair is excluded; it does not support a savings claim.',
+      'The separately frozen 72-cell capability-profile follow-up matched baseline cell completion, but verification-driven escalations increased measured GPU energy and modeled GPU cost.',
+      'The capability-profile v2 corrigendum discloses v1-informed design, task-template overlap, and deterministic repetition semantics without changing the frozen negative result.',
+      'The 24-cell representative repository-operation shakedown matched 6/12 verified cells under both policies with zero false passes and zero path violations. Its 7.1% measured GPU-energy reduction missed the frozen 20% gate, so the evidence result is failed and no general savings claim is permitted.',
+      'The representative shakedown contains six unique fixture tasks repeated twice per policy; timing repetitions are not independent tasks and the small fixture set is not production generalization.',
+      'The fresh-clone proof completed five command stages; doctor semantic health remained unknown, and no real-user utility or model-task completion is claimed.',
       'Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.',
+      'GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained.',
     ],
     artifacts: [
       artifact('benchmarks/optimizer-proof/actual-report.json', optimizer),
       artifact('benchmarks/roma-operation-control/published-run/bundle.json', roma),
       artifact('benchmarks/operation-control-v2/prospective/RESULTS.json', prospective),
       artifact('benchmarks/sentient-readiness/published-run/bundle.json', readiness),
+      artifact('benchmarks/sentient-readiness/SENSITIVITY.json', readinessSensitivity),
+      artifact('benchmarks/sentient-readiness/DEPENDENCY_CLOSURE.json', readinessClosure),
+      artifact('benchmarks/sentient-readiness-v2/published-run/bundle.json', capabilityProfile),
+      artifact('benchmarks/sentient-readiness-v2/DEPENDENCY_CLOSURE.json', capabilityClosure),
+      textArtifact('benchmarks/sentient-readiness-v2/CORRIGENDUM.md'),
+      artifact('benchmarks/local-measurement-audit/REPORT.json', measurementAudit),
+      artifact('benchmarks/representative-operation-pilot-v2/published-run/bundle.json', representative),
       artifact('benchmarks/fresh-clone-onboarding/REPORT.json', onboarding),
     ],
   };
@@ -125,6 +216,8 @@ function renderManifest(manifest) {
   const r = manifest.claims.roma_operation_control;
   const p = manifest.claims.prospective_runtime;
   const l = manifest.claims.prospective_local_economics;
+  const c = manifest.claims.capability_profile_followup;
+  const x = manifest.claims.representative_repository_pilot;
   const f = manifest.claims.fresh_clone_onboarding;
   return `# Citadel public evidence manifest
 
@@ -135,8 +228,10 @@ Generated from committed canonical artifacts. As of ${manifest.as_of}.
 | Optimizer history | ${o.cells} signed cells; ${o.real_model_attempts} real attempts; ${o.verified} verified; ${o.false_passes} false passes | Performance gate ${o.performance_gate}; retrospective |
 | ROMA operation control | ${r.cells} cells; Citadel ${r.citadel_verified}/${r.citadel_total}; direct local ${r.local_baseline_verified}/${r.local_baseline_total} | Evidence ${r.evidence_result}; performance ${r.performance_hypothesis} |
 | Prospective runtime | ${p.passed}/${p.attempts} passed; ${p.successful_runtime}/${p.successful_model} | Integration only; actual cash ${p.actual_cash_status} |
-| Prospective local economics | adaptive ${l.adaptive_verified}/${l.adaptive_total}; baseline ${l.baseline_verified}/${l.baseline_total}; ${(l.gpu_energy_reduction * 100).toFixed(1)}% less GPU energy | Frozen economic result ${l.evidence_result}; actual cash ${l.actual_cash_status} |
-| Fresh-clone onboarding | ${f.steps_passed}/${f.steps_total} steps in ${(f.total_duration_ms / 1000).toFixed(2)}s | Engineering proof; model execution ${f.model_execution} |
+| Prospective local v1 | adaptive ${l.adaptive_verified}/${l.adaptive_total} verified, ${l.adaptive_failed} failed, ${l.adaptive_unknown} unknown; baseline ${l.baseline_verified}/${l.baseline_total} verified, ${l.baseline_failed} failed, ${l.baseline_unknown} unknown | Frozen gate ${l.evidence_result}; timeout sensitivity ${(l.sensitivity.gpu_energy_reduction * 100).toFixed(1)}% GPU energy; identity gate ${l.gates.execution_identity} |
+| Capability-profile follow-up | profile ${c.profile_verified}/${c.profile_total} verified, ${c.profile_failed} failed, ${c.profile_unknown} unknown; baseline ${c.baseline_verified}/${c.baseline_total} | Matched baseline cell completion; ${Math.abs(c.gpu_energy_reduction * 100).toFixed(1)}% more GPU energy; gate ${c.evidence_result} |
+| Representative repository pilot | profile ${x.profile_verified}/${x.profile_total} verified; baseline ${x.baseline_verified}/${x.baseline_total}; ${x.unique_tasks} unique fixture tasks | ${(x.gpu_energy_reduction * 100).toFixed(1)}% less measured GPU energy missed the 20% gate; evidence ${x.evidence_result} |
+| Fresh-clone onboarding | ${f.stages_completed}/${f.steps_total} command stages in ${(f.total_duration_ms / 1000).toFixed(2)}s | Doctor health ${f.doctor_health}; model execution ${f.model_execution} |
 
 ## Claim boundaries
 
@@ -175,7 +270,7 @@ function buildConformance(manifest = buildManifest()) {
         evidence_level: 'prospective-actual-run',
         status: local.cells === 72 && local.integrity_failures === 0 ? 'passed-with-observed-runtime-failure' : 'failed',
         requested_identity: 'exact Qwen2.5-Coder manifest digests',
-        observed_identity: '71/72 completed attempts; one timeout before model identity was observed',
+        observed_identity: '75 attempts total; 74 identity-observed attempts and one timeout before model identity was observed',
         outcome_verification: 'exact canonical answer digest',
         cost_lenses: { provider_invoice: 'known-zero', gpu_energy: 'measured', actual_end_to_end_cash: 'unknown' },
       },

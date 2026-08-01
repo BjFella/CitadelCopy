@@ -56,7 +56,7 @@ function render(report) {
   return `# Citadel fresh-clone onboarding proof
 
 Source commit: \`${report.source_commit}\`  
-Result: **${report.status}**  
+Result: **${report.status}**
 Total measured time: **${(report.total_duration_ms / 1000).toFixed(2)} seconds**
 
 | Step | Status | Duration | Evidence |
@@ -116,7 +116,13 @@ function execute() {
 
     const doctorResult = run(process.execPath, [path.join(clone, 'scripts', 'adopt.js'), 'doctor', '--target', target, '--json'], { cwd: target, env: proofEnv });
     const doctor = parseJson(doctorResult, 'adoption doctor');
-    steps.push({ id: 'adoption-doctor', status: doctorResult.status === 0 ? 'passed' : 'failed', duration_ms: doctorResult.duration_ms, detail: `Doctor status ${doctor.status || doctor.health || 'passed'}; owned footprint inspected.` });
+    steps.push({
+      id: 'doctor-command-executed',
+      status: doctorResult.status === 0 ? 'passed' : 'failed',
+      doctor_health: doctor.status || doctor.health || 'unknown',
+      duration_ms: doctorResult.duration_ms,
+      detail: `Doctor command exited ${doctorResult.status}; semantic health ${doctor.status || doctor.health || 'unknown'}; owned footprint inspected.`,
+    });
 
     const routeResult = run(process.execPath, [path.join(clone, 'scripts', 'route-preview.js'), '--json', '--project-root', target, '--', 'review README.md'], { cwd: target });
     const route = parseJson(routeResult, 'route preview');
@@ -131,7 +137,7 @@ function execute() {
       runtime_projection: 'both',
       external_registration: 'not-attempted',
       model_execution: 'not-attempted',
-      status: steps.every((step) => step.status === 'passed') ? 'passed' : 'failed',
+      status: steps.every((step) => step.status === 'passed') ? 'completed' : 'failed',
       total_duration_ms: Date.now() - overallStarted,
       steps,
       claim_boundary: 'Unattended local clean-clone adoption and route proof; not real-user utility or model-task evidence.',
@@ -151,9 +157,11 @@ function verify() {
   const unsigned = { ...report };
   delete unsigned.report_digest;
   if (report.report_digest !== digest(unsigned)) throw new Error('fresh-clone report digest drifted');
-  if (report.status !== 'passed' || report.steps.length !== 5 || report.steps.some((step) => step.status !== 'passed')) {
-    throw new Error('fresh-clone onboarding proof did not pass every step');
+  if (report.status !== 'completed' || report.steps.length !== 5 || report.steps.some((step) => step.status !== 'passed')) {
+    throw new Error('fresh-clone onboarding proof did not complete every command stage');
   }
+  const doctor = report.steps.find((step) => step.id === 'doctor-command-executed');
+  if (!doctor || doctor.doctor_health !== 'unknown') throw new Error('fresh-clone report must preserve unknown doctor health');
   const markdown = fs.readFileSync(path.join(OUTPUT_ROOT, 'REPORT.md'), 'utf8');
   if (!markdown.includes(report.report_digest) || !markdown.includes(report.source_commit)) throw new Error('fresh-clone report markdown drifted');
   return report;

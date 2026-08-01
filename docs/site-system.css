@@ -78,6 +78,24 @@ body.site-page :focus-visible {
   border-radius: 5px;
 }
 
+.site-skip-link {
+  position: fixed;
+  top: 10px;
+  left: 14px;
+  z-index: 2000;
+  padding: 11px 15px;
+  border: 1px solid var(--site-cyan);
+  border-radius: 9px;
+  color: #031017;
+  background: var(--site-cyan);
+  font: 750 13px/1 var(--site-sans);
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 140ms ease;
+}
+
+.site-skip-link:focus { transform: translateY(0); }
+
 .site-scroll-progress {
   position: fixed;
   top: 0;
@@ -709,7 +727,7 @@ body.site-proof {
 .research-thesis-card h3 { margin: 12px 0 16px; color: var(--site-text); font-size: clamp(25px, 3vw, 38px); line-height: 1.12; letter-spacing: -0.04em; }
 .research-thesis-card p { margin: 0; color: var(--site-muted); font-size: 16px; line-height: 1.72; }
 .research-thesis-card.target { border-color: rgba(98, 227, 157, 0.34); }
-.target-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
+.target-pair { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 26px; }
 .target-number { padding: 18px; border: 1px solid var(--site-line); border-radius: 13px; background: rgba(5, 8, 13, 0.48); }
 .target-number strong { display: block; color: var(--site-green); font: 750 clamp(28px, 4vw, 44px)/1 var(--site-mono); }
 .target-number span { display: block; margin-top: 9px; color: var(--site-muted); font-size: 12px; line-height: 1.45; }

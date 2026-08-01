@@ -25,17 +25,21 @@ compress the research story into fast terminal noise.
 - Switch to the failed attempts and show that they remain failed.
 - Caption: **A runtime cannot promote its own status into proof.**
 
-## 1:20-1:50 — The economic result
+## 1:20-1:50 — The economic results
 
-- Open Research and the 72-cell prospective comparison.
-- Show adaptive 27/36 versus baseline 24/36 and 9.9% less measured GPU energy.
-- Show the failed 30% economic gate.
-- Caption: **Citadel improved this result and still rejected its own savings claim.**
+- Open Research and show v1's 27/36 versus 24/36 frozen aggregate.
+- Immediately show the matched-timeout sensitivity: excluding one same-route
+  timeout pair reverses the direction to 3.5% more measured GPU energy and
+  5.4% more modeled GPU cost.
+- Show v2's cost regression and v3's repository-artifact integrity with failed
+  economic gates.
+- Caption: **The apparent v1 gain reversed under sensitivity; Citadel rejected all three savings stories.**
 
 ## 1:50-2:00 — Funding target
 
-- Show the funded gate: at least 95% frontier verified completion and at least
-  30% lower measured end-to-end cost across multiple stacks.
+- Show the funded gate: at least 80% absolute verified completion, at least 95%
+  of a valid frontier baseline, and at least 30% lower measured end-to-end cost
+  across multiple stacks.
 - End on the one-command evidence verification link.
 
 ## Capture requirements
@@ -45,4 +49,3 @@ compress the research story into fast terminal noise.
 - No synthetic user testimonial, fake live activity, or unverified savings.
 - Provide an animated GIF or three-image fallback for application fields that
   do not accept video.
-

@@ -1,0 +1,97 @@
+WEBVTT
+
+1
+00:00:00.050 --> 00:00:02.620
+Citadel starts with one command: slash do.
+
+2
+00:00:02.620 --> 00:00:07.890
+Describe the engineering outcome, and Citadel chooses the smallest operating lane that can carry it.
+
+3
+00:00:07.890 --> 00:00:15.730
+Longer work gains repository state, recovery, coordination, bounded execution, and a concrete next action around Claude Code or Codex.
+
+4
+00:00:15.730 --> 00:00:18.420
+The research question begins where orchestration ends.
+
+5
+00:00:18.420 --> 00:00:25.220
+A smaller model is not cheaper when its answer fails, verification forces a retry, or the operation hides part of its cost.
+
+6
+00:00:25.220 --> 00:00:33.740
+Citadel binds the declared route to observed execution, a deterministic verdict outside the routed model, measured and modeled cost lenses, and a signed receipt.
+
+7
+00:00:33.740 --> 00:00:36.330
+Failed and unknown outcomes remain visible.
+
+8
+00:00:36.330 --> 00:00:38.490
+Three local studies tested that contract.
+
+9
+00:00:38.490 --> 00:00:43.760
+In v1, adaptive recorded twenty-seven of thirty-six verified cells versus twenty-four.
+
+10
+00:00:43.760 --> 00:00:48.140
+But one same-route sixty-second baseline timeout drove the apparent savings.
+
+11
+00:00:48.140 --> 00:00:52.880
+Excluding that pair reverses the economic direction, so Citadel makes no savings claim.
+
+12
+00:00:52.880 --> 00:00:57.230
+V2 tested one-point-five, three, and seven-billion-parameter routing.
+
+13
+00:00:57.230 --> 00:01:02.270
+It matched baseline cell completion, but twelve failed small-model attempts escalated to seven B.
+
+14
+00:01:02.270 --> 00:01:05.960
+The policy used fifteen point seven percent more GPU energy.
+
+15
+00:01:05.960 --> 00:01:07.210
+Citadel rejected it.
+
+16
+00:01:07.210 --> 00:01:11.940
+V3 moved from exact answers to six artifact-producing repository fixtures.
+
+17
+00:01:11.940 --> 00:01:14.420
+Both policies verified six of twelve cells.
+
+18
+00:01:14.420 --> 00:01:23.590
+Citadel recorded zero false passes and zero path violations, but its seven point one percent energy reduction missed the frozen twenty percent gate, and token use increased.
+
+19
+00:01:23.590 --> 00:01:25.660
+That result is also published as failed.
+
+20
+00:01:25.660 --> 00:01:29.030
+This is the point: Citadel does not let a router grade itself.
+
+21
+00:01:29.030 --> 00:01:36.110
+Sentient funding would scale this open operation-evidence layer across agent stacks, real repositories, model families, and hardware.
+
+22
+00:01:36.110 --> 00:01:45.530
+The target remains at least eighty percent absolute verified completion, at least ninety-five percent of a valid frontier baseline, and at least thirty percent lower measured end-to-end cost.
+
+23
+00:01:45.530 --> 00:01:51.170
+Frontier must first clear eighty percent overall and seventy percent in every frozen task stratum.
+
+24
+00:01:51.170 --> 00:01:56.850
+Methods, receipts, commands, and negative results stay public whether that target passes or fails.

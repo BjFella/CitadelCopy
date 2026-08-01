@@ -521,10 +521,11 @@ function main() {
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'pricing-assumptions.json'), 'utf8')),
   ));
   assert(publicIndex.includes('href="optimizer.html">Optimizer Proof</a>'));
-  assert(optimizerPage.includes('Engineering contract only'));
-  assert(optimizerPage.includes('current routing claim failed'));
-  assert(optimizerPage.includes('120 / 120 signed'));
-  assert(optimizerPage.includes('PRELIMINARY_PERFORMANCE_GATE_OPEN'));
+  assert(optimizerPage.includes('Measurement contract proven'));
+  assert(optimizerPage.includes('The verifier rejected three economic stories.'));
+  assert(optimizerPage.includes('168 / 168 signed'));
+  assert(optimizerPage.includes('V3 · artifacts verified, savings gate missed'));
+  assert(optimizerPage.includes('ECONOMIC_TARGET_OPEN'));
   assert(optimizerPage.includes('Fixture math exercises a 23.2507%'));
   assert.strictEqual((optimizerPage.match(/class="policy-tab"/g) || []).length, 4);
 

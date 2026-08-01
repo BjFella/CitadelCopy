@@ -7,7 +7,7 @@
   "runtime_projection": "both",
   "external_registration": "not-attempted",
   "model_execution": "not-attempted",
-  "status": "passed",
+  "status": "completed",
   "total_duration_ms": 28167,
   "steps": [
     {
@@ -29,10 +29,11 @@
       "detail": "Receipt recorded; confirmation token revalidated."
     },
     {
-      "id": "adoption-doctor",
+      "id": "doctor-command-executed",
       "status": "passed",
+      "doctor_health": "unknown",
       "duration_ms": 1080,
-      "detail": "Doctor status unknown; owned footprint inspected."
+      "detail": "Doctor command exited 0; semantic health unknown; owned footprint inspected."
     },
     {
       "id": "first-do-route",
@@ -42,5 +43,5 @@
     }
   ],
   "claim_boundary": "Unattended local clean-clone adoption and route proof; not real-user utility or model-task evidence.",
-  "report_digest": "sha256:ea2e1ded008dd7204d68ef369192b62e7ec6c596dc79e0e6792b6062446afe09"
+  "report_digest": "sha256:1f89b1d60d978a82e867a5c11839ab87f6482d4b16744dd48e045cb01f83800a"
 }

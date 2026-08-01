@@ -8,11 +8,13 @@ Evidence observed: 2026-08-01 UTC
 
 **Citadel Operation Control: Verifiable Economic Governance for Open Agent Stacks**
 
-Citadel is an open, stack-neutral control and evidence plane for agent
-operations. It binds model assignment, decomposition, concurrency, subtask
+Citadel is an open operation-control and evidence plane for agent operations.
+Its core contract is stack-neutral, while current external-stack adoption is
+demonstrated only with ROMA. It binds model assignment, decomposition, concurrency, subtask
 ceilings, retries, tools, timeouts, and escalation to a signed plan; observes
-what the underlying stack and providers actually exercised; and lets an
-independent verifier decide whether the operation completed.
+what the underlying stack and providers actually exercised; and lets a
+deterministic verifier outside the routed model decide whether the operation
+completed.
 
 The first external-stack binding targets Sentient's own ROMA recursive agent
 framework. A frozen 24-cell actual-run diagnostic compared subscribed frontier,
@@ -24,25 +26,41 @@ The precommitted efficiency hypothesis still failed: Citadel used six strong
 whole-operation attempts, the same as the direct-7B baseline, and was much
 slower. The application does not convert that result into a savings claim.
 
-A subsequent preregistered 72-cell local comparison tested a simpler adaptive
-policy on one GTX 1070. Adaptive verified 27/36 outcomes versus 24/36 for
-always-7B while reducing measured GPU energy 9.9%, modeled GPU electricity plus
-amortization 10.3%, and model duration 10.8%. It failed the frozen 30% economic
-gates, retained one model-launch timeout as unknown, and produced zero false
-passes or integrity failures. The grant would fund the missing general result:
+A subsequent preregistered local comparison tested a simpler adaptive policy
+on one GTX 1070: 12 tasks × 2 policies × 3 timing repetitions. Adaptive
+recorded 27/36 verified cells versus 24/36 for always-7B. The frozen aggregate
+showed 9.9% less GPU energy and 10.3% less modeled GPU cost, but one same-route
+60-second baseline timeout drove that appearance. Excluding the matched pair
+reverses the comparison to 3.5% more energy, 5.4% more modeled GPU cost, and
+7.5% more request wall time. The frozen 30% gates failed, one model identity
+remained unknown, and Citadel makes no v1 savings claim. The grant would fund:
 learning when smaller models, recursive decomposition, tools, and strong
 modules are worth their full operational cost across stacks and hardware.
+
+A separately frozen second 72-cell study used 12 new exact instances, 10 from
+task templates already seen in v1: 1.5B for numeric atomic work, 3B for lexical
+counting, and 7B for compositional, constraint, or adversarial work. A
+model-external verifier could escalate a failed small-model answer. The profile
+matched the always-7B cell completion (24/36 versus 24/36) with zero false
+passes, but its 12 escalations increased measured GPU energy 15.7%, modeled GPU
+cost 16.4%, request wall time 17.2%, and tokens 27.4%. Repetitions used the same
+temperature-zero prompt and estimate runtime variance; they are not independent
+task successes. That signed negative result is
+published unchanged. It demonstrates why the funded controller must optimize
+expected verified operation value rather than model size or prompt labels.
 
 ## Short application answer
 
 Citadel makes optimization claims about open agents falsifiable. It attaches to
 an existing stack, controls the whole operation rather than only choosing a
 model, reconciles the declared plan against provider-level observations, keeps
-unknown cost unknown, and signs independently verified outcomes. The working
+unknown cost unknown, and signs model-externally verified outcomes. The working
 ROMA integration and 24-cell proof reduce integration and evaluation risk. The
 funded work is to turn that proven control plane into an adaptive policy that
-meets precommitted completion and end-to-end cost gates across multiple open
-agent stacks.
+meets precommitted absolute-completion, relative-quality, and end-to-end cost
+gates across multiple open agent stacks. Citadel is currently demonstrated
+research infrastructure and falsification machinery, not a demonstrated
+economic optimizer.
 
 ## Sentient request addressed
 
@@ -57,6 +75,22 @@ and reviewed on a rolling basis, and compute and engineering support may
 accompany funding. The site states that `$42M` is committed but does not publish
 a per-project maximum. The amount proposed below is a budget, not an inferred
 entitlement.
+
+### Sentient's six beliefs
+
+- **Open:** MIT code, contracts, adapters, methods, cells, reports, and verifiers.
+- **Yours to keep:** no Citadel account, token, or mandatory hosted evidence endpoint.
+- **Accessible:** `/do` is the beginner path and current local studies ran on
+  an 8 GB GTX 1070, while broader hardware accessibility remains a funded gate.
+- **Good for humanity:** the intended benefit is reliable, lower-cost access to
+  coding-agent capability; impact is not claimed before representative proof.
+- **Private by default:** project state and telemetry remain local unless a user
+  explicitly invokes a provider; public artifacts are bounded and redacted.
+- **Empowering, not extractive:** users keep code, state, receipts, and adapters;
+  Citadel has no telemetry resale or proprietary lock-in requirement.
+
+The evidence and remaining gates for each belief are mapped in
+[`SENTIENT_BELIEFS.md`](SENTIENT_BELIEFS.md).
 
 ## Problem
 
@@ -109,15 +143,17 @@ or execution logic. It records:
 Unexercised modules are labeled `not_exercised`. A timeout can retain evidence,
 but it remains incomplete and cannot become a pass.
 
-### Independent evidence and cost boundary
+### Model-external evidence and cost boundary
 
 - Expected answers are stored only as frozen canonical SHA-256 digests.
 - The last parseable JSON answer is verified outside the model and agent stack.
 - Model prose, ROMA status, and self-reported verdicts cannot pass a cell.
 - Every receipt is content-addressed.
-- The full artifact bundle is Ed25519-attested.
+- The full artifact bundle is operator-signed with Ed25519. This is tamper
+  evidence under the operator key, not proof against operator fabrication.
 - Offline verification recomputes source bindings, routes, plans, controls,
   observations, answers, receipts, summary, report, digests, and signature.
+  This validates artifact consistency; it is not third-party replication.
 - Self-hosted provider invoice cost can be known `$0` while total economic cost
   remains `unknown` because CPU/system energy, electricity price, hardware
   amortization, or subscription allocation is unmeasured.
@@ -191,7 +227,7 @@ direct-local baseline. Therefore the optimizer performance hypothesis is
 reported as **failed**.
 
 The proof result is **passed** because the frozen controls, provider paths,
-outcomes, failure states, and attestation all independently reproduce. An
+outcomes, failure states, and attestation all reconstruct consistently offline. An
 operational failure is not mislabeled as evidence corruption when it is
 faithfully recorded.
 
@@ -207,7 +243,8 @@ its original identity:
 - 0 adversarial false passes;
 - 36 setup-unknown cells;
 - adaptive and prompt-only each completed 6/12 held-out cells;
-- the original adaptive cost hypothesis failed.
+- the original adaptive performance gate remained open because cost coverage
+  was incomplete; it was not a failed economic comparison.
 
 That baseline demonstrated large-scale signed evidence and exposed method
 defects. The ROMA diagnostic does not rewrite it. It closes several of its
@@ -215,7 +252,7 @@ largest gaps: a stack-neutral contract, real open/local execution, exact model
 manifests, clean setup preflight, explicit attempt semantics, and task-scoped
 verification.
 
-## Latest prospective local economic comparison
+## Prospective local v1 calibration
 
 Method:
 [`benchmarks/sentient-readiness/METHOD.md`](../../benchmarks/sentient-readiness/METHOD.md)
@@ -234,16 +271,80 @@ npm run readiness:verify
 | Always strong local | 24/36 | 36 | 0 | 36 | 0.004599 kWh | $0.001795 |
 | Citadel adaptive local | 27/36 | 39 | 24 | 15 | 0.004145 kWh | $0.001609 |
 
-The adaptive policy improved verified completion by three cells and reduced
-measured GPU energy, modeled GPU cost, and duration by about ten percent. It did
-not meet the precommitted 30% economic threshold. Token use increased 11.2%,
-and one initial 7B attempt timed out before model identity was observed. Both
-facts remain in the signed bundle.
+The adaptive policy recorded three more verified cells. Its frozen aggregate
+showed roughly ten percent lower GPU energy, modeled GPU cost, and request wall
+time, but that direction is not robust: one initial 7B baseline attempt timed
+out after 60 seconds on a task where both policies selected the same strong
+route. Excluding that matched pair makes adaptive use 3.5% more measured GPU
+energy, 5.4% more modeled GPU cost, and 7.5% more request wall time. Token use
+in the frozen aggregate increased 11.2%, and the timeout retained unknown model
+identity. The signed aggregate is unchanged; the supplementary
+[`SENSITIVITY.md`](../../benchmarks/sentient-readiness/SENSITIVITY.md) rules out
+a v1 routing-policy savings claim.
 
-This is the strongest current performance evidence because it is prospective,
-repeated, local, energy-measured, and failure-preserving. It is still a
-single-machine, single-family, exact-answer pilot rather than the funded
-multi-stack result.
+This is a prospective, repeated, local, energy-measured calibration. Its 12
+unique exact-answer tasks and deterministic repetitions do not establish a
+general quality or economic effect.
+
+### Capability-profile follow-up
+
+Frozen method and required disclosure:
+[`METHOD.md`](../../benchmarks/sentient-readiness-v2/METHOD.md) ·
+[`CORRIGENDUM.md`](../../benchmarks/sentient-readiness-v2/CORRIGENDUM.md)
+
+Signed report:
+[`benchmarks/sentient-readiness-v2/published-run/REPORT.md`](../../benchmarks/sentient-readiness-v2/published-run/REPORT.md)
+
+One-command verification:
+
+```text
+npm run readiness:v2:verify
+```
+
+| Policy | Verified | Attempts | 1.5B | 3B | 7B | GPU energy | Modeled comparison cost |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Always strong local | 24/36 | 36 | 0 | 0 | 36 | 0.003568 kWh | $0.001389 |
+| Capability profile | 24/36 | 48 | 18 | 6 | 24 | 0.004127 kWh | $0.001617 |
+
+This result rejects the idea that capability labels plus smaller models are
+enough. The model-external verifier matched baseline cell completion, but the cost of 12
+escalations erased the apparent savings. Citadel is valuable here because it
+can reject the policy before its intuition is promoted as an economic claim.
+
+### Representative repository-operation shakedown
+
+Frozen method:
+[`benchmarks/representative-operation-pilot-v2/METHOD.md`](../../benchmarks/representative-operation-pilot-v2/METHOD.md)
+
+Signed report:
+[`benchmarks/representative-operation-pilot-v2/published-run/REPORT.md`](../../benchmarks/representative-operation-pilot-v2/published-run/REPORT.md)
+
+One-command verification:
+
+```text
+npm run representative:v2:verify
+```
+
+| Policy | Unique tasks | Verified cells | Attempts | Escalations | GPU energy | Modeled comparison cost |
+|---|---:|---:|---:|---:|---:|---:|
+| Always strong local | 6 | 6/12 | 12 | 0 | 0.002507 kWh | $0.000810 |
+| Citadel risk profile | 6 | 6/12 | 14 | 2 | 0.002329 kWh | $0.000772 |
+
+This precommitted v2 repair exercised six artifact-producing repository fixture
+tasks across configuration, documentation, refactoring, security, bug fixing,
+and multi-file API work, twice per policy. Both policies verified 6/12 cells;
+Citadel had zero false passes, zero path violations, and zero integrity
+failures. Its 7.1% measured GPU-energy reduction and 4.7% modeled GPU-cost
+reduction missed the frozen 20% gates, while token use increased 13.2%, so the
+published evidence result is failed. Six fixture tasks and timing repetitions
+do not establish production generalization. The result matters because it
+extends the evidence machinery from exact answers to repository artifacts and
+still refuses to turn a small directional result into a savings claim.
+
+The first frozen pilot identity remains published as an aborted harness result:
+its initial offline replay exposed an ephemeral temporary-path mismatch. The
+source was not patched in place. A separately frozen v2 normalized only that
+ephemeral root before the 24-cell run.
 
 ## Why this is differentiated
 
@@ -253,15 +354,17 @@ Its research claim is narrower and more defensible:
 > The economically relevant unit is the verified agent operation, and an
 > optimization layer should prove the relationship between its declared
 > operation plan, the provider paths actually exercised, the full cost boundary,
-> and the independently verified outcome.
+> and the model-externally verified outcome.
 
-Prompt routers such as RouteLLM and Not Diamond choose a model for a query.
-ROMA and other agent stacks plan and execute work. Citadel controls and audits
-the operation around those systems without requiring them to grade themselves.
+ROMA, LiteLLM, RouteLLM, OpenTelemetry, Langfuse, and Harbor already provide
+important orchestration, routing, telemetry, and evaluation capabilities.
+Citadel's claim is the binding across them, not invention of their components.
+The dated, source-linked comparison and exact missing seam for each is in
+[`TECHNICAL_COMPARISON.md`](TECHNICAL_COMPARISON.md).
 
 The first ROMA binding matters to Sentient because it demonstrates that this is
 not a Citadel-only abstraction. Sentient's own recursive stack can consume the
-contract, remain responsible for execution, and produce independently
+contract, remain responsible for execution, and produce externally
 reconcilable evidence.
 
 ## Why Sentient should fund it
@@ -271,8 +374,13 @@ reconcilable evidence.
 - It runs on real open/local models rather than a simulated routing table.
 - The stack-neutral core and proof artifacts remain MIT-licensed public goods.
 - The evidence layer has already rejected two of Citadel's own optimizer claims.
-- A third prospective study improved quality and measured energy while still
-  rejecting the claimed 30% economic target.
+- V1 recorded more verified cells but its apparent savings reverse under a
+  matched-timeout sensitivity, preventing an overclaim.
+- V2 matched baseline cell completion while robustly showing that naive
+  capability-profile routing increased measured GPU energy and modeled GPU cost.
+- The representative repository-operation shakedown preserved zero false passes
+  and zero path violations, but failed its frozen economic gates and remains
+  published as failed.
 - The work distinguishes activity, completion, control integrity, and cost.
 - Citadel already provides operation lifecycle, recovery, executor profiles,
   worktree isolation, receipts, and verification, reducing substrate risk.
@@ -309,74 +417,93 @@ reconcilable evidence.
 
 ### 4. Scale the proof
 
-- precommit a larger multi-stack benchmark with clean setup gates;
-- add repeated trials and uncertainty intervals;
+- precommit at least 60 unique artifact-producing repository operations across
+  bug fixing, tests, configuration migration, documentation consistency, and
+  search/refactor strata, with clean setup gates;
+- use repeated trials only for runtime variance and cluster uncertainty by
+  unique task and repository;
 - publish privacy-safe raw cells and signed bundles;
 - run clean hosted offline verification;
 - provide one-command reproduction and adapter conformance tests.
 
-## Evidence-gated milestones
+## Evidence-gated milestones and requested funding
 
-Milestones are gated by artifacts rather than calendar promises.
+The proposal is **$150,000 over nine months**, released in $45,000, $60,000,
+and $45,000 go/no-go tranches. The cost basis is $99,000 maintainer labor,
+$27,000 capped compute/tools, $7,000 hosted reproducibility, $7,000
+documentation/accessibility/release work, $2,000 for a bounded opt-in operator
+cohort, and $8,000 bounded contingency.
 
-1. **Economic telemetry gate:** all declared cost components are measured or
-   explicitly unknown; no unknown is counted as savings.
-2. **Adapter gate:** ROMA plus two additional open stacks pass the same public
-   operation-contract conformance suite.
-3. **Controller gate:** adaptive whole-operation control beats prompt-only and
-   always-open/local on precommitted expected-cost and completion gates.
-4. **Scale gate:** the result reproduces across multiple model families,
-   hardware profiles, and task categories with uncertainty reported.
-5. **Public-proof gate:** a clean hosted job reconstructs every published claim
-   from signed raw evidence.
+The single canonical milestone allocation, FTE/rate basis, dependencies,
+baseline matrix, statistical contract, tranche gates, and failure deliverables
+are in [`MILESTONES_AND_BUDGET.md`](MILESTONES_AND_BUDGET.md). No second budget
+allocation is maintained in this draft.
 
-If a gate fails, that failure and its artifacts are deliverables.
-
-## Requested funding
-
-Proposed public-goods grant: **$150,000**.
-
-| Use | Amount |
-|---|---:|
-| Controller and runtime engineering | $50,000 |
-| Open-model, stack, and hardware evaluation | $35,000 |
-| Economic telemetry and cost attribution | $25,000 |
-| Benchmark and verification hardening | $20,000 |
-| Documentation and public proof surfaces | $10,000 |
-| Administration and contingency | $10,000 |
-| **Total** | **$150,000** |
-
-Sentient compute support could reduce the evaluation cash line. The public
-deliverables and evidence gates would remain unchanged.
+The primary comparator is always frontier. Stack-native default, prompt-only,
+and strongest applicable open/local are diagnostic baselines. If a gate fails,
+the negative result, reusable contracts/data, and unused-funds accounting are
+deliverables.
 
 ## Funded performance target
 
 Across the funded multi-stack benchmark:
 
-- at least 95% of frontier verified completion;
+- always frontier first verifies at least 80% overall and at least 70% in every
+  preregistered task stratum, or the benchmark is baseline-invalid;
+- at least 80% absolute verified-operation completion;
+- at least 95% of the valid always-frontier verified-operation rate;
 - at least 30% lower measured end-to-end cost than always-frontier;
-- adaptive whole-operation control beats prompt-only routing;
 - zero false passes;
 - zero unknown cost used as savings;
 - a clean hosted reconstruction from public privacy-safe evidence.
 
-These are funded targets, not current results.
+Prompt-only paired differences remain a reported routing diagnostic, not a pass
+condition. These are funded targets, not current results.
 
 ## Risks and honest limits
 
 - Six diagnostic tasks are too few for a general performance claim.
 - Citadel/ROMA was materially slower than every baseline.
 - The strong-operation avoidance gate failed.
-- The 72-cell local adaptive result reduced measured GPU energy only 9.9%, below
-  its frozen 30% target.
+- V1 contains 12 unique tasks repeated at temperature zero; one same-route
+  baseline timeout drives the apparent 9.9% GPU-energy reduction, and matched
+  sensitivity reverses the economic direction.
+- V2 uses 12 new exact instances but 10 reuse v1 task templates; it is not an
+  independent task-family holdout, and its repetitions are timing repetitions.
+- The capability-profile follow-up used 15.7% more GPU energy and 16.4% more
+  modeled cost because verification triggered 12 strong-model escalations.
 - One local 7B cell timed out before model identity was observed.
 - Actual end-to-end dollar cost is still unknown because whole-system energy
   and Seth's observed utility rate were not measured.
-- Current stack-neutral adoption is demonstrated only with ROMA.
-- The local test used one 8 GB GPU and two Qwen2.5-Coder model sizes.
+- External-stack adoption is demonstrated only with ROMA; Claude Code and
+  Ollama establish contract-layer runtime coverage.
+- The local package used one 8 GB GPU and three Qwen2.5-Coder model sizes in
+  one model family.
+- The representative shakedown used six small fixture tasks with two timing
+  repetitions per policy; repetitions are not independent tasks and fixtures
+  are not evidence of production generalization.
+- Original freeze source lists omitted transitive verifier dependencies;
+  supplementary closure manifests bind those files at each signed execution
+  commit but do not retroactively repair the preregistration.
+- `human_interventions_during_cells: 0` is operator-declared, not instrumented
+  telemetry; request duration is client wall time, not provider model duration.
 - The controller remains heuristic rather than learned.
 
 Those are the exact uncertainties the funded milestones address.
+
+## Applicant and adoption evidence
+
+SethGammon owns and maintains the public MIT repository. On 2026-08-01 the
+GitHub page showed 808 stars, 79 forks, and 480 commits. Those are public
+interest and delivery signals, not users or installations. The adoption path is
+an existing Claude Code or Codex user starting with `/do`, then an external
+stack builder implementing the conformance adapter; ROMA is the current
+example. A funded, bounded opt-in cohort of 15-20 external operators measures
+governed first-operation completion, including failed installs and abandonment;
+it does not govern the optimizer performance gate. Legal recipient,
+jurisdiction, nine-month availability, and private biographical claims remain
+explicit submission blockers. See
+[`APPLICANT_AND_ADOPTION.md`](APPLICANT_AND_ADOPTION.md).
 
 ## Public deliverables
 

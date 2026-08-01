@@ -110,14 +110,27 @@ Citadel does not replace `CLAUDE.md` or `AGENTS.md`. Those files describe the pr
 ## Evidence status
 
 Citadel publishes positive and negative results from the same evidence
-contract. The latest preregistered 72-cell local comparison improved verified
-completion from 24/36 to 27/36 while reducing measured GPU energy 9.9%, but it
-failed the frozen 30% economic target. That failed gate is retained rather than
-turned into a savings claim.
+contract. V1 recorded 27/36 verified cells versus 24/36 and a frozen aggregate
+with 9.9% less measured GPU energy, but one same-route 60-second baseline
+timeout drove that appearance. Excluding the matched pair reverses the
+economic direction to 3.5% more GPU energy and 5.4% more modeled GPU cost, so
+Citadel makes no v1 savings claim.
+
+A distinct capability-profile follow-up then preserved the always-7B verified
+rate (24/36 versus 24/36) but used 15.7% more measured GPU energy after 12
+verification escalations. Citadel publishes that regression because detecting
+a plausible policy that is economically worse is part of the product.
+
+The latest representative fixture shakedown moved verification from exact
+answers to repository artifacts. Both policies verified 6/12 cells with zero
+false passes and path violations; Citadel's 7.1% energy reduction missed the
+frozen 20% gate and is published as failed.
 
 - [Evaluator start here](docs/grants/EVALUATOR_START_HERE.md)
 - [Generated evidence manifest](docs/EVIDENCE_MANIFEST.md)
 - [Prospective local comparison](benchmarks/sentient-readiness/published-run/REPORT.md)
+- [Capability-profile follow-up](benchmarks/sentient-readiness-v2/published-run/REPORT.md)
+- [Representative repository-operation shakedown](benchmarks/representative-operation-pilot-v2/published-run/REPORT.md)
 - [Research site](https://sethgammon.github.io/Citadel/research.html)
 
 ## One operating loop

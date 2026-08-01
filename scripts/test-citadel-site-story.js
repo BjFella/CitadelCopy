@@ -11,6 +11,8 @@ const siteJs = fs.readFileSync(path.join(root, 'docs', 'site-system.js'), 'utf8'
 const operation = fs.readFileSync(path.join(root, 'docs', 'operation-control.html'), 'utf8');
 const optimizer = fs.readFileSync(path.join(root, 'docs', 'optimizer.html'), 'utf8');
 const research = fs.readFileSync(path.join(root, 'docs', 'research.html'), 'utf8');
+const evidence = fs.readFileSync(path.join(root, 'docs', 'evidence.html'), 'utf8');
+const walkthrough = fs.readFileSync(path.join(root, 'docs', 'walkthrough.html'), 'utf8');
 const contract = fs.readFileSync(path.join(root, 'docs', 'interactive-story-contract.md'), 'utf8');
 
 function localLinksResolve(file, source) {
@@ -46,7 +48,7 @@ const checks = [
   ['runtime tabs treat Claude and Codex equally', html.includes('data-runtime="claude"') && html.includes('data-runtime="codex"') && html.includes('--runtime claude') && html.includes('--runtime codex')],
   ['first verified success is explicit', html.includes('/do review README.md') && html.includes('/do next')],
   ['keyboard arrow navigation covers tablists', html.includes("['ArrowLeft', 'ArrowRight']")],
-  ['copy controls have visible feedback', html.includes("button.textContent = 'Copied'")],
+  ['copy controls have visible feedback', html.includes("button.classList.add('is-copied')") && html.includes('.install-copy.is-copied::after { content: "Copied"')],
   ['repository inspector exists', html.includes('aria-label="Repository state inspector"')],
   ['playback controls exist', ['story-prev', 'story-play', 'story-next', 'story-reset'].every(id => html.includes(`id="${id}"`))],
   ['fresh session step exists', html.includes('fresh process restored')],
@@ -56,13 +58,15 @@ const checks = [
   ['mobile story layout exists', html.includes('.story-layout { grid-template-columns: 1fr; }')],
   ['mobile router choices use a readable grid', siteCss.includes('.site-home .generators { grid-template-columns: 1fr 1fr;') && siteCss.includes('overflow: visible')],
   ['progressive complexity starts with do', html.includes('One entry point, four levels') && html.includes('/do &lt;request&gt;') && html.includes('Most users stay at 1-2')],
-  ['all public surfaces use the shared system', [html, operation, optimizer, research].every(page => page.includes('site-system.css') && page.includes('site-system.js') && page.includes('site-nav'))],
+  ['all public surfaces use the shared system', [html, operation, optimizer, research, evidence, walkthrough].every(page => page.includes('site-system.css') && page.includes('site-system.js') && page.includes('site-nav'))],
   ['operation proof leads with the prospective runtime cell', operation.includes('Current proof · prospective v2') && operation.includes('1 / 3 passed') && operation.includes('$0.704256')],
-  ['optimizer publishes the hosted result and open gate', optimizer.includes('Clean hosted verification passed') && optimizer.includes('PROSPECTIVE_COMPARISON_PENDING')],
+  ['optimizer publishes all three local results and open gate', optimizer.includes('168 / 168 signed') && optimizer.includes('ESCALATION_VALUE_REQUIRED') && optimizer.includes('15.7% more measured GPU energy') && optimizer.includes('V3 · artifacts verified, savings gate missed')],
   ['research page separates evidence from funded targets', research.includes('Evidence ladder') && research.includes('≥95%') && research.includes('≥30%') && research.includes('Not demonstrated')],
+  ['evidence page leads with the latest honest failure', evidence.includes('Repository artifacts verified. The savings gate did not.') && evidence.includes('zero false passes and zero path violations') && evidence.includes('Still open')],
+  ['walkthrough publishes video, disclosure, and transcript', walkthrough.includes('citadel-sentient-walkthrough.mp4') && walkthrough.includes('Synthetic narration is disclosed') && walkthrough.includes('Accessible transcript')],
   ['all public local links resolve', [
     ['index.html', html], ['operation-control.html', operation],
-    ['optimizer.html', optimizer], ['research.html', research]
+    ['optimizer.html', optimizer], ['research.html', research], ['evidence.html', evidence], ['walkthrough.html', walkthrough]
   ].every(([file, source]) => localLinksResolve(file, source))],
   ['experience contract names all acceptance questions', (contract.match(/^\d+\. /gm) || []).length >= 7],
   ['public story copy contains no em dash', !html.slice(html.indexOf('<section class="story-section"'), html.indexOf('<!-- Vertical tier cascade -->')).includes('—')]
