@@ -7,6 +7,11 @@ scripts/fixtures/workflow-compiler/*.json text eol=lf
 scripts/fixtures/workflow-compiler/*.yml text eol=lf
 docs/proof-ledger.json text eol=lf
 docs/PROOF_LEDGER.md text eol=lf
+docs/site-release-manifest.json text eol=lf
 action.yml text eol=lf
 .github/workflows/*.yml text eol=lf
 benchmarks/optimizer-proof/proof-bundle/** text eol=lf
+
+# Generated supporting documents are binary artifacts. Do not text-diff their
+# embedded fonts, streams, or cross-reference tables.
+output/pdf/*.pdf binary

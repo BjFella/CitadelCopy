@@ -50,10 +50,12 @@ The mandatory supporting document is ready at:
 
 - format: PDF, 16:9 landscape;
 - pages: 8;
-- size: 1,976,050 bytes;
-- SHA-256: `9dc8add0f9b224ab983209e3fe14a335965cb45d3f02de149638dc9e7e65b723`;
+- size: 971,050 bytes;
+- SHA-256: `019dbef9189d6727f9417676ce6a6a766b8535854b997eef15cceab8776ebdf9`;
 - source renderer: `scripts/render-sentient-grant-packet.py`;
-- visual QA: all eight pages rendered to PNG and inspected at full resolution;
+- visual QA: all eight pages rendered to PNG and inspected at both 72 and 96
+  DPI, including the normal-viewer scale that exposed the original legibility
+  problem;
 - text QA: eight pages, 960 by 540 points, required headings extractable,
   replacement-character check passed.
 

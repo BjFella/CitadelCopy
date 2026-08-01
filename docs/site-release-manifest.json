@@ -129,8 +129,8 @@
     },
     {
       "path": "grants/SUBMISSION_READINESS.md",
-      "bytes": 6077,
-      "digest": "sha256:dd2ce23b38947c1cab7fc0c32fd3eeb8cf1e8b89e2d1b15c4b61d44ecce65658"
+      "bytes": 6162,
+      "digest": "sha256:37687db4dc4e5659aa6bd52dcc42bc02cebf6a3d6ed899039bfc31028ae66368"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -193,5 +193,5 @@
       "digest": "sha256:fe6a87df64bb6248b53a182bee63f7eb288e9128e669caf96e8b9ee26bc27f05"
     }
   ],
-  "source_digest": "sha256:a76e348fb5077578766212e978812e846d8cd17e305867a4d62265bfe1e4597b"
+  "source_digest": "sha256:ae62da145d4d8c40c1dcf6321894e58ab753c05f140078ab3b090c3cbb61da94"
 }
