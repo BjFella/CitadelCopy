@@ -19,6 +19,7 @@ function run(command, args, options = {}) {
     windowsHide: true,
     timeout: options.timeout || 120000,
     maxBuffer: 16 * 1024 * 1024,
+    env: { ...process.env, ...(options.env || {}) },
   });
   return {
     status: result.status,
@@ -79,6 +80,7 @@ function execute() {
   const clone = path.join(temporary, 'Citadel');
   const target = path.join(temporary, 'target-project');
   const planFile = path.join(temporary, 'citadel-adoption.plan.json');
+  const proofEnv = { CITADEL_CONTROL_ROOT: path.join(temporary, 'private-control') };
   const steps = [];
   const overallStarted = Date.now();
   try {
@@ -102,17 +104,17 @@ function execute() {
     }
 
     const planResult = run(process.execPath, [path.join(clone, 'scripts', 'adopt.js'), 'plan', clone,
-      '--target', target, '--project-runtime', 'both', '--out', planFile, '--json'], { cwd: target });
+      '--target', target, '--project-runtime', 'both', '--out', planFile, '--json'], { cwd: target, env: proofEnv });
     const plan = parseJson(planResult, 'adoption plan');
     if (!plan.confirmation || typeof plan.confirmation.token !== 'string') throw new Error('adoption plan did not expose an exact confirmation token');
     steps.push({ id: 'governed-plan', status: 'passed', duration_ms: planResult.duration_ms, detail: `${plan.effects.length} file operations bound to ${plan.plan_digest}.` });
 
     const applyResult = run(process.execPath, [path.join(clone, 'scripts', 'adopt.js'), 'apply', planFile,
-      '--confirm', plan.confirmation.token, '--json'], { cwd: target });
+      '--confirm', plan.confirmation.token, '--json'], { cwd: target, env: proofEnv });
     const receipt = parseJson(applyResult, 'adoption apply');
     steps.push({ id: 'exact-apply', status: applyResult.status === 0 ? 'passed' : 'failed', duration_ms: applyResult.duration_ms, detail: `Receipt ${receipt.receipt_digest || receipt.receipt_id || 'recorded'}; confirmation token revalidated.` });
 
-    const doctorResult = run(process.execPath, [path.join(clone, 'scripts', 'adopt.js'), 'doctor', '--target', target, '--json'], { cwd: target });
+    const doctorResult = run(process.execPath, [path.join(clone, 'scripts', 'adopt.js'), 'doctor', '--target', target, '--json'], { cwd: target, env: proofEnv });
     const doctor = parseJson(doctorResult, 'adoption doctor');
     steps.push({ id: 'adoption-doctor', status: doctorResult.status === 0 ? 'passed' : 'failed', duration_ms: doctorResult.duration_ms, detail: `Doctor status ${doctor.status || doctor.health || 'passed'}; owned footprint inspected.` });
 
