@@ -32,6 +32,10 @@ All notable Citadel changes are recorded here. Citadel follows semantic versioni
 - A frozen retrospective import verifies 120 signed real-repository cells,
   87 model attempts, source attestations and digests, zero adversarial false
   passes, and explicit preservation of the still-open performance gate.
+- A preregistered prospective integration cell invokes Claude Code against a
+  pinned public repository, reconciles the observed model and topology, requires
+  the declared artifact change, and passes only after an independent verifier.
+  Two infrastructure failures remain published beside the pass.
 - Operation Control tests cover strict contracts, conservative Wilson outcome
   estimates, whole-path maximum admission, tool/model/topology reconciliation,
   failure-directed retry, runtime adapters, tamper detection, scale, CLI, and

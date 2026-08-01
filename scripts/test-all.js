@@ -131,6 +131,7 @@ const UNLOCK_TESTS = Object.freeze([
   ['Reliability learning', 'test-reliability-learning.js'],
   ['Optimizer proof', 'test-optimizer.js'],
   ['Operation controller v2', 'test-operation-controller.js'],
+  ['Operation controller prospective evidence', 'operation-control-prospective.js'],
   ['Proof bundle', 'test-proof-bundle.js'],
   ['Governance contract kernel', 'test-governance-contracts.js'],
   ['Governance runtime authority', 'test-governance-runtime.js'],

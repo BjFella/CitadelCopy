@@ -140,6 +140,11 @@ Portable operations are optional. They are for work that needs a stable contract
 
 The underlying [Operations Protocol](docs/OPERATIONS_PROTOCOL.md) defines the runtime-neutral contracts for operations, attempts, intents, evidence, and receipts. Most users do not need those internals to use Citadel.
 
+For reviewers who want evidence instead of architecture claims, Operation
+Control includes a [frozen 120-cell real-workload import](benchmarks/operation-control-v2/REPORT.md)
+and a [preregistered real-runtime integration result](benchmarks/operation-control-v2/prospective/RESULTS.md).
+Both preserve failed and unknown outcomes and state what they do not prove.
+
 ## Trust and scope
 
 - Citadel runs with the permissions of Claude Code or Codex. It does not replace code review, branch protection, or repository-specific checks.

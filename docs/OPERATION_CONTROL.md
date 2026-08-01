@@ -178,6 +178,26 @@ This demonstrates real-workload outcome ingestion and reproducible selection.
 It is not a prospective savings result. The original performance gate remains
 open until a frozen prospective comparison meets it.
 
+### Prospective runtime integration
+
+The checked-in [prospective result](../benchmarks/operation-control-v2/prospective/RESULTS.md)
+adds a preregistered real-runtime cell against a fresh public-only clone of a
+pinned Citadel revision. Claude Code completed the declared regression with an
+exact observed model and topology match; Citadel then required the declared
+file to have changed and ran the repository verifier independently before
+reporting a pass. Actual and marginal cash stayed unknown while attributable
+market-equivalent telemetry remained separate.
+
+Two infrastructure failures are published beside the pass rather than hidden:
+the WindowsApps Codex executable could not be launched as a child process, and
+the first Claude attempt could not reach its provider from the restricted
+environment. Run `npm run operation:prospective` to verify all three report
+digests, history bindings, gates, published patch, freeze, and privacy scan.
+
+This is credible prospective integration evidence, not a comparative savings,
+performance, or broad-reliability result. The comparative performance gate
+remains open.
+
 ## Runnable local example
 
 The package includes a no-provider example with a real command verifier:
