@@ -22,16 +22,9 @@ Citadel helps coding agents work reliably across real repositories. It routes re
 Open the repository you want Citadel to manage, then paste this into your coding agent:
 
 ```text
-Install Citadel in this repository.
-
-Use https://github.com/SethGammon/Citadel as the source. If a local clone
-already exists, reuse it or update it. Detect whether this session is running
-in OpenAI Codex or Claude Code. From this project's root, create a governed
-Citadel adoption plan for that runtime. Show me the exact footprint, unknown
-external registrations, plan digest, and confirmation token before applying
-anything. After I approve the saved plan, apply it and run adoption doctor.
-
-Use the current repository as the target. Do not require placeholder paths.
+Install Citadel from https://github.com/SethGammon/Citadel into this repository.
+Detect whether I am using Codex or Claude Code, show me what will change before
+applying it, use the current repository as the target, and run Citadel doctor.
 ```
 
 Follow any printed enable step, start a fresh session if prompted, then run:
@@ -77,7 +70,7 @@ Dry runs, generated paths, runtime-specific setup, and rollback are documented i
 
 <img src="assets/terminal-demo.svg" width="100%" alt="A Citadel terminal session routing a request, running checks, and writing a handoff" />
 
-You do not need to learn the skill catalog. Start with `/do` and describe the outcome:
+You do not need to learn the skill catalog or operation internals. Start with `/do` and describe the outcome:
 
 ```text
 /do review README.md
@@ -85,12 +78,16 @@ You do not need to learn the skill catalog. Start with `/do` and describe the ou
 /do next
 ```
 
-| Command | What it gives you |
-|---|---|
-| `/do <request>` | Selects and runs the appropriate workflow |
-| `/do next` | Shows active work, risks, and the next useful action |
-| `/dashboard` | Opens Mission Control for campaigns, agents, operations, hooks, and handoffs |
-| `/cost` | Reports token use and session cost from available local telemetry |
+Citadel reveals more machinery only when the work needs it:
+
+| Level | Start here | What it gives you |
+|---|---|---|
+| 1. Do the work | `/do <request>` | Selects a proportional workflow and verifies the result |
+| 2. Keep going | `/do next` or `/do continue` | Preserves and resumes work across sessions |
+| 3. Coordinate | `/dashboard`, campaigns, or Fleet | Makes longer and parallel work visible and recoverable |
+| 4. Control an operation | `citadel operation ...` | Adds explicit quality, privacy, tool, time, model-fallback, and cost constraints |
+
+Most users can stay at Levels 1 and 2. Advanced levels do not replace or complicate `/do`.
 
 For a copyable walkthrough in a real repository, use the [demo workflow](DEMO.md).
 
@@ -138,9 +135,15 @@ Portable operations are optional. They are for work that needs a stable contract
 | Run the same objective through isolated Claude Code and Codex branches | [Operation Fork](docs/OPERATION_FORK.md) |
 | Package a repeatable result with permissions, checks, and stopping conditions | [Outcome Packs](docs/PACKS.md) |
 | Inspect or control a running operation | [Mission Control](docs/DASHBOARD_SPEC.md) |
+| Choose and escalate a model/tool/topology path under explicit constraints | [Operation Control](docs/OPERATION_CONTROL.md) |
 | Adopt Citadel reversibly, activate only the needed product, or connect an external control plane | [Governed lifecycle](docs/GOVERNED_LIFECYCLE.md) |
 
 The underlying [Operations Protocol](docs/OPERATIONS_PROTOCOL.md) defines the runtime-neutral contracts for operations, attempts, intents, evidence, and receipts. Most users do not need those internals to use Citadel.
+
+For reviewers who want evidence instead of architecture claims, Operation
+Control includes a [frozen 120-cell real-workload import](benchmarks/operation-control-v2/REPORT.md)
+and a [preregistered real-runtime integration result](benchmarks/operation-control-v2/prospective/RESULTS.md).
+Both preserve failed and unknown outcomes and state what they do not prove.
 
 ## Trust and scope
 
@@ -157,7 +160,7 @@ Read [Security](SECURITY.md), the [threat model](THREAT_MODEL.md), and [golden-p
 |---|---|
 | Install or evaluate Citadel | [Installation](INSTALL.md), [Demo](DEMO.md), [Choosing Citadel](docs/CHOOSING_CITADEL.md) |
 | Operate day to day | [Campaigns](docs/CAMPAIGNS.md), [Fleet](docs/FLEET.md), [Hooks](docs/HOOKS.md), [Mission Control](docs/DASHBOARD_SPEC.md) |
-| Use portable operations | [Operation Fork](docs/OPERATION_FORK.md), [Outcome Packs](docs/PACKS.md), [Recovery](docs/OPERATION_RECOVERY.md) |
+| Use portable operations | [Operation Control](docs/OPERATION_CONTROL.md), [Operation Fork](docs/OPERATION_FORK.md), [Outcome Packs](docs/PACKS.md), [Recovery](docs/OPERATION_RECOVERY.md) |
 | Govern adoption, activation, evidence, or external control | [Governed lifecycle](docs/GOVERNED_LIFECYCLE.md), [Real User Proof v2](docs/PRODUCT_PROOF_TRIAL.md) |
 | Integrate or verify | [CLI reference](docs/CLI.md), [Interoperability](docs/INTEROPERABILITY.md), [Reports](docs/REPORT_ARTIFACTS.md) |
 

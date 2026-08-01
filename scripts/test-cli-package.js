@@ -69,7 +69,7 @@ for (const command of [
   'install', 'doctor', 'update', 'rollback', 'uninstall', 'pack', 'journey',
   'receipt', 'fork', 'adopt', 'config', 'governance',
   'control-plane', 'trial',
-  'memory',
+  'memory', 'operation',
 ]) {
   assert(help.stdout.includes(command), `root help missing ${command}`);
 }
@@ -86,6 +86,7 @@ assert.equal(invoke(['governance', '--help']).status, 0);
 assert.equal(invoke(['control-plane', '--help']).status, 0);
 assert.equal(invoke(['trial', '--help']).status, 0);
 assert.equal(invoke(['memory', '--help']).status, 0);
+assert.equal(invoke(['operation', '--help']).status, 0);
 
 const installRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-install & literal-'));
 const install = invoke(['install', '--runtime', 'codex', '--project-root', installRoot, '--plugin-only', '--dry-run', '--json']);
@@ -155,6 +156,9 @@ for (const required of [
   'package/core/control-plane/index.js', 'package/scripts/control-plane-stdio.js',
   'package/core/memory/repository-store.js', 'package/scripts/repository-memory.js',
   'package/core/product-proof/index.js', 'package/scripts/product-proof-trial.js',
+  'package/core/operation-controller/index.js', 'package/scripts/operation.js',
+  'package/scripts/operation-runtime-adapter.js',
+  'package/examples/operation-control/request.json',
   'package/schemas/harness-config-v2.schema.json',
   'package/skills/unharness/SKILL.md',
   'package/skills/do/SKILL.md', 'package/.planning/_templates/campaign.md',

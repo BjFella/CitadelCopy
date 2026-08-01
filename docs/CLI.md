@@ -94,6 +94,30 @@ unavailable, stale, or malformed authority blocks execution with a bounded
 activation plan. Governance authorization is read-only; work-queue status,
 transport success, or dashboard projection cannot authorize merge.
 
+## Operation Control
+
+Ordinary work begins with `/do`. Use `citadel operation` when the entire
+execution path needs explicit quality, privacy, tool, duration, model-fallback,
+or economic constraints.
+
+```sh
+citadel operation init --objective "Fix the parser regression" \
+  --runtime codex --model gpt-5.6-sol \
+  --verifier-executable npm --verifier-arg test \
+  --out-dir .citadel/operations/parser-regression
+citadel operation plan --request REQUEST --catalog CATALOG
+citadel operation run --request REQUEST --catalog CATALOG --workspace . \
+  --out REPORT --history-out HISTORY.jsonl
+citadel operation verify --input REPORT
+citadel operation doctor --request REQUEST --catalog CATALOG
+```
+
+`init` and `catalog` create inputs but do not invoke a model. `plan` is
+read-only. `run` executes adapters and the request's independent verifier as
+literal argument arrays with `shell: false`. Use `--history` on later plans to
+calibrate from verified outcomes. See [Operation Control](OPERATION_CONTROL.md)
+for contracts, economics, evidence, and trust boundaries.
+
 ## Operation Fork
 
 Run one objective through Claude Code and Codex from the same commit:

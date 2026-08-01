@@ -6,6 +6,14 @@ All notable Citadel changes are recorded here. Citadel follows semantic versioni
 
 ### Added
 
+- Operation Control v2 adds an installable `citadel operation` runtime for
+  outcome-aware model, tool, and topology selection across a complete declared
+  retry and fallback path.
+- Codex and Claude CLI adapters, independent command verification, observed
+  control reconciliation, three fail-honest economic lenses, digest-bound
+  reports, OpenTelemetry-compatible GenAI attributes, and JSONL outcome learning.
+- The public experience now uses four progressive levels: `/do`, durable
+  continuation, coordinated work, and optional explicit Operation Control.
 - Operation Fork runs one objective through isolated Claude Code and Codex worktrees
   under one immutable objective, scope, policy, budget, workflow, and verifier contract.
 - Signed per-branch receipts, evidence coverage, duration, cost, and diff metadata feed
@@ -21,6 +29,17 @@ All notable Citadel changes are recorded here. Citadel follows semantic versioni
 
 ### Verification
 
+- A frozen retrospective import verifies 120 signed real-repository cells,
+  87 model attempts, source attestations and digests, zero adversarial false
+  passes, and explicit preservation of the still-open performance gate.
+- A preregistered prospective integration cell invokes Claude Code against a
+  pinned public repository, reconciles the observed model and topology, requires
+  the declared artifact change, and passes only after an independent verifier.
+  Two infrastructure failures remain published beside the pass.
+- Operation Control tests cover strict contracts, conservative Wilson outcome
+  estimates, whole-path maximum admission, tool/model/topology reconciliation,
+  failure-directed retry, runtime adapters, tamper detection, scale, CLI, and
+  installed-package contents.
 - Real git worktree isolation and recovery fault injection cover both runtime branches.
 - Adversarial tests cover strict schemas, path containment, shell-free spawning,
   redaction, revision races, idempotency, and exactly-once landing boundaries.

@@ -4,6 +4,9 @@ This demo takes an existing repository, initializes Citadel, then asks it to imp
 
 If Citadel is not installed yet, follow [INSTALL.md](INSTALL.md) first.
 
+This is the complete beginner path. You do not need Operation Control, Fleet,
+Packs, or the protocol documentation to get value from this demo.
+
 ## Core Demo: 5 minutes, works in most repos
 
 Open the repository you want Citadel to manage in Claude Code or OpenAI Codex, then run:
@@ -58,6 +61,10 @@ What to look for:
 - Merge review remains explicit; do not accept parallel changes blindly.
 
 If the task is not actually parallel, Citadel should downgrade or recommend a lighter workflow. That is a feature, not a failure: Fleet is for independent streams, not every task.
+
+Operation Control is a separate Level 4 demo for a different job: choosing and
+escalating a model/tool path under explicit constraints. It is documented in
+[Operation Control](docs/OPERATION_CONTROL.md) and is not part of first use.
 
 For a 90-second proof clip, record the core demo end to end in a real terminal or agent window: real repo, real commands, real output. The evidence checklist behind the recording is [Operating Loop Proof](docs/OPERATING_LOOP_PROOF.md); for a stricter post-landing first-use assessment, run the [Usefulness Trial](docs/USEFULNESS_TRIAL.md).
 
