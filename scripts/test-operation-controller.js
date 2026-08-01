@@ -186,6 +186,7 @@ assert.deepEqual(fakeCodex.observations.tool_calls, ['filesystem', 'shell']);
 assert.equal(fakeCodex.observations.costs.actual_cash.status, 'unknown');
 assert.equal(runtimeAdapter.invocationFor('claude', 'opus').command, 'claude');
 assert.equal(runtimeAdapter.invocationFor('codex', 'gpt').args.at(-1), '-');
+assert.equal(runtimeAdapter.invocationFor('codex', 'gpt', { CITADEL_CODEX_JS: 'codex.js' }).args[0], 'codex.js');
 
 const scalePlans = Array.from({ length: 64 }, (_, index) => ({
   ...plan(`scale-${index}`, 0.6 + ((index % 4) * 0.05), 0.1 + (index / 1000)),

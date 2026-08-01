@@ -48,3 +48,11 @@ An integration pass requires all of the following:
 
 Any missing model/topology observation is `unknown`. Any control mismatch or
 failed verifier is a failure. The result is published regardless of outcome.
+
+## Attempt handling
+
+An infrastructure failure before a model starts may be repaired without
+changing the frozen cell. Each attempt is retained as a separate report. A
+repair may change only the local executable binding; runtime, model, objective,
+source revision, tools, verifier, required artifact, limits, and claim boundary
+remain frozen.

@@ -94,7 +94,7 @@ function runtimeCatalog(args) {
         executable: process.execPath,
         args: [path.join(__dirname, 'operation-runtime-adapter.js'), runtime],
         timeout_ms: Number(value(args, '--adapter-timeout-ms', 1800000)),
-        environment_allowlist: runtime === 'codex' ? ['CODEX_HOME'] : [],
+        environment_allowlist: runtime === 'codex' ? ['CODEX_HOME', 'CITADEL_CODEX_JS'] : [],
       },
     },
     plans,

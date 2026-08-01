@@ -30,7 +30,7 @@ function promptFor(input) {
   ].join('\n');
 }
 
-function invocationFor(runtime, model) {
+function invocationFor(runtime, model, env = process.env) {
   if (runtime === 'claude') {
     const args = ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits'];
     if (model) args.push('--model', model);
@@ -40,6 +40,9 @@ function invocationFor(runtime, model) {
     const args = ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config'];
     if (model) args.push('--model', model);
     args.push('-');
+    if (env.CITADEL_CODEX_JS) {
+      return { command: process.execPath, args: [env.CITADEL_CODEX_JS, ...args] };
+    }
     return { command: 'codex', args };
   }
   throw new TypeError(`unsupported runtime adapter: ${runtime}`);
@@ -62,7 +65,10 @@ function observedToolCalls(runtime, stdout) {
 
 function execute(input, runtime, options = {}) {
   if (!input || input.protocol !== 'citadel-operation-adapter-v1') throw new TypeError('invalid operation adapter input');
-  const invocation = (options.resolve || platformInvocation)(invocationFor(runtime, input.plan.model), options.env || process.env);
+  const invocation = (options.resolve || platformInvocation)(
+    invocationFor(runtime, input.plan.model, options.env || process.env),
+    { env: options.env || process.env },
+  );
   const result = (options.spawn || spawnSync)(invocation.command, invocation.args, {
     cwd: input.workspace_root,
     input: promptFor(input),
