@@ -1,0 +1,11 @@
+Citadel starts with one command: slash do. Describe the engineering outcome, and Citadel chooses the smallest operating lane that can carry it. Longer work gains repository state, recovery, coordination, bounded execution, and a concrete next action around Claude Code or Codex.
+
+The research question begins where orchestration ends. A smaller model is not cheaper when its answer fails, verification forces a retry, or the operation hides part of its cost. Citadel binds the declared route to observed execution, a deterministic verdict outside the routed model, measured and modeled cost lenses, and a signed receipt. Failed and unknown outcomes remain visible.
+
+Three local studies tested that contract. In v1, adaptive recorded twenty-seven of thirty-six verified cells versus twenty-four. But one same-route sixty-second baseline timeout drove the apparent savings. Excluding that pair reverses the economic direction, so Citadel makes no savings claim.
+
+V2 tested one-point-five, three, and seven-billion-parameter routing. It matched baseline cell completion, but twelve failed small-model attempts escalated to seven B. The policy used fifteen point seven percent more GPU energy. Citadel rejected it.
+
+V3 moved from exact answers to six artifact-producing repository fixtures. Both policies verified six of twelve cells. Citadel recorded zero false passes and zero path violations, but its seven point one percent energy reduction missed the frozen twenty percent gate, and token use increased. That result is also published as failed.
+
+This is the point: Citadel does not let a router grade itself. Sentient funding would scale this open operation-evidence layer across agent stacks, real repositories, model families, and hardware. The target remains at least eighty percent absolute verified completion, at least ninety-five percent of a valid frontier baseline, and at least thirty percent lower measured end-to-end cost. Frontier must first clear eighty percent overall and seventy percent in every frozen task stratum. Methods, receipts, commands, and negative results stay public whether that target passes or fails.

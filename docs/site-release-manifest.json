@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "kind": "citadel-site-release-manifest",
+  "files": [
+    {
+      "path": "404.html",
+      "bytes": 1065,
+      "digest": "sha256:f75a238d8003a6f213e91086cfd909c42a1847696081cf3939d58e4bbf4f1c5b"
+    },
+    {
+      "path": "EVIDENCE_MANIFEST.md",
+      "bytes": 3040,
+      "digest": "sha256:6e4aecdb423f0846411444e401324a6fb81c46a3d0a2ed8c3cf5ca5d15e6ad09"
+    },
+    {
+      "path": "assets/application/01-product-entry.png",
+      "bytes": 532781,
+      "digest": "sha256:4d28d1e46cbe8d57836d219fe3eba017d88fb35f1853e257ac8514a91ef8b8dd"
+    },
+    {
+      "path": "assets/application/02-evidence-hero.png",
+      "bytes": 554790,
+      "digest": "sha256:a121eaaf8437f567b03f71ee93ed227db329c8773868eb01f65d024849b5c094"
+    },
+    {
+      "path": "assets/application/03-policy-comparison.png",
+      "bytes": 514482,
+      "digest": "sha256:33fe8c3a131d396d16ef220659fe0df90f4f2c30167027e5f7bf679cf9dd2646"
+    },
+    {
+      "path": "assets/application/citadel-live-verification-demo.mp4",
+      "bytes": 237995,
+      "digest": "sha256:8694a94b0e12d9a611e3ffb7ac6cdd778c35932b70cbe3a0aa04edf3ff9acc83"
+    },
+    {
+      "path": "assets/application/citadel-sentient-walkthrough.mp4",
+      "bytes": 4060568,
+      "digest": "sha256:a75c5ad81a5635467caada7d04378999955681905857c842f6c24eee6d60e0d7"
+    },
+    {
+      "path": "assets/application/citadel-sentient-walkthrough.vtt",
+      "bytes": 2943,
+      "digest": "sha256:9f9600ca6975b25049a3903d4ede9d15b532b078367d921694be0d70fa12ce85"
+    },
+    {
+      "path": "assets/application/live-verification-output.json",
+      "bytes": 4035,
+      "digest": "sha256:e296a8411e234ac6dcf18f76dbb6a620a1be040b3d521453b986d05299bf4f99"
+    },
+    {
+      "path": "assets/application/walkthrough-narration.txt",
+      "bytes": 2134,
+      "digest": "sha256:81eab3a0daf3562c85b59dfd949c5d7183c20bdfa16d9ad802a4da874847ea9d"
+    },
+    {
+      "path": "assets/citadel-social-preview.png",
+      "bytes": 54624,
+      "digest": "sha256:a98da3d6d94acef6e010f89f9d64d68017eeecb2cb8451ae0f4c85bc499d6c52"
+    },
+    {
+      "path": "assets/citadel-social-preview.svg",
+      "bytes": 3521,
+      "digest": "sha256:3978e6f3e202c8c0e9b9c32ae8833639255979f8c2a4f13b656b48928d194ae2"
+    },
+    {
+      "path": "evidence-manifest.json",
+      "bytes": 10025,
+      "digest": "sha256:a53284e9517a439d0e68cef4dd240622fa831023e0d93578752804b2d7c9d31d"
+    },
+    {
+      "path": "evidence.html",
+      "bytes": 24960,
+      "digest": "sha256:00321520abcf944adf8e55e02f825b76a04879b6ec7173a474e4d721afd328c2"
+    },
+    {
+      "path": "grants/APPLICANT_AND_ADOPTION.md",
+      "bytes": 3206,
+      "digest": "sha256:17464370b0eb1ad48b75619722db9d9e643b4495a8a91ff38dc43fbb4fed2a02"
+    },
+    {
+      "path": "grants/APPLICATION_CHECKLIST.md",
+      "bytes": 2504,
+      "digest": "sha256:94cdcccfcef3f124230da0e1059f4cd49c33bd077cb5508deca61f0e328455cd"
+    },
+    {
+      "path": "grants/APPLICATION_MEDIA.md",
+      "bytes": 2137,
+      "digest": "sha256:9b6ef390190322e1df1e9cc986a6086a78107e2d335a8990e424c005ba75dda7"
+    },
+    {
+      "path": "grants/CLAIM_EVIDENCE_MATRIX.md",
+      "bytes": 2982,
+      "digest": "sha256:3f5be36f3fae515d1f8296df55626a148b4c758d85b445d8e56a46d8ab762575"
+    },
+    {
+      "path": "grants/DEMO_SCRIPT.md",
+      "bytes": 2075,
+      "digest": "sha256:27ce3da7caa0ae8b9053ffd665ccb3b60c6f4e1a96e69c7dc821446afbc458b6"
+    },
+    {
+      "path": "grants/EVALUATOR_START_HERE.md",
+      "bytes": 3159,
+      "digest": "sha256:63d016202e90baebb00fbd94c2f9d9e4e773f3e576eed7dc14e776ff4de12a3c"
+    },
+    {
+      "path": "grants/MILESTONES_AND_BUDGET.md",
+      "bytes": 6491,
+      "digest": "sha256:2dd53eafc556a423d1395c6d5606dce20a88abeb4aeb9e47b47ffe9ee1caa344"
+    },
+    {
+      "path": "grants/PUBLIC_GOODS_AND_GOVERNANCE.md",
+      "bytes": 3540,
+      "digest": "sha256:2d70c5b599d6ec8fc3719fcb71325336dd080ba6cd6f8da15b54282dd29d6f99"
+    },
+    {
+      "path": "grants/RISK_REGISTER.md",
+      "bytes": 3856,
+      "digest": "sha256:08f51ec5cbb20bd379342f9bdb703de0736191c18250c9b90a4f1291aaad48c6"
+    },
+    {
+      "path": "grants/SENTIENT_BELIEFS.md",
+      "bytes": 1933,
+      "digest": "sha256:edc756e4bb27bbddbe984273a127e8689611187faf6bc15b925b0e3020fb311d"
+    },
+    {
+      "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
+      "bytes": 25410,
+      "digest": "sha256:79725c98e281072062c0135bfa677cf3439575f497d5f8ff42a024db0052b06d"
+    },
+    {
+      "path": "grants/TECHNICAL_COMPARISON.md",
+      "bytes": 4136,
+      "digest": "sha256:970a8a43f94695b2a722412f28f58ae6c7d86bd0f96da427880a2c0f0358d3f9"
+    },
+    {
+      "path": "index.html",
+      "bytes": 201636,
+      "digest": "sha256:7342976062c565e01cafdec13b5ca1d1f160c485ce66a7e2eceecb3c7f049e82"
+    },
+    {
+      "path": "operation-control.html",
+      "bytes": 26449,
+      "digest": "sha256:ee00168a9614783448d1355c15e85a429e2ff88ef07834a8e05dfb56a0db1756"
+    },
+    {
+      "path": "optimizer.html",
+      "bytes": 31919,
+      "digest": "sha256:0474108b37e370cbf4d657401eee11a9436d153a2c0b84c184cffba20157c159"
+    },
+    {
+      "path": "research.html",
+      "bytes": 17338,
+      "digest": "sha256:42f9f7e884dec235c932f7a1e7965c3f9dcbe9093e244c94945259030c1c0f75"
+    },
+    {
+      "path": "robots.txt",
+      "bytes": 82,
+      "digest": "sha256:a71725fec90580ea15eeb2f4b0dd3276c0579f725a5bb1c420ab0a747565adf3"
+    },
+    {
+      "path": "site-system.css",
+      "bytes": 31143,
+      "digest": "sha256:75499fe97f54f60e4556624092bf72e90c65d8b8e45b4dbb403e015b7823754c"
+    },
+    {
+      "path": "site-system.js",
+      "bytes": 1981,
+      "digest": "sha256:bdf7c7ee8e326e3420a53e904fc3c17dc4a7417dd3c4702e0f7d3fd7ce70884a"
+    },
+    {
+      "path": "site.webmanifest",
+      "bytes": 242,
+      "digest": "sha256:8706e4d34abab2770e70f66f5429b872cb7ab57d24d4000eb159491e2dd3d6f6"
+    },
+    {
+      "path": "sitemap.xml",
+      "bytes": 704,
+      "digest": "sha256:906188a24cca31f5f9c27fcc8083e8f595a9469514f304ffc6405a0a1e376e5a"
+    },
+    {
+      "path": "walkthrough.html",
+      "bytes": 9088,
+      "digest": "sha256:72ee2abbae6b4a1f500abeebf803e149640fa9f53da04343606c648766065121"
+    }
+  ],
+  "source_digest": "sha256:5727b949891123314e7df7d8b983c729271f982d80f84a309b3e7c93d5487f3b"
+}

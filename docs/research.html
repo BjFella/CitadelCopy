@@ -3,18 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="The Citadel research program: open operation control, independent outcome verification, economic evidence, current proof, and funded milestones." />
+  <meta name="description" content="The Citadel research program: open operation control, model-external outcome verification, economic evidence, current proof, and funded milestones." />
+  <meta name="theme-color" content="#070b12" />
+  <link rel="canonical" href="https://sethgammon.github.io/Citadel/research.html" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Citadel" />
+  <meta property="og:title" content="Citadel Research Program | Make agent optimization falsifiable" />
+  <meta property="og:description" content="Open methods, signed receipts, retained failures, prospective local comparisons, and a precise boundary around what Citadel has and has not proved." />
+  <meta property="og:url" content="https://sethgammon.github.io/Citadel/research.html" />
+  <meta property="og:image" content="https://sethgammon.github.io/Citadel/assets/citadel-social-preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://sethgammon.github.io/Citadel/assets/citadel-social-preview.png" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23070b12%22/><path d=%22M8 8h16v5H13v6h11v5H8z%22 fill=%22%2345ddff%22/></svg>" />
   <title>Citadel Research Program | Proof before optimization claims</title>
   <link rel="stylesheet" href="site-system.css" />
 </head>
 <body class="site-page site-proof site-research">
+  <a class="site-skip-link" href="#main-content">Skip to content</a>
   <div class="site-scroll-progress" aria-hidden="true"><span></span></div>
   <nav class="site-nav" aria-label="Primary navigation">
     <div class="site-nav-inner">
       <a class="site-brand" href="index.html"><span class="site-brand-mark">C</span><span>Citadel</span></a>
       <div class="site-nav-links">
         <a class="site-nav-link" href="index.html#product-story">How it works</a>
+        <a class="site-nav-link" href="evidence.html">Evidence</a>
         <a class="site-nav-link" href="operation-control.html">Operation Control</a>
         <a class="site-nav-link" href="optimizer.html">Optimizer</a>
         <a class="site-nav-link" href="research.html" aria-current="page">Research</a>
@@ -27,6 +40,7 @@
     </div>
     <div class="site-nav-mobile" id="site-nav-mobile" data-site-nav-mobile hidden>
       <a class="site-nav-link" href="index.html">Overview</a>
+      <a class="site-nav-link" href="evidence.html">Evidence index</a>
       <a class="site-nav-link" href="operation-control.html">Operation Control</a>
       <a class="site-nav-link" href="optimizer.html">Optimizer</a>
       <a class="site-nav-link" href="#evidence">Evidence ledger</a>
@@ -35,7 +49,7 @@
     </div>
   </nav>
 
-  <main class="shell">
+  <main class="shell" id="main-content" tabindex="-1">
     <header class="hero">
       <div>
         <div class="eyebrow">Open agent optimization research</div>
@@ -43,7 +57,7 @@
         <p class="hero-copy">
           Citadel is building the evidence layer between an optimization policy
           and its claim. It controls what an agent operation may run, records
-          what actually ran, and asks an independent verifier whether the work
+          what actually ran, and asks a deterministic verifier outside the routed model whether the work
           counts. <strong>A cheaper failure is not a saving. An unknown is not zero.</strong>
         </p>
         <div class="site-button-row" style="margin-top:30px;">
@@ -53,20 +67,21 @@
       </div>
       <aside class="claim-card" aria-label="Research status">
         <div class="claim-label">Research status</div>
-        <h2>The control plane works. The economic result is still open.</h2>
+        <h2>The measurement loop works. Three economic claims did not.</h2>
         <p>
-          Historical evidence and a prospective runtime cell establish the
-          measurement seam. They do not establish savings, broad reliability,
-          or best-in-class performance.
+          Two separately frozen 72-cell studies preserved every failure and
+          unknown. V1's direction reverses under timeout sensitivity; v2 showed
+          verifier escalation can cost more. A later 24-cell repository-fixture
+          shakedown preserved artifact integrity but missed its economic gates.
         </p>
-        <code>control integration: passed<br />false-pass gate: passed<br />comparative performance: open</code>
+        <code>control integration: passed<br />false-pass gate: passed<br />30% economic target: not demonstrated</code>
       </aside>
     </header>
 
     <div class="proof-strip" aria-label="Citadel research evidence summary">
-      <div class="proof-stat"><strong>120</strong><span>signed historical cells</span></div>
-      <div class="proof-stat"><strong>87</strong><span>real model attempts</span></div>
-      <div class="proof-stat"><strong>3</strong><span>prospective runtime attempts</span></div>
+      <div class="proof-stat"><strong>168</strong><span>signed prospective local cells</span></div>
+      <div class="proof-stat"><strong>3</strong><span>separately frozen studies</span></div>
+      <div class="proof-stat"><strong>14</strong><span>verifier escalations observed</span></div>
       <div class="proof-stat"><strong>0</strong><span>adversarial false passes</span></div>
     </div>
 
@@ -89,7 +104,7 @@
             A selected executor cannot become the winner because it sounded
             confident, reported a low number, or produced a patch. Requested
             and observed runtime facts are reconciled, required artifacts are
-            checked, and an independent repository verifier decides completion.
+            checked, and a model-external repository verifier decides completion.
           </p>
         </article>
         <article class="research-thesis-card target">
@@ -97,9 +112,11 @@
           <h3>A result strong enough to survive a no.</h3>
           <p>Across a preregistered multi-stack benchmark, the funded controller targets:</p>
           <div class="target-pair">
-            <div class="target-number"><strong>≥95%</strong><span>of frontier verified completion</span></div>
+            <div class="target-number"><strong>≥80%</strong><span>absolute verified completion</span></div>
+            <div class="target-number"><strong>≥95%</strong><span>of a valid frontier baseline</span></div>
             <div class="target-number"><strong>≥30%</strong><span>lower measured end-to-end cost</span></div>
           </div>
+          <p style="margin-top:16px;font-size:13px;">Frontier must first verify at least 80% overall and 70% in every frozen task stratum, or the comparison is baseline-invalid.</p>
         </article>
       </div>
     </section>
@@ -110,8 +127,9 @@
         <p>
           Each rung answers a different question. Implementation evidence shows
           the mechanism exists. Retrospective evidence calibrates it. Prospective
-          evidence shows the public runtime seam works. Comparative evidence is
-          the remaining research result.
+          evidence shows the public runtime seam works. Three comparative studies
+          now expose a timeout-sensitive apparent gain, a policy regression, and
+          repository-artifact integrity without laundering any into a success claim.
         </p>
       </div>
       <div class="proof-ledger">
@@ -136,14 +154,26 @@
         <article class="proof-ledger-item">
           <div class="ledger-id">04 / RUNTIME</div>
           <h3>Prospective public task</h3>
-          <p>One preregistered Claude Code operation on a fresh public clone matched model and topology, changed the required artifact, and passed an independent verifier.</p>
+          <p>One preregistered Claude Code operation on a fresh public clone matched model and topology, changed the required artifact, and passed a deterministic verifier outside the model.</p>
           <span class="ledger-state">Verified</span>
         </article>
         <article class="proof-ledger-item">
-          <div class="ledger-id">05 / ECONOMICS</div>
-          <h3>Prospective policy comparison</h3>
-          <p>The decisive study must compare policies on unseen work with full cost attribution, frozen gates, multiple stacks, and every negative result retained.</p>
-          <span class="ledger-state open">Open gate</span>
+          <div class="ledger-id">05 / ECONOMICS V1</div>
+          <h3>Adaptive local comparison</h3>
+          <p>Across 12 tasks × 2 policies × 3 timing repetitions, adaptive recorded 27/36 verified cells versus 24/36. The frozen aggregate used 9.9% less GPU energy, but excluding one same-route timeout pair reverses the comparison to 3.5% more.</p>
+          <span class="ledger-state">Verified negative gate</span>
+        </article>
+        <article class="proof-ledger-item">
+          <div class="ledger-id">06 / ECONOMICS V2</div>
+          <h3>Capability-profile falsification</h3>
+          <p>A separately frozen 72-cell follow-up matched 24/36 baseline cell completion, but 12 escalations caused 15.7% more GPU energy and 16.4% more modeled GPU cost.</p>
+          <span class="ledger-state">Verified regression</span>
+        </article>
+        <article class="proof-ledger-item">
+          <div class="ledger-id">07 / REPOSITORY</div>
+          <h3>Representative fixture shakedown</h3>
+          <p>Six artifact-producing fixture tasks, two policies, and two timing repetitions produced 24 signed cells. Both policies verified 6/12; zero false passes and path violations survived replay, while the 7.1% energy reduction missed the frozen 20% gate.</p>
+          <span class="ledger-state">Integrity passed; economics failed</span>
         </article>
       </div>
     </section>
@@ -180,7 +210,7 @@
         <article class="milestone-card" data-step="04">
           <small>Scale gate</small>
           <h3>Run the prospective study</h3>
-          <p>Freeze unseen tasks, baselines, policies, verifiers, stopping rules, and economic targets before execution. Publish passed, failed, and unknown cells.</p>
+          <p>Extend the three local studies to multiple stacks, repositories, model families, hardware profiles, and tool routes. Freeze every task, baseline, policy, verifier, stopping rule, and economic target before execution.</p>
           <div class="milestone-gate">Exit: the result reproduces offline and in clean hosted verification, even if the performance hypothesis fails.</div>
         </article>
       </div>
@@ -190,9 +220,10 @@
       <div class="section-heading">
         <div><div class="proof-kicker">Claim boundary</div><h2>Credibility comes from saying exactly where the proof ends.</h2></div>
         <p>
-          Citadel has enough evidence to justify funding the next experiment.
-          It does not yet have enough evidence to claim the experiment's desired
-          economic result. The site and repository use the same boundary.
+          Citadel has enough evidence to show that its controller can be held
+          accountable to economic claims. It does not yet have enough evidence
+          to claim the funded multi-stack result. The site and repository use
+          the same boundary.
         </p>
       </div>
       <div class="claim-boundary-list">
@@ -201,9 +232,10 @@
           <ul>
             <li>Stack-neutral operation contracts can bind real agent runtimes.</li>
             <li>Requested and observed model identity can be reconciled without inference.</li>
-            <li>Independent verification can reject false, partial, and adversarial outputs.</li>
+            <li>Model-external deterministic verification can reject false, partial, and adversarial outputs.</li>
             <li>Signed evidence can preserve passed, failed, and unknown outcomes.</li>
             <li>Clean hosted verification reproduces the committed proof bundle.</li>
+            <li>Three prospective local studies reject a timeout-sensitive apparent gain, a cost-increasing capability policy, and a representative pilot that missed its economic gates.</li>
           </ul>
         </article>
         <article class="claim-boundary-column">
@@ -240,13 +272,13 @@
       <aside class="closing-card">
         <div class="claim-label">Public research principle</div>
         <p style="font-size:22px;line-height:1.45;color:var(--site-text);">A failed frozen hypothesis is a result. A missing receipt is not.</p>
-        <p style="font:11px/1.65 var(--site-mono);color:var(--site-dim);">Observed 2026-07-31 · application not yet submitted</p>
+        <p style="font:11px/1.65 var(--site-mono);color:var(--site-dim);">Observed 2026-08-01 · application not yet submitted</p>
       </aside>
     </section>
   </main>
 
   <footer>
-    <div class="shell">Citadel research program · operation control, independent verification, and honest agent economics · current performance gate open.</div>
+    <div class="shell">Citadel research program · operation control, model-external verification, and honest agent economics · current performance gate open.</div>
   </footer>
   <script src="site-system.js"></script>
 </body>

@@ -8,10 +8,11 @@ to complete the whole operation at the lowest total cost.
 The hypothesis is:
 
 > Across competing agent stacks, an adaptive controller can reduce
-> end-to-end cost by at least 30% while retaining at least 95% of the
-> verified completions of an always-frontier policy.
+> end-to-end cost by at least 30%, reach at least 80% absolute verified
+> completion, and retain at least 95% of a valid always-frontier policy.
 
-That is a target, not a current result.
+Always frontier is valid only if it verifies at least 80% overall and 70% in
+every preregistered task stratum. That is a target, not a current result.
 
 ## What the controller owns
 

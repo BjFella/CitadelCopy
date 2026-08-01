@@ -4,6 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Citadel is the progressive operating layer for Claude Code and Codex: start with /do, then add durable state, coordination, and verifiable operation control only when the work needs it." />
+  <meta name="theme-color" content="#070b12" />
+  <link rel="canonical" href="https://sethgammon.github.io/Citadel/" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Citadel" />
+  <meta property="og:title" content="Citadel | Start with /do. Prove what actually ran." />
+  <meta property="og:description" content="A progressive operating and evidence layer for Claude Code and Codex: durable state, bounded control, model-external verification, and signed receipts." />
+  <meta property="og:url" content="https://sethgammon.github.io/Citadel/" />
+  <meta property="og:image" content="https://sethgammon.github.io/Citadel/assets/citadel-social-preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Citadel | Start with /do. Prove what actually ran." />
+  <meta name="twitter:description" content="A progressive operating and evidence layer for coding agents." />
+  <meta name="twitter:image" content="https://sethgammon.github.io/Citadel/assets/citadel-social-preview.png" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23070b12%22/><path d=%22M8 8h16v5H13v6h11v5H8z%22 fill=%22%2345ddff%22/></svg>" />
   <title>Citadel | The operating layer for Claude Code and Codex</title>
   <style>
@@ -1163,6 +1178,7 @@
     }
     .install-step-body { flex: 1; min-width: 0; }
     .install-step-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .install-platform { margin: 9px 0 5px; color: var(--dim); font: 700 9px/1 'SF Mono', Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
     .install-code {
       font-family: 'SF Mono', monospace; font-size: 12px;
       background: var(--surface); border: 1px solid var(--border);
@@ -1180,7 +1196,9 @@
     .runtime-tab[aria-selected="true"] { color: var(--cyan); border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 7%, var(--surface)); }
     .runtime-path[hidden] { display: none; }
     .install-code-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-    .install-copy { min-width: 68px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--muted); font: 700 11px 'SF Mono', Consolas, monospace; cursor: pointer; }
+    .install-copy { width: 68px; min-width: 68px; padding: 0 12px; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: transparent; font: 0/1 'SF Mono', Consolas, monospace; cursor: pointer; }
+    .install-copy::after { content: "Copy"; color: var(--muted); font: 700 11px/1 'SF Mono', Consolas, monospace; }
+    .install-copy.is-copied::after { content: "Copied"; color: var(--green); }
     .install-copy:hover { border-color: var(--cyan); color: var(--cyan); }
     .install-success { margin-top: 20px; padding: 14px 16px; border-left: 2px solid var(--green); background: color-mix(in srgb, var(--green) 6%, var(--surface)); color: var(--muted); font-size: 12px; line-height: 1.65; }
 
@@ -1456,6 +1474,7 @@
   <link rel="stylesheet" href="site-system.css" />
 </head>
 <body class="site-page site-home">
+  <a class="site-skip-link" href="#main-content">Skip to content</a>
   <canvas id="bg-dots"></canvas>
   <div class="site-scroll-progress" aria-hidden="true"><span></span></div>
   <nav class="site-nav" aria-label="Primary navigation">
@@ -1463,7 +1482,7 @@
       <a class="site-brand" href="index.html"><span class="site-brand-mark">C</span><span>Citadel</span></a>
       <div class="site-nav-links">
         <a class="site-nav-link" href="#product-story">How it works</a>
-        <a class="site-nav-link" href="#proof">Proof</a>
+        <a class="site-nav-link" href="evidence.html">Evidence</a>
         <a class="site-nav-link" href="operation-control.html">Operation Proof</a>
         <a class="site-nav-link" href="optimizer.html">Optimizer Proof</a>
         <a class="site-nav-link" href="research.html">Research</a>
@@ -1477,7 +1496,7 @@
     </div>
     <div class="site-nav-mobile" id="site-nav-mobile" data-site-nav-mobile hidden>
       <a class="site-nav-link" href="#product-story">How it works</a>
-      <a class="site-nav-link" href="#proof">Proof</a>
+      <a class="site-nav-link" href="evidence.html">Evidence</a>
       <a class="site-nav-link" href="operation-control.html">Operation Proof</a>
       <a class="site-nav-link" href="optimizer.html">Optimizer Proof</a>
       <a class="site-nav-link" href="research.html">Research program</a>
@@ -1486,7 +1505,7 @@
     </div>
   </nav>
 
-  <div id="page-wrap">
+  <main id="main-content" tabindex="-1">
   <div id="screens-inner">
   <div id="screen-1">
 
@@ -1504,7 +1523,7 @@
         <div class="home-proof-line" aria-label="Citadel product proof">
           <div class="home-proof-item"><strong>15/15</strong><span>PRs landed</span></div>
           <div class="home-proof-item"><strong>30/30</strong><span>hosted journeys</span></div>
-          <div class="home-proof-item"><strong>120</strong><span>signed proof cells</span></div>
+          <div class="home-proof-item"><strong>120</strong><span>signed operation-control cells</span></div>
           <div class="home-proof-item"><strong>0</strong><span>adversarial false passes</span></div>
         </div>
       </div>
@@ -2051,11 +2070,11 @@
           <a href="https://github.com/SethGammon/Citadel/releases/tag/v1.1.0">Inspect release →</a>
         </article>
         <article class="proof-card">
-          <div class="proof-card-kind">Acquisition</div>
-          <div class="proof-card-result">107 unique cloners</div>
-          <p class="proof-card-claim">GitHub recorded 107 unique cloners during the July 11 surge.</p>
-          <div class="proof-card-boundary">Boundary: clone activity is not installation, successful setup, or retention.</div>
-          <a href="ACTIVATION_METRICS.md">Inspect measurement rules →</a>
+          <div class="proof-card-kind">Economic falsification</div>
+          <div class="proof-card-result">168 prospective cells</div>
+          <p class="proof-card-claim">Three separately frozen local studies retained every failure. V1's apparent savings reverse under timeout sensitivity; v2 shows verifier escalation costing more; v3 verifies repository artifacts while missing its economic gates.</p>
+          <div class="proof-card-boundary">Boundary: one GPU and one model family; the funded multi-stack savings target remains open.</div>
+          <a href="evidence.html">Inspect the evidence index →</a>
         </article>
       </div>
     </div>
@@ -2094,23 +2113,26 @@
       </div>
       <div class="install-right">
         <div class="runtime-tabs" role="tablist" aria-label="Choose your coding agent runtime">
-          <button class="runtime-tab" role="tab" aria-selected="true" data-runtime="claude">Claude Code</button>
-          <button class="runtime-tab" role="tab" aria-selected="false" data-runtime="codex">OpenAI Codex</button>
+          <button class="runtime-tab" id="runtime-tab-claude" role="tab" aria-selected="true" aria-controls="runtime-panel-claude" tabindex="0" data-runtime="claude">Claude Code</button>
+          <button class="runtime-tab" id="runtime-tab-codex" role="tab" aria-selected="false" aria-controls="runtime-panel-codex" tabindex="-1" data-runtime="codex">OpenAI Codex</button>
         </div>
-        <div class="runtime-path" data-runtime-path="claude">
+        <div class="runtime-path" id="runtime-panel-claude" role="tabpanel" aria-labelledby="runtime-tab-claude" data-runtime-path="claude">
           <div class="install-steps">
-            <div class="install-step"><div class="install-step-num">1</div><div class="install-step-body"><div class="install-step-label">From the target project root</div><div class="install-code-row"><div class="install-code">node ~/Citadel/scripts/install.js --runtime claude --install --scope local</div><button class="install-copy" data-copy="node ~/Citadel/scripts/install.js --runtime claude --install --scope local">Copy</button></div></div></div>
-            <div class="install-step"><div class="install-step-num">2</div><div class="install-step-body"><div class="install-step-label">Start the fresh session requested by the installer</div><div class="install-code">/do setup --express</div></div></div>
+            <div class="install-step"><div class="install-step-num">1</div><div class="install-step-body"><div class="install-step-label">Clone Citadel once</div><div class="install-platform">PowerShell</div><div class="install-code-row"><div class="install-code">git clone https://github.com/SethGammon/Citadel.git "$env:USERPROFILE\Citadel"</div><button class="install-copy" type="button" data-copy='git clone https://github.com/SethGammon/Citadel.git "$env:USERPROFILE\Citadel"'>Copy PowerShell clone command</button></div><div class="install-platform">macOS / Linux</div><div class="install-code-row"><div class="install-code">git clone https://github.com/SethGammon/Citadel.git "$HOME/Citadel"</div><button class="install-copy" type="button" data-copy='git clone https://github.com/SethGammon/Citadel.git "$HOME/Citadel"'>Copy shell clone command</button></div></div></div>
+            <div class="install-step"><div class="install-step-num">2</div><div class="install-step-body"><div class="install-step-label">From the repository Citadel should manage</div><div class="install-platform">PowerShell</div><div class="install-code-row"><div class="install-code">node "$env:USERPROFILE\Citadel\scripts\install.js" --runtime claude --install --scope local</div><button class="install-copy" type="button" data-copy='node "$env:USERPROFILE\Citadel\scripts\install.js" --runtime claude --install --scope local'>Copy PowerShell install command</button></div><div class="install-platform">macOS / Linux</div><div class="install-code-row"><div class="install-code">node "$HOME/Citadel/scripts/install.js" --runtime claude --install --scope local</div><button class="install-copy" type="button" data-copy='node "$HOME/Citadel/scripts/install.js" --runtime claude --install --scope local'>Copy shell install command</button></div></div></div>
+            <div class="install-step"><div class="install-step-num">3</div><div class="install-step-body"><div class="install-step-label">Start the fresh session requested by the installer</div><div class="install-code">/do setup --express</div></div></div>
           </div>
+          <a class="install-guide-link" href="CLAUDE_INSTALLATION_GUIDE.md">Claude Code install guide →</a>
         </div>
-        <div class="runtime-path" data-runtime-path="codex" hidden>
+        <div class="runtime-path" id="runtime-panel-codex" role="tabpanel" aria-labelledby="runtime-tab-codex" data-runtime-path="codex" hidden>
           <div class="install-steps">
-            <div class="install-step"><div class="install-step-num">1</div><div class="install-step-body"><div class="install-step-label">From the target project root</div><div class="install-code-row"><div class="install-code">node ~/Citadel/scripts/install.js --runtime codex --add-marketplace</div><button class="install-copy" data-copy="node ~/Citadel/scripts/install.js --runtime codex --add-marketplace">Copy</button></div></div></div>
-            <div class="install-step"><div class="install-step-num">2</div><div class="install-step-body"><div class="install-step-label">Enable the plugin, start a fresh task, then prepare the project</div><div class="install-code">/do setup --express</div></div></div>
+            <div class="install-step"><div class="install-step-num">1</div><div class="install-step-body"><div class="install-step-label">Clone Citadel once</div><div class="install-platform">PowerShell</div><div class="install-code-row"><div class="install-code">git clone https://github.com/SethGammon/Citadel.git "$env:USERPROFILE\Citadel"</div><button class="install-copy" type="button" data-copy='git clone https://github.com/SethGammon/Citadel.git "$env:USERPROFILE\Citadel"'>Copy PowerShell clone command</button></div><div class="install-platform">macOS / Linux</div><div class="install-code-row"><div class="install-code">git clone https://github.com/SethGammon/Citadel.git "$HOME/Citadel"</div><button class="install-copy" type="button" data-copy='git clone https://github.com/SethGammon/Citadel.git "$HOME/Citadel"'>Copy shell clone command</button></div></div></div>
+            <div class="install-step"><div class="install-step-num">2</div><div class="install-step-body"><div class="install-step-label">From the repository Citadel should manage</div><div class="install-platform">PowerShell</div><div class="install-code-row"><div class="install-code">node "$env:USERPROFILE\Citadel\scripts\install.js" --runtime codex --add-marketplace</div><button class="install-copy" type="button" data-copy='node "$env:USERPROFILE\Citadel\scripts\install.js" --runtime codex --add-marketplace'>Copy PowerShell install command</button></div><div class="install-platform">macOS / Linux</div><div class="install-code-row"><div class="install-code">node "$HOME/Citadel/scripts/install.js" --runtime codex --add-marketplace</div><button class="install-copy" type="button" data-copy='node "$HOME/Citadel/scripts/install.js" --runtime codex --add-marketplace'>Copy shell install command</button></div></div></div>
+            <div class="install-step"><div class="install-step-num">3</div><div class="install-step-body"><div class="install-step-label">Enable the plugin, start a fresh task, then prepare the project</div><div class="install-code">/do setup --express</div></div></div>
           </div>
+          <a class="install-guide-link" href="CODEX_INSTALLATION_GUIDE.md">OpenAI Codex install guide →</a>
         </div>
         <div class="install-success"><strong>First verified success:</strong> run <code>/do review README.md</code>, inspect the route and handoff, then close the session and run <code>/do next</code> in a fresh one.</div>
-        <a class="install-guide-link" href="CLAUDE_INSTALLATION_GUIDE.md" onclick="openPanel('install'); return false;">Full install guide →</a>
       </div>
     </div>
   </div>
@@ -2118,10 +2140,10 @@
   <!-- Final CTA  -  single copy-pasteable command -->
   <div class="final-cta">
     <div class="final-cta-label">One operating command after installation.</div>
-    <div class="final-cta-cmd" onclick="navigator.clipboard.writeText('/do setup --express').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+    <button class="final-cta-cmd" type="button" onclick="navigator.clipboard.writeText('/do setup --express').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})">
       /do setup --express
-      <button class="final-cta-copy">copy</button>
-    </div>
+      <span class="final-cta-copy" aria-hidden="true">copy</span>
+    </button>
   </div>
 
   <button class="up-cue" onclick="goToScreen(0)" aria-label="Back to top" title="Back to top">
@@ -2140,19 +2162,24 @@
   </footer>
   </div><!-- /screen-2 -->
   </div><!-- /screens-inner -->
-  </div><!-- /page-wrap -->
+  </main><!-- /main-content -->
 
   <!-- Panels  -  outside #screens-inner so position:fixed is viewport-relative -->
   <!-- Panel backdrop -->
-  <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
+  <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()" hidden></div>
 
   <!-- Install panel -->
-  <div class="side-panel" id="panel-install">
+  <div class="side-panel" id="panel-install" role="dialog" aria-modal="true" aria-labelledby="panel-install-title" hidden>
     <div class="panel-header">
-      <span class="panel-title">Install</span>
-      <button class="panel-close" onclick="closePanel()">✕</button>
+      <span class="panel-title" id="panel-install-title">Install Citadel</span>
+      <button class="panel-close" type="button" aria-label="Close install panel" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
+      <div class="panel-section-label">Choose your runtime</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Claude Code or OpenAI Codex</div>
+        <div class="campaign-block-body"><a href="CLAUDE_INSTALLATION_GUIDE.md">Claude Code guide</a> · <a href="CODEX_INSTALLATION_GUIDE.md">OpenAI Codex guide</a><br />The quick steps below are the Claude Code plugin path.</div>
+      </div>
       <div class="panel-step">
         <div class="panel-step-num">1</div>
         <div class="panel-step-body">
@@ -2186,10 +2213,10 @@
   </div>
 
   <!-- Skills panel -->
-  <div class="side-panel" id="panel-skills">
+  <div class="side-panel" id="panel-skills" role="dialog" aria-modal="true" aria-labelledby="panel-skills-title" hidden>
     <div class="panel-header">
-      <span class="panel-title">Skills  -  49 built in</span>
-      <button class="panel-close" onclick="closePanel()">✕</button>
+      <span class="panel-title" id="panel-skills-title">Skills  -  49 built in</span>
+      <button class="panel-close" type="button" aria-label="Close capabilities panel" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
       <div class="panel-note" style="margin-bottom:20px">Invoke any skill directly with <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">/skill-name</code>, or let <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">/do</code> route to the right one automatically.</div>
@@ -2243,10 +2270,10 @@
   </div>
 
   <!-- Hooks panel -->
-  <div class="side-panel" id="panel-hooks">
+  <div class="side-panel" id="panel-hooks" role="dialog" aria-modal="true" aria-labelledby="panel-hooks-title" hidden>
     <div class="panel-header">
-      <span class="panel-title">Hooks  -  13 events</span>
-      <button class="panel-close" onclick="closePanel()">✕</button>
+      <span class="panel-title" id="panel-hooks-title">Hooks  -  13 events</span>
+      <button class="panel-close" type="button" aria-label="Close hooks panel" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
       <div class="panel-note" style="margin-bottom:20px">Hooks fire automatically on Claude Code lifecycle events  -  no agent intervention needed.</div>
@@ -2277,10 +2304,10 @@
   </div>
 
   <!-- Campaigns panel -->
-  <div class="side-panel" id="panel-campaigns">
+  <div class="side-panel" id="panel-campaigns" role="dialog" aria-modal="true" aria-labelledby="panel-campaigns-title" hidden>
     <div class="panel-header">
-      <span class="panel-title">Campaigns</span>
-      <button class="panel-close" onclick="closePanel()">✕</button>
+      <span class="panel-title" id="panel-campaigns-title">Campaigns</span>
+      <button class="panel-close" type="button" aria-label="Close campaigns panel" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
       <div class="panel-note" style="margin-bottom:20px">A <strong style="color:var(--text)">campaign</strong> is work that spans multiple sessions. State is persisted to disk and resumed exactly where it left off.</div>
@@ -2446,7 +2473,10 @@
       document.getElementById('story-play').addEventListener('click', storyPlay);
       document.querySelectorAll('[data-runtime]').forEach(tab => tab.addEventListener('click', () => {
         const runtime = tab.dataset.runtime;
-        document.querySelectorAll('[data-runtime]').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+        document.querySelectorAll('[data-runtime]').forEach(item => {
+          item.setAttribute('aria-selected', String(item === tab));
+          item.tabIndex = item === tab ? 0 : -1;
+        });
         document.querySelectorAll('[data-runtime-path]').forEach(path => { path.hidden = path.dataset.runtimePath !== runtime; });
       }));
       document.querySelectorAll('.runtime-tabs, .story-scenarios').forEach(tablist => tablist.addEventListener('keydown', event => {
@@ -2460,9 +2490,8 @@
       }));
       document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
         await navigator.clipboard.writeText(button.dataset.copy);
-        const previous = button.textContent;
-        button.textContent = 'Copied';
-        setTimeout(() => { button.textContent = previous; }, 1400);
+        button.classList.add('is-copied');
+        setTimeout(() => { button.classList.remove('is-copied'); }, 1400);
       }));
       document.querySelectorAll('[data-fork-mode]').forEach(button => button.addEventListener('click', () => {
         renderOperationFork(button.dataset.forkMode);
@@ -2966,35 +2995,71 @@
     });
 
     // ─── Side panels ──────────────────────────────────────────────────────
+    document.querySelectorAll('[onclick^="openPanel("]').forEach(trigger => {
+      const match = trigger.getAttribute('onclick').match(/openPanel\('([^']+)'\)/);
+      if (!match) return;
+      trigger.setAttribute('aria-haspopup', 'dialog');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-controls', `panel-${match[1]}`);
+    });
     let activePanel = null;
+    let lastPanelTrigger = null;
+
+    function panelFocusables(panel) {
+      return [...panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter(node => !node.hidden && node.getAttribute('aria-hidden') !== 'true');
+    }
 
     function openPanel(name) {
       if (activePanel === name) { closePanel(); return; }
-      if (activePanel) {
-        document.getElementById(`panel-${activePanel}`).classList.remove('open');
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('panel-active'));
-      }
+      if (activePanel) closePanel(false);
+      lastPanelTrigger = document.activeElement;
       activePanel = name;
-      document.getElementById('panel-backdrop').classList.add('open');
-      document.getElementById(`panel-${name}`).classList.add('open');
-      const btn = [...document.querySelectorAll('.nav-link')].find(
+      const backdrop = document.getElementById('panel-backdrop');
+      const panel = document.getElementById(`panel-${name}`);
+      backdrop.hidden = false;
+      panel.hidden = false;
+      requestAnimationFrame(() => {
+        backdrop.classList.add('open');
+        panel.classList.add('open');
+      });
+      const btn = [...document.querySelectorAll('[onclick]')].find(
         el => el.getAttribute('onclick') === `openPanel('${name}')`
       );
-      if (btn) btn.classList.add('panel-active');
+      if (btn) {
+        btn.classList.add('panel-active');
+        btn.setAttribute('aria-expanded', 'true');
+      }
       document.body.style.overflow = 'hidden';
+      panelFocusables(panel)[0]?.focus();
     }
 
-    function closePanel() {
+    function closePanel(restoreFocus = true) {
       if (!activePanel) return;
-      document.getElementById('panel-backdrop').classList.remove('open');
-      document.getElementById(`panel-${activePanel}`).classList.remove('open');
-      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('panel-active'));
+      const backdrop = document.getElementById('panel-backdrop');
+      const panel = document.getElementById(`panel-${activePanel}`);
+      backdrop.classList.remove('open');
+      panel.classList.remove('open');
+      backdrop.hidden = true;
+      panel.hidden = true;
+      document.querySelectorAll('[aria-expanded="true"]').forEach(el => el.setAttribute('aria-expanded', 'false'));
+      document.querySelectorAll('.panel-active').forEach(el => el.classList.remove('panel-active'));
       document.body.style.overflow = '';
       activePanel = null;
+      if (restoreFocus && lastPanelTrigger instanceof HTMLElement) lastPanelTrigger.focus();
     }
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && activePanel) { closePanel(); e.stopPropagation(); }
+      if (e.key === 'Tab' && activePanel) {
+        const panel = document.getElementById(`panel-${activePanel}`);
+        const focusables = panelFocusables(panel);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
 
     // ─── Cinematic scroll ─────────────────────────────────────────────────────
