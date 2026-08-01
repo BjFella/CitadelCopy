@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "kind": "citadel-public-evidence-manifest",
+  "as_of": "2026-08-01T03:12:18.830Z",
+  "claim_policy": "Every value is generated from a canonical committed artifact. Unknown is never converted to zero.",
+  "claims": {
+    "optimizer_history": {
+      "evidence_class": "retrospective-actual-run",
+      "cells": 120,
+      "real_model_attempts": 87,
+      "verified": 33,
+      "failed": 51,
+      "unknown": 36,
+      "false_passes": 0,
+      "performance_gate": "open",
+      "adaptive_holdout_verified": 6,
+      "adaptive_holdout_total": 12,
+      "actual_cash_status": "unknown"
+    },
+    "roma_operation_control": {
+      "evidence_class": "prospective-stack-diagnostic",
+      "cells": 24,
+      "evidence_result": "passed",
+      "performance_hypothesis": "failed",
+      "false_passes": 0,
+      "citadel_verified": 4,
+      "citadel_total": 6,
+      "local_baseline_verified": 2,
+      "local_baseline_total": 6,
+      "actual_cash_status": "unknown"
+    },
+    "prospective_runtime": {
+      "evidence_class": "prospective-real-runtime-integration",
+      "attempts": 3,
+      "passed": 1,
+      "failed": 2,
+      "successful_runtime": "claude-code",
+      "successful_model": "claude-opus-5",
+      "actual_cash_status": "unknown",
+      "market_equivalent_usd": 0.7042557
+    },
+    "prospective_local_economics": {
+      "evidence_class": "prospective-local-economic-comparison",
+      "cells": 72,
+      "evidence_result": "failed",
+      "baseline_verified": 24,
+      "baseline_total": 36,
+      "adaptive_verified": 27,
+      "adaptive_total": 36,
+      "quality_ratio": 1.124999,
+      "gpu_energy_reduction": 0.098673,
+      "modeled_cost_reduction": 0.10329,
+      "duration_reduction": 0.108149,
+      "false_passes": 0,
+      "integrity_failures": 0,
+      "actual_cash_status": "unknown"
+    }
+  },
+  "boundaries": [
+    "The 120-cell optimizer result is retrospective and its performance gate failed.",
+    "The 24-cell ROMA result proves control and evidence integration; its efficiency hypothesis failed.",
+    "The Claude prospective cell proves one real runtime integration, not savings or broad reliability.",
+    "The 72-cell local comparison improved quality and reduced measured GPU energy, but failed the frozen 30 percent economic gates.",
+    "Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured."
+  ],
+  "artifacts": [
+    {
+      "path": "benchmarks/optimizer-proof/actual-report.json",
+      "digest": "sha256:a1890c71bd51898191dedc68fd2a75f105a9babbdfdd551b75293e8931d367a3"
+    },
+    {
+      "path": "benchmarks/roma-operation-control/published-run/bundle.json",
+      "digest": "sha256:4053c90e9dae8233d3f0c2ec85aac0d637780464618fcbfcab2b1d7c36891c2c"
+    },
+    {
+      "path": "benchmarks/operation-control-v2/prospective/RESULTS.json",
+      "digest": "sha256:816ffb04d418de49a30098a84942ff746d66af3fe59507ee74e28e1f574febc3"
+    },
+    {
+      "path": "benchmarks/sentient-readiness/published-run/bundle.json",
+      "digest": "sha256:85e5b56bbd9812721d917830955cc523d7f99297700160235051ec2af592f705"
+    }
+  ],
+  "manifest_digest": "sha256:e9c43c56fda331e054e5e05cbbb1c1fa1d5651be328208b60014303e74324cad"
+}
