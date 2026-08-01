@@ -126,12 +126,13 @@ function executeAdapter({ adapter, plan, request, decision, workspaceRoot, retry
 }
 
 function changedWorkspacePaths(workspaceRoot, spawn = spawnSync, env = process.env) {
+  const canonicalWorkspaceRoot = fs.realpathSync.native(workspaceRoot);
   const top = spawn('git', ['rev-parse', '--show-toplevel'], {
     cwd: workspaceRoot, env: safeEnvironment([], env), encoding: 'utf8', shell: false,
     stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000,
   });
   if (top.error || top.status !== 0) return { status: 'unknown', paths: [] };
-  const repositoryRoot = String(top.stdout || '').trim();
+  const repositoryRoot = fs.realpathSync.native(String(top.stdout || '').trim());
   const status = spawn('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--', '.'], {
     cwd: workspaceRoot, env: safeEnvironment([], env), encoding: 'utf8', shell: false,
     stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000,
@@ -149,8 +150,8 @@ function changedWorkspacePaths(workspaceRoot, spawn = spawnSync, env = process.e
     }
     for (const candidate of candidates) {
       const absolute = path.resolve(repositoryRoot, candidate);
-      if (!contained(workspaceRoot, absolute)) continue;
-      paths.push(path.relative(workspaceRoot, absolute).replace(/\\/g, '/'));
+      if (!contained(canonicalWorkspaceRoot, absolute)) continue;
+      paths.push(path.relative(canonicalWorkspaceRoot, absolute).replace(/\\/g, '/'));
     }
   }
   return { status: 'known', paths: [...new Set(paths)].sort() };

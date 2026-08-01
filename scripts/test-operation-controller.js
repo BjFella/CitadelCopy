@@ -151,6 +151,15 @@ const artifactRequest = {
 };
 const artifactVerification = operation.verifyAttempt({ request: artifactRequest, adapterResult: { status: 'completed', output: '' }, workspaceRoot: artifactRoot });
 assert.equal(artifactVerification.status, 'passed');
+const artifactAlias = `${artifactRoot}-alias`;
+fs.symlinkSync(artifactRoot, artifactAlias, process.platform === 'win32' ? 'junction' : 'dir');
+const aliasedArtifactVerification = operation.verifyAttempt({
+  request: artifactRequest,
+  adapterResult: { status: 'completed', output: '' },
+  workspaceRoot: artifactAlias,
+});
+assert.equal(aliasedArtifactVerification.status, 'passed');
+fs.unlinkSync(artifactAlias);
 const uncoveredVerification = operation.verifyAttempt({
   request: { ...artifactRequest, verifier: { ...artifactRequest.verifier, required_changed_paths: ['missing.txt'] } },
   adapterResult: { status: 'completed', output: '' }, workspaceRoot: artifactRoot,
