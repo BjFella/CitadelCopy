@@ -185,6 +185,8 @@ assert.equal(fakeCodex.observations.model, 'direct-small');
 assert.deepEqual(fakeCodex.observations.tool_calls, ['filesystem', 'shell']);
 assert.equal(fakeCodex.observations.costs.actual_cash.status, 'unknown');
 assert.equal(runtimeAdapter.invocationFor('claude', 'opus').command, 'claude');
+assert.match(runtimeAdapter.invocationFor('claude', 'opus', {}, ['filesystem', 'shell']).args.join(' '), /Bash\(node \*\)/);
+assert.equal(runtimeAdapter.claudeAllowedTools(['filesystem']).includes('Bash'), false);
 assert.equal(runtimeAdapter.invocationFor('codex', 'gpt').args.at(-1), '-');
 assert.equal(runtimeAdapter.invocationFor('codex', 'gpt', { CITADEL_CODEX_JS: 'codex.js' }).args[0], 'codex.js');
 

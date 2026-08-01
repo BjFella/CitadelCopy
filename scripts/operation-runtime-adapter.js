@@ -30,9 +30,22 @@ function promptFor(input) {
   ].join('\n');
 }
 
-function invocationFor(runtime, model, env = process.env) {
+function claudeAllowedTools(tools) {
+  const allowed = [];
+  if (tools.includes('filesystem')) allowed.push('Read', 'Edit', 'Write', 'Glob', 'Grep');
+  if (tools.includes('shell')) allowed.push(
+    'Bash(node *)', 'Bash(npm *)', 'Bash(npx *)',
+    'Bash(git diff *)', 'Bash(git status *)', 'Bash(git rev-parse *)',
+  );
+  return allowed.join(',');
+}
+
+function invocationFor(runtime, model, env = process.env, tools = []) {
   if (runtime === 'claude') {
-    const args = ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits'];
+    const args = [
+      '--print', '--output-format', 'json', '--permission-mode', 'acceptEdits',
+      '--allowedTools', claudeAllowedTools(tools),
+    ];
     if (model) args.push('--model', model);
     return { command: 'claude', args };
   }
@@ -66,7 +79,7 @@ function observedToolCalls(runtime, stdout) {
 function execute(input, runtime, options = {}) {
   if (!input || input.protocol !== 'citadel-operation-adapter-v1') throw new TypeError('invalid operation adapter input');
   const invocation = (options.resolve || platformInvocation)(
-    invocationFor(runtime, input.plan.model, options.env || process.env),
+    invocationFor(runtime, input.plan.model, options.env || process.env, input.plan.tools),
     { env: options.env || process.env },
   );
   const result = (options.spawn || spawnSync)(invocation.command, invocation.args, {
@@ -127,4 +140,4 @@ function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) main();
 
-module.exports = Object.freeze({ costsFor, execute, invocationFor, main, observedToolCalls, promptFor });
+module.exports = Object.freeze({ claudeAllowedTools, costsFor, execute, invocationFor, main, observedToolCalls, promptFor });
