@@ -11,9 +11,11 @@ const answerFile = path.join(ROOT, 'docs', 'grants', 'TYPEFORM_ANSWER_PACK.md');
 const readinessFile = path.join(ROOT, 'docs', 'grants', 'SUBMISSION_READINESS.md');
 const checklistFile = path.join(ROOT, 'docs', 'grants', 'APPLICATION_CHECKLIST.md');
 const rendererFile = path.join(ROOT, 'scripts', 'render-sentient-grant-packet.py');
+const formCheckFile = path.join(ROOT, 'scripts', 'check-sentient-grant-form.js');
 const pdfFile = path.join(ROOT, 'output', 'pdf', 'citadel-sentient-grant-packet.pdf');
+const packageFile = path.join(ROOT, 'package.json');
 
-for (const file of [answerFile, readinessFile, checklistFile, rendererFile, pdfFile]) {
+for (const file of [answerFile, readinessFile, checklistFile, rendererFile, formCheckFile, pdfFile, packageFile]) {
   assert.ok(fs.existsSync(file), `missing application package file: ${path.relative(ROOT, file)}`);
 }
 
@@ -21,7 +23,9 @@ const answers = fs.readFileSync(answerFile, 'utf8');
 const readiness = fs.readFileSync(readinessFile, 'utf8');
 const checklist = fs.readFileSync(checklistFile, 'utf8');
 const renderer = fs.readFileSync(rendererFile, 'utf8');
+const formCheck = fs.readFileSync(formCheckFile, 'utf8');
 const pdf = fs.readFileSync(pdfFile);
+const packageJson = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
 
 const oneLine = 'An open control layer that proves whether AI agents finished and what it cost.';
 assert.ok(oneLine.length <= 80, `one-line answer exceeds Typeform limit: ${oneLine.length}`);
@@ -34,6 +38,11 @@ for (const placeholder of ['[SETH EMAIL]', '[CITY, COUNTRY]']) {
 assert.ok(!answers.includes('[HOW SETH HEARD ABOUT SENTIENT]'), 'Grant path must not require the skipped how-heard field');
 assert.match(answers, /jumps from the required supporting-document upload\s+directly to the thank-you screen/i);
 assert.match(readiness, /Grant-branch logic jumps from the supporting\s+document field to the grant thank-you screen/i);
+assert.strictEqual(packageJson.scripts['application:form:check'], 'node scripts/check-sentient-grant-form.js');
+assert.match(readiness, /npm run application:form:check/);
+assert.match(formCheck, /EXPECTED_GRANT_FIELDS/);
+assert.match(formCheck, /611739716b3eb5ad7b16a2e93778f91b9b8cc06ff5ffcbe2eb843c4683544dcd/);
+assert.match(readiness, /611739716b3eb5ad7b16a2e93778f91b9b8cc06ff5ffcbe2eb843c4683544dcd/);
 
 for (const liveField of [
   'Email',

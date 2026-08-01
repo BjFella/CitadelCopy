@@ -79,8 +79,8 @@
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 3864,
-      "digest": "sha256:cc20d98d8adb2c88be743dd75bb7317f81c5c4ef56b8b89cf65f92f78f8ad787"
+      "bytes": 4019,
+      "digest": "sha256:8fd7922b103fd2dd66b4685137e5cebaae6f81956dd8408f19a28ee64af35d60"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
@@ -129,8 +129,8 @@
     },
     {
       "path": "grants/SUBMISSION_READINESS.md",
-      "bytes": 5470,
-      "digest": "sha256:62bbeb4d326405e22a52bd01c5353be10e583011a5c03eb89c4d979dfb6cff42"
+      "bytes": 6077,
+      "digest": "sha256:dd2ce23b38947c1cab7fc0c32fd3eeb8cf1e8b89e2d1b15c4b61d44ecce65658"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -193,5 +193,5 @@
       "digest": "sha256:fe6a87df64bb6248b53a182bee63f7eb288e9128e669caf96e8b9ee26bc27f05"
     }
   ],
-  "source_digest": "sha256:9038395e23f7ba3d819cf48fc4f5745d12b6bc126ed0780d4616a79d2f706bc9"
+  "source_digest": "sha256:a76e348fb5077578766212e978812e846d8cd17e305867a4d62265bfe1e4597b"
 }

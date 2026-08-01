@@ -113,6 +113,7 @@
     "application:evidence": "node scripts/application-evidence.js build",
     "application:evidence:check": "node scripts/application-evidence.js check",
     "application:evidence:test": "node scripts/test-application-evidence.js",
+    "application:form:check": "node scripts/check-sentient-grant-form.js",
     "application:claims:test": "node scripts/test-application-claim-discipline.js",
     "application:media:walkthrough": "python scripts/render-application-walkthrough.py",
     "application:media:verification": "python scripts/render-live-verification-demo.py",
