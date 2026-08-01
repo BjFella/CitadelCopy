@@ -54,6 +54,15 @@
       "false_passes": 0,
       "integrity_failures": 0,
       "actual_cash_status": "unknown"
+    },
+    "fresh_clone_onboarding": {
+      "evidence_class": "unattended-clean-clone-engineering-proof",
+      "status": "passed",
+      "steps_passed": 5,
+      "steps_total": 5,
+      "total_duration_ms": 28167,
+      "source_commit": "8c7b5102b75946767c62bf5a04fae13471b6e010",
+      "model_execution": "not-attempted"
     }
   },
   "boundaries": [
@@ -61,6 +70,7 @@
     "The 24-cell ROMA result proves control and evidence integration; its efficiency hypothesis failed.",
     "The Claude prospective cell proves one real runtime integration, not savings or broad reliability.",
     "The 72-cell local comparison improved quality and reduced measured GPU energy, but failed the frozen 30 percent economic gates.",
+    "The fresh-clone proof exercises engineering onboarding without claiming real-user utility or model-task completion.",
     "Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured."
   ],
   "artifacts": [
@@ -79,7 +89,11 @@
     {
       "path": "benchmarks/sentient-readiness/published-run/bundle.json",
       "digest": "sha256:85e5b56bbd9812721d917830955cc523d7f99297700160235051ec2af592f705"
+    },
+    {
+      "path": "benchmarks/fresh-clone-onboarding/REPORT.json",
+      "digest": "sha256:7ac176b7408301fcdea8fb18fd3389db91a68399889adc7cdf78a3f97c1af1d4"
     }
   ],
-  "manifest_digest": "sha256:e9c43c56fda331e054e5e05cbbb1c1fa1d5651be328208b60014303e74324cad"
+  "manifest_digest": "sha256:e8a65d50ca409d039608a783478f605f3454ab4ab33ee98e525fdf18d89f7318"
 }

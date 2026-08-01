@@ -2,7 +2,7 @@
 
 Status: internal draft, not approved or submitted
 
-Evidence observed: 2026-07-31
+Evidence observed: 2026-08-01 UTC
 
 ## Project
 
@@ -23,8 +23,15 @@ prompt router. All receipts reconciled, and there were zero false passes.
 The precommitted efficiency hypothesis still failed: Citadel used six strong
 whole-operation attempts, the same as the direct-7B baseline, and was much
 slower. The application does not convert that result into a savings claim.
-The grant would fund the missing research result: learning when recursive
-decomposition and strong modules are worth their full operational cost.
+
+A subsequent preregistered 72-cell local comparison tested a simpler adaptive
+policy on one GTX 1070. Adaptive verified 27/36 outcomes versus 24/36 for
+always-7B while reducing measured GPU energy 9.9%, modeled GPU electricity plus
+amortization 10.3%, and model duration 10.8%. It failed the frozen 30% economic
+gates, retained one model-launch timeout as unknown, and produced zero false
+passes or integrity failures. The grant would fund the missing general result:
+learning when smaller models, recursive decomposition, tools, and strong
+modules are worth their full operational cost across stacks and hardware.
 
 ## Short application answer
 
@@ -208,6 +215,36 @@ largest gaps: a stack-neutral contract, real open/local execution, exact model
 manifests, clean setup preflight, explicit attempt semantics, and task-scoped
 verification.
 
+## Latest prospective local economic comparison
+
+Method:
+[`benchmarks/sentient-readiness/METHOD.md`](../../benchmarks/sentient-readiness/METHOD.md)
+
+Signed report:
+[`benchmarks/sentient-readiness/published-run/REPORT.md`](../../benchmarks/sentient-readiness/published-run/REPORT.md)
+
+One-command verification:
+
+```text
+npm run readiness:verify
+```
+
+| Policy | Verified | Attempts | 3B | 7B | GPU energy | Modeled comparison cost |
+|---|---:|---:|---:|---:|---:|---:|
+| Always strong local | 24/36 | 36 | 0 | 36 | 0.004599 kWh | $0.001795 |
+| Citadel adaptive local | 27/36 | 39 | 24 | 15 | 0.004145 kWh | $0.001609 |
+
+The adaptive policy improved verified completion by three cells and reduced
+measured GPU energy, modeled GPU cost, and duration by about ten percent. It did
+not meet the precommitted 30% economic threshold. Token use increased 11.2%,
+and one initial 7B attempt timed out before model identity was observed. Both
+facts remain in the signed bundle.
+
+This is the strongest current performance evidence because it is prospective,
+repeated, local, energy-measured, and failure-preserving. It is still a
+single-machine, single-family, exact-answer pilot rather than the funded
+multi-stack result.
+
 ## Why this is differentiated
 
 Citadel is not claiming the first model router or the first agent orchestrator.
@@ -234,6 +271,8 @@ reconcilable evidence.
 - It runs on real open/local models rather than a simulated routing table.
 - The stack-neutral core and proof artifacts remain MIT-licensed public goods.
 - The evidence layer has already rejected two of Citadel's own optimizer claims.
+- A third prospective study improved quality and measured energy while still
+  rejecting the claimed 30% economic target.
 - The work distinguishes activity, completion, control integrity, and cost.
 - Citadel already provides operation lifecycle, recovery, executor profiles,
   worktree isolation, receipts, and verification, reducing substrate risk.
@@ -328,7 +367,11 @@ These are funded targets, not current results.
 - Six diagnostic tasks are too few for a general performance claim.
 - Citadel/ROMA was materially slower than every baseline.
 - The strong-operation avoidance gate failed.
-- Total dollar cost is still unknown.
+- The 72-cell local adaptive result reduced measured GPU energy only 9.9%, below
+  its frozen 30% target.
+- One local 7B cell timed out before model identity was observed.
+- Actual end-to-end dollar cost is still unknown because whole-system energy
+  and Seth's observed utility rate were not measured.
 - Current stack-neutral adoption is demonstrated only with ROMA.
 - The local test used one 8 GB GPU and two Qwen2.5-Coder model sizes.
 - The controller remains heuristic rather than learned.
@@ -350,9 +393,11 @@ Those are the exact uncertainties the funded milestones address.
 
 Do not submit until:
 
-- the committed proof bundle passes its clean GitHub-hosted verification job;
-- the public operation-control page is live at its final URL;
-- final repository and evidence links are checked after merge;
+- the application-readiness branch is merged and all hosted checks pass;
+- the final public pages, evidence manifest, and repository links are checked
+  after merge;
+- the two-minute walkthrough and three-image application kit are captured from
+  the merged public site;
 - Seth reviews and explicitly approves the requested amount and wording;
 - Seth explicitly approves submitting the application.
 

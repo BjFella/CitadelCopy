@@ -107,6 +107,19 @@ For a short, one-off edit, your coding agent may already be enough. Citadel beco
 
 Citadel does not replace `CLAUDE.md` or `AGENTS.md`. Those files describe the project and its rules. Citadel supplies the workflows and state used to carry them out consistently.
 
+## Evidence status
+
+Citadel publishes positive and negative results from the same evidence
+contract. The latest preregistered 72-cell local comparison improved verified
+completion from 24/36 to 27/36 while reducing measured GPU energy 9.9%, but it
+failed the frozen 30% economic target. That failed gate is retained rather than
+turned into a savings claim.
+
+- [Evaluator start here](docs/grants/EVALUATOR_START_HERE.md)
+- [Generated evidence manifest](docs/EVIDENCE_MANIFEST.md)
+- [Prospective local comparison](benchmarks/sentient-readiness/published-run/REPORT.md)
+- [Research site](https://sethgammon.github.io/Citadel/research.html)
+
 ## One operating loop
 
 <img src="assets/loop-flow.svg" width="100%" alt="The Citadel lifecycle: route, execute, protect, verify, record, and resume" />

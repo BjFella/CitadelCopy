@@ -30,6 +30,7 @@ function buildManifest() {
   const roma = readJson('benchmarks/roma-operation-control/published-run/bundle.json');
   const prospective = readJson('benchmarks/operation-control-v2/prospective/RESULTS.json');
   const readiness = readJson('benchmarks/sentient-readiness/published-run/bundle.json');
+  const onboarding = readJson('benchmarks/fresh-clone-onboarding/REPORT.json');
   const romaPolicies = Object.fromEntries(roma.summary.policies.map((entry) => [entry.policy_id, entry]));
   const readinessPolicies = Object.fromEntries(readiness.summary.policies.map((entry) => [entry.policy_id, entry]));
   const manifest = {
@@ -89,12 +90,22 @@ function buildManifest() {
         integrity_failures: readiness.summary.integrity_failures,
         actual_cash_status: readiness.summary.actual_end_to_end_cash_status,
       },
+      fresh_clone_onboarding: {
+        evidence_class: 'unattended-clean-clone-engineering-proof',
+        status: onboarding.status,
+        steps_passed: onboarding.steps.filter((step) => step.status === 'passed').length,
+        steps_total: onboarding.steps.length,
+        total_duration_ms: onboarding.total_duration_ms,
+        source_commit: onboarding.source_commit,
+        model_execution: onboarding.model_execution,
+      },
     },
     boundaries: [
       'The 120-cell optimizer result is retrospective and its performance gate failed.',
       'The 24-cell ROMA result proves control and evidence integration; its efficiency hypothesis failed.',
       'The Claude prospective cell proves one real runtime integration, not savings or broad reliability.',
       'The 72-cell local comparison improved quality and reduced measured GPU energy, but failed the frozen 30 percent economic gates.',
+      'The fresh-clone proof exercises engineering onboarding without claiming real-user utility or model-task completion.',
       'Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.',
     ],
     artifacts: [
@@ -102,6 +113,7 @@ function buildManifest() {
       artifact('benchmarks/roma-operation-control/published-run/bundle.json', roma),
       artifact('benchmarks/operation-control-v2/prospective/RESULTS.json', prospective),
       artifact('benchmarks/sentient-readiness/published-run/bundle.json', readiness),
+      artifact('benchmarks/fresh-clone-onboarding/REPORT.json', onboarding),
     ],
   };
   manifest.manifest_digest = digest({ ...manifest, manifest_digest: null });
@@ -113,6 +125,7 @@ function renderManifest(manifest) {
   const r = manifest.claims.roma_operation_control;
   const p = manifest.claims.prospective_runtime;
   const l = manifest.claims.prospective_local_economics;
+  const f = manifest.claims.fresh_clone_onboarding;
   return `# Citadel public evidence manifest
 
 Generated from committed canonical artifacts. As of ${manifest.as_of}.
@@ -123,6 +136,7 @@ Generated from committed canonical artifacts. As of ${manifest.as_of}.
 | ROMA operation control | ${r.cells} cells; Citadel ${r.citadel_verified}/${r.citadel_total}; direct local ${r.local_baseline_verified}/${r.local_baseline_total} | Evidence ${r.evidence_result}; performance ${r.performance_hypothesis} |
 | Prospective runtime | ${p.passed}/${p.attempts} passed; ${p.successful_runtime}/${p.successful_model} | Integration only; actual cash ${p.actual_cash_status} |
 | Prospective local economics | adaptive ${l.adaptive_verified}/${l.adaptive_total}; baseline ${l.baseline_verified}/${l.baseline_total}; ${(l.gpu_energy_reduction * 100).toFixed(1)}% less GPU energy | Frozen economic result ${l.evidence_result}; actual cash ${l.actual_cash_status} |
+| Fresh-clone onboarding | ${f.steps_passed}/${f.steps_total} steps in ${(f.total_duration_ms / 1000).toFixed(2)}s | Engineering proof; model execution ${f.model_execution} |
 
 ## Claim boundaries
 
