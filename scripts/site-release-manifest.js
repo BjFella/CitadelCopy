@@ -15,8 +15,15 @@ const ROOT_FILES = Object.freeze([
   'site-system.js', 'evidence-manifest.json', 'EVIDENCE_MANIFEST.md',
   'robots.txt', 'sitemap.xml', 'site.webmanifest',
 ]);
+const TEXT_EXTENSIONS = new Set([
+  '.css', '.html', '.js', '.json', '.md', '.svg', '.txt', '.vtt', '.webmanifest', '.xml',
+]);
 
 function digest(buffer) { return `sha256:${crypto.createHash('sha256').update(buffer).digest('hex')}`; }
+function normalizeForManifest(relative, buffer) {
+  if (!TEXT_EXTENSIONS.has(path.extname(relative).toLowerCase())) return buffer;
+  return Buffer.from(buffer.toString('utf8').replace(/\r\n?/g, '\n'), 'utf8');
+}
 function walk(relativeRoot) {
   const absoluteRoot = path.join(DOCS, relativeRoot);
   if (!fs.existsSync(absoluteRoot)) return [];
@@ -34,11 +41,10 @@ function build() {
     .filter((relative) => relative !== 'site-release-manifest.json')
     .filter((relative) => fs.existsSync(path.join(DOCS, relative)))
     .sort();
-  const entries = files.map((relative) => ({
-    path: relative,
-    bytes: fs.statSync(path.join(DOCS, relative)).size,
-    digest: digest(fs.readFileSync(path.join(DOCS, relative))),
-  }));
+  const entries = files.map((relative) => {
+    const content = normalizeForManifest(relative, fs.readFileSync(path.join(DOCS, relative)));
+    return { path: relative, bytes: content.length, digest: digest(content) };
+  });
   return {
     schema: 1,
     kind: 'citadel-site-release-manifest',
@@ -59,9 +65,11 @@ function verify() {
   return expected;
 }
 
-const command = process.argv[2] || 'verify';
-const manifest = command === 'build' ? write() : command === 'verify' ? verify() : null;
-if (!manifest) throw new Error(`unknown site release manifest command: ${command}`);
-process.stdout.write(`site release manifest ${command} passed: ${manifest.source_digest}\n`);
+if (require.main === module) {
+  const command = process.argv[2] || 'verify';
+  const manifest = command === 'build' ? write() : command === 'verify' ? verify() : null;
+  if (!manifest) throw new Error(`unknown site release manifest command: ${command}`);
+  process.stdout.write(`site release manifest ${command} passed: ${manifest.source_digest}\n`);
+}
 
-module.exports = Object.freeze({ build, verify });
+module.exports = Object.freeze({ build, normalizeForManifest, verify });

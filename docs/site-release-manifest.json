@@ -39,13 +39,13 @@
     },
     {
       "path": "assets/application/citadel-sentient-walkthrough.vtt",
-      "bytes": 3039,
-      "digest": "sha256:0dfc510c892ea76fa4ea76b516adeda9722e02c344da2e275dfbedd87b4b383a"
+      "bytes": 2943,
+      "digest": "sha256:9f9600ca6975b25049a3903d4ede9d15b532b078367d921694be0d70fa12ce85"
     },
     {
       "path": "assets/application/live-verification-output.json",
-      "bytes": 4065,
-      "digest": "sha256:c7d72d80d82c2d7aed84ccad3774ca0be4bdcd4a3b61a6982de8a126d1883caf"
+      "bytes": 4035,
+      "digest": "sha256:e296a8411e234ac6dcf18f76dbb6a620a1be040b3d521453b986d05299bf4f99"
     },
     {
       "path": "assets/application/walkthrough-narration.txt",
@@ -124,8 +124,8 @@
     },
     {
       "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
-      "bytes": 25682,
-      "digest": "sha256:2088b811a6b1c098ad2cb87324bbd38bf11b0d4be3b72ce1ed0f0f2bc3b3b4eb"
+      "bytes": 25410,
+      "digest": "sha256:79725c98e281072062c0135bfa677cf3439575f497d5f8ff42a024db0052b06d"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -134,18 +134,18 @@
     },
     {
       "path": "index.html",
-      "bytes": 204734,
-      "digest": "sha256:eee1b98d9d8ccfbe26ec8691b27bb076e718b5fcc2d93bfae86c93143526496e"
+      "bytes": 201636,
+      "digest": "sha256:7342976062c565e01cafdec13b5ca1d1f160c485ce66a7e2eceecb3c7f049e82"
     },
     {
       "path": "operation-control.html",
-      "bytes": 26980,
-      "digest": "sha256:1716268f6e2399773bd6f1eb909833dcc775878d142d8a7912a2551f4dd12ead"
+      "bytes": 26449,
+      "digest": "sha256:ee00168a9614783448d1355c15e85a429e2ff88ef07834a8e05dfb56a0db1756"
     },
     {
       "path": "optimizer.html",
-      "bytes": 32571,
-      "digest": "sha256:a369bf0968aa3ffef69e7fe642672eaf12ac55696d79c98c00c4ff59d50eb215"
+      "bytes": 31919,
+      "digest": "sha256:0474108b37e370cbf4d657401eee11a9436d153a2c0b84c184cffba20157c159"
     },
     {
       "path": "research.html",
@@ -183,5 +183,5 @@
       "digest": "sha256:72ee2abbae6b4a1f500abeebf803e149640fa9f53da04343606c648766065121"
     }
   ],
-  "source_digest": "sha256:530b140c7c74286055c85627d800fe14a1dd13728a6e935c8ea321176bb6bb0f"
+  "source_digest": "sha256:5727b949891123314e7df7d8b983c729271f982d80f84a309b3e7c93d5487f3b"
 }
