@@ -404,10 +404,10 @@
     "evidence_result": "failed",
     "actual_end_to_end_cash_status": "unknown"
   },
-  "report_digest": "sha256:c55b4c73b07b739a897a03ebe4d88e8c314206e221f235907cace5b3f02d4813",
+  "report_digest": "sha256:7e99309d4a273d6588dd8f9ed9010cf86645e7a0aa7d551e3435a278796655e7",
   "attestation": {
     "algorithm": "Ed25519",
-    "payload_digest": "sha256:23ea75303e24eaef6d38d7dd9dde1f7ae8d25fb0b8ca877f043d39b4bf873326",
-    "signature": "mpTkdhdvc9pt80AwrJt+Itfd4lZmbqoIx12HU5Wov7j6Mri7wgIcPyFXN6dLvB3MF/PLPIHI9jx6QTgBQPL4Aw=="
+    "payload_digest": "sha256:1981f618abe99c7e48fde960ee1b6cca6432ace712aff575848b432ed7cf209f",
+    "signature": "tLS7ngmj/Shdxx6snEVSblWLqe85sFZHkg6+ojKBowiGzoei+oBf8CLr+TNYWrnAaWzmEC0JqDa5dxvRWfG4AA=="
   }
 }

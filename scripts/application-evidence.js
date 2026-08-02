@@ -40,15 +40,25 @@ function buildManifest() {
   const capabilityClosure = readJson('benchmarks/sentient-readiness-v2/DEPENDENCY_CLOSURE.json');
   const measurementAudit = readJson('benchmarks/local-measurement-audit/REPORT.json');
   const representative = readJson('benchmarks/representative-operation-pilot-v2/published-run/bundle.json');
+  const prospectiveRepository = readJson('benchmarks/prospective-economic-pilot/published-run/bundle.json');
+  const hybrid = readJson('benchmarks/hybrid-economic-pilot/published-run/bundle.json');
+  const hybridV2 = readJson('benchmarks/hybrid-economic-pilot-v2/published-run/bundle.json');
   const onboarding = readJson('benchmarks/fresh-clone-onboarding/REPORT.json');
   const romaPolicies = Object.fromEntries(roma.summary.policies.map((entry) => [entry.policy_id, entry]));
   const readinessPolicies = Object.fromEntries(readiness.summary.policies.map((entry) => [entry.policy_id, entry]));
   const capabilityPolicies = Object.fromEntries(capabilityProfile.summary.policies.map((entry) => [entry.policy_id, entry]));
   const representativePolicies = Object.fromEntries(representative.summary.policies.map((entry) => [entry.policy_id, entry]));
+  const prospectiveRepositoryPolicies = Object.fromEntries(prospectiveRepository.summary.policies.map((entry) => [entry.policy_id, entry]));
+  const hybridPolicies = Object.fromEntries(hybrid.summary.policies.map((entry) => [entry.policy_id, entry]));
+  const hybridV2Policies = Object.fromEntries(hybridV2.summary.policies.map((entry) => [entry.policy_id, entry]));
+  const hybridCells = hybrid.artifacts.map((entry) => readJson(`benchmarks/hybrid-economic-pilot/published-run/${entry.path}`));
+  const hybridBaselineByTask = new Map(hybridCells.filter((cell) => cell.policy_id === 'always-claude-sonnet').map((cell) => [cell.scenario_id, cell.attempts[0].economics.comparison_cost.total_usd]));
+  const hybridPairedCandidateCost = hybridCells.filter((cell) => cell.policy_id === 'citadel-hybrid-risk-route').reduce((total, cell) => total + cell.attempts.filter((attempt) => attempt.tier === 'local').reduce((subtotal, attempt) => subtotal + attempt.economics.comparison_cost.total_usd, 0) + (cell.attempts.some((attempt) => attempt.tier === 'cloud') ? hybridBaselineByTask.get(cell.scenario_id) : 0), 0);
+  const hybridPairedCostReduction = 1 - hybridPairedCandidateCost / hybridPolicies['always-claude-sonnet'].comparison_cost_usd;
   const manifest = {
     schema: 1,
     kind: 'citadel-public-evidence-manifest',
-    as_of: representative.completed_at,
+    as_of: hybridV2.completed_at,
     claim_policy: 'Every value in this manifest is generated from a canonical committed artifact. Public prose is separately contract-tested. Unknown is never converted to zero.',
     claims: {
       optimizer_history: {
@@ -168,6 +178,63 @@ function buildManifest() {
         gates: representative.summary.gates,
         actual_cash_status: representative.summary.actual_end_to_end_cash_status,
       },
+      prospective_repository_calibration: {
+        evidence_class: 'prospective-local-repository-operation-calibration',
+        cells: prospectiveRepository.artifacts.length,
+        unique_tasks: prospectiveRepositoryPolicies['always-strong-local'].unique_tasks,
+        evidence_result: prospectiveRepository.summary.evidence_result,
+        baseline_verified: prospectiveRepositoryPolicies['always-strong-local'].verified,
+        baseline_total: prospectiveRepositoryPolicies['always-strong-local'].cells,
+        candidate_verified: prospectiveRepositoryPolicies['citadel-frozen-risk-route'].verified,
+        candidate_total: prospectiveRepositoryPolicies['citadel-frozen-risk-route'].cells,
+        gpu_energy_reduction: prospectiveRepository.summary.comparison.gpu_energy_reduction,
+        modeled_cost_reduction: prospectiveRepository.summary.comparison.modeled_gpu_cost_reduction,
+        baseline_risk_strata: prospectiveRepository.summary.risk_strata,
+        path_violations: prospectiveRepository.summary.path_violations,
+        false_passes: prospectiveRepository.summary.false_passes,
+        actual_cash_status: prospectiveRepository.summary.actual_end_to_end_cash_status,
+      },
+      hybrid_economic_calibration: {
+        evidence_class: 'prospective-hybrid-repository-operation-calibration',
+        cells: hybrid.artifacts.length,
+        unique_tasks: hybridPolicies['always-claude-sonnet'].unique_tasks,
+        evidence_result: hybrid.summary.evidence_result,
+        baseline_verified: hybridPolicies['always-claude-sonnet'].verified,
+        baseline_total: hybridPolicies['always-claude-sonnet'].cells,
+        candidate_verified: hybridPolicies['citadel-hybrid-risk-route'].verified,
+        candidate_total: hybridPolicies['citadel-hybrid-risk-route'].cells,
+        cloud_calls_avoided: hybridPolicies['always-claude-sonnet'].cloud_attempts - hybridPolicies['citadel-hybrid-risk-route'].cloud_attempts,
+        comparison_cost_reduction: hybrid.summary.comparison.comparison_cost_reduction,
+        paired_cost_sensitivity: Number(hybridPairedCostReduction.toFixed(6)),
+        path_violations: hybrid.summary.path_violations,
+        false_passes: hybrid.summary.false_passes,
+        actual_cash_status: hybrid.summary.actual_subscription_cash_status,
+      },
+      calibrated_hybrid_economic_pilot: {
+        evidence_class: 'prospective-calibrated-hybrid-repository-operation',
+        cells: hybridV2.artifacts.length,
+        unique_tasks: hybridV2Policies['always-claude-sonnet'].unique_tasks,
+        evidence_result: hybridV2.summary.evidence_result,
+        baseline_verified: hybridV2Policies['always-claude-sonnet'].verified,
+        baseline_total: hybridV2Policies['always-claude-sonnet'].cells,
+        candidate_verified: hybridV2Policies['citadel-calibrated-support-route'].verified,
+        candidate_total: hybridV2Policies['citadel-calibrated-support-route'].cells,
+        local_attempts: hybridV2Policies['citadel-calibrated-support-route'].local_attempts,
+        cloud_attempts: hybridV2Policies['citadel-calibrated-support-route'].cloud_attempts,
+        escalations: hybridV2Policies['citadel-calibrated-support-route'].escalations,
+        cloud_calls_avoided: hybridV2Policies['always-claude-sonnet'].cloud_attempts - hybridV2Policies['citadel-calibrated-support-route'].cloud_attempts,
+        baseline_comparison_cost_usd: hybridV2Policies['always-claude-sonnet'].comparison_cost_usd,
+        candidate_comparison_cost_usd: hybridV2Policies['citadel-calibrated-support-route'].comparison_cost_usd,
+        comparison_cost_reduction: hybridV2.summary.comparison.comparison_cost_reduction,
+        quality_ratio: hybridV2.summary.comparison.quality_ratio,
+        risk_strata: hybridV2.summary.risk_strata,
+        path_violations: hybridV2.summary.path_violations,
+        false_passes: hybridV2.summary.false_passes,
+        integrity_failures: hybridV2.summary.integrity_failures,
+        gates: hybridV2.summary.gates,
+        actual_cash_status: hybridV2.summary.actual_subscription_cash_status,
+        whole_system_energy_status: hybridV2.summary.whole_system_energy_status,
+      },
       fresh_clone_onboarding: {
         evidence_class: 'unattended-clean-clone-engineering-proof',
         status: onboarding.status,
@@ -188,6 +255,10 @@ function buildManifest() {
       'The capability-profile v2 corrigendum discloses v1-informed design, task-template overlap, and deterministic repetition semantics without changing the frozen negative result.',
       'The 24-cell representative repository-operation shakedown matched 6/12 verified cells under both policies with zero false passes and zero path violations. Its 7.1% measured GPU-energy reduction missed the frozen 20% gate, so the evidence result is failed and no general savings claim is permitted.',
       'The representative shakedown contains six unique fixture tasks repeated twice per policy; timing repetitions are not independent tasks and the small fixture set is not production generalization.',
+      'A fresh 12-task local-only repository calibration preserved 8/12 verified completions under both policies but used 34.6% more GPU energy; its baseline also failed the frozen overall and high-risk validity floors.',
+      'The first 12-task Claude-plus-local hybrid preserved 12/12 completions and reduced comparison cost 28.4%, missing the frozen 30% gate. A post-run paired-cost sensitivity reaches 30.1% but does not change the failed verdict.',
+      'The separately frozen calibrated hybrid v2 preserved 12/12 completions, reduced provider-reported and locally modeled comparison cost 38.7%, and passed every frozen gate on twelve new author-selected synthetic tasks.',
+      'Hybrid v2 establishes a positive result only inside its preregistered support envelope on one model pair and one machine. Task selection was author-controlled, comparison USD is not the operator subscription bill, and production generalization is not claimed.',
       'The fresh-clone proof completed five command stages; doctor semantic health remained unknown, and no real-user utility or model-task completion is claimed.',
       'Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.',
       'GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained.',
@@ -204,6 +275,9 @@ function buildManifest() {
       textArtifact('benchmarks/sentient-readiness-v2/CORRIGENDUM.md'),
       artifact('benchmarks/local-measurement-audit/REPORT.json', measurementAudit),
       artifact('benchmarks/representative-operation-pilot-v2/published-run/bundle.json', representative),
+      artifact('benchmarks/prospective-economic-pilot/published-run/bundle.json', prospectiveRepository),
+      artifact('benchmarks/hybrid-economic-pilot/published-run/bundle.json', hybrid),
+      artifact('benchmarks/hybrid-economic-pilot-v2/published-run/bundle.json', hybridV2),
       artifact('benchmarks/fresh-clone-onboarding/REPORT.json', onboarding),
     ],
   };
@@ -218,6 +292,9 @@ function renderManifest(manifest) {
   const l = manifest.claims.prospective_local_economics;
   const c = manifest.claims.capability_profile_followup;
   const x = manifest.claims.representative_repository_pilot;
+  const y = manifest.claims.prospective_repository_calibration;
+  const h = manifest.claims.hybrid_economic_calibration;
+  const v = manifest.claims.calibrated_hybrid_economic_pilot;
   const f = manifest.claims.fresh_clone_onboarding;
   return `# Citadel public evidence manifest
 
@@ -231,6 +308,9 @@ Generated from committed canonical artifacts. As of ${manifest.as_of}.
 | Prospective local v1 | adaptive ${l.adaptive_verified}/${l.adaptive_total} verified, ${l.adaptive_failed} failed, ${l.adaptive_unknown} unknown; baseline ${l.baseline_verified}/${l.baseline_total} verified, ${l.baseline_failed} failed, ${l.baseline_unknown} unknown | Frozen gate ${l.evidence_result}; timeout sensitivity ${(l.sensitivity.gpu_energy_reduction * 100).toFixed(1)}% GPU energy; identity gate ${l.gates.execution_identity} |
 | Capability-profile follow-up | profile ${c.profile_verified}/${c.profile_total} verified, ${c.profile_failed} failed, ${c.profile_unknown} unknown; baseline ${c.baseline_verified}/${c.baseline_total} | Matched baseline cell completion; ${Math.abs(c.gpu_energy_reduction * 100).toFixed(1)}% more GPU energy; gate ${c.evidence_result} |
 | Representative repository pilot | profile ${x.profile_verified}/${x.profile_total} verified; baseline ${x.baseline_verified}/${x.baseline_total}; ${x.unique_tasks} unique fixture tasks | ${(x.gpu_energy_reduction * 100).toFixed(1)}% less measured GPU energy missed the 20% gate; evidence ${x.evidence_result} |
+| Fresh local repository calibration | candidate ${y.candidate_verified}/${y.candidate_total}; baseline ${y.baseline_verified}/${y.baseline_total}; ${y.unique_tasks} unique tasks | ${Math.abs(y.gpu_energy_reduction * 100).toFixed(1)}% more measured GPU energy; invalid baseline; evidence ${y.evidence_result} |
+| Hybrid calibration | candidate ${h.candidate_verified}/${h.candidate_total}; baseline ${h.baseline_verified}/${h.baseline_total}; ${h.cloud_calls_avoided} Claude calls avoided | ${(h.comparison_cost_reduction * 100).toFixed(1)}% cost reduction missed 30%; paired sensitivity ${(h.paired_cost_sensitivity * 100).toFixed(1)}%; evidence ${h.evidence_result} |
+| Calibrated hybrid v2 | candidate ${v.candidate_verified}/${v.candidate_total}; baseline ${v.baseline_verified}/${v.baseline_total}; ${v.local_attempts} local attempts, ${v.escalations} recovery | ${(v.comparison_cost_reduction * 100).toFixed(1)}% comparison-cost reduction at ${(v.quality_ratio * 100).toFixed(1)}% relative completion; evidence ${v.evidence_result} |
 | Fresh-clone onboarding | ${f.stages_completed}/${f.steps_total} command stages in ${(f.total_duration_ms / 1000).toFixed(2)}s | Doctor health ${f.doctor_health}; model execution ${f.model_execution} |
 
 ## Claim boundaries
@@ -245,6 +325,7 @@ function buildConformance(manifest = buildManifest()) {
   const roma = manifest.claims.roma_operation_control;
   const prospective = manifest.claims.prospective_runtime;
   const local = manifest.claims.prospective_local_economics;
+  const hybrid = manifest.claims.calibrated_hybrid_economic_pilot;
   return {
     schema: 1,
     kind: 'citadel-application-adapter-conformance',
@@ -283,6 +364,16 @@ function buildConformance(manifest = buildManifest()) {
         observed_identity: 'configured modules and provider-call history reconciled',
         outcome_verification: 'exact canonical answer digest outside ROMA',
         cost_lenses: { provider_invoice: 'known-zero-local', actual_end_to_end_cash: 'unknown' },
+      },
+      {
+        id: 'citadel-hybrid-claude-ollama',
+        runtime_family: 'frontier-plus-open-local-route',
+        evidence_level: 'prospective-actual-run',
+        status: hybrid.evidence_result,
+        requested_identity: 'Claude Sonnet 5 baseline plus pinned Qwen2.5-Coder 3B support route',
+        observed_identity: `${hybrid.candidate_verified}/${hybrid.candidate_total} candidate and ${hybrid.baseline_verified}/${hybrid.baseline_total} baseline completions`,
+        outcome_verification: 'fresh repository fixture plus deterministic external verifier',
+        cost_lenses: { provider_equivalent: 'known', local_gpu: 'measured', actual_subscription_cash: 'unknown', whole_system_energy: 'unknown' },
       },
       {
         id: 'codex-direct',

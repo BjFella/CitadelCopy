@@ -36,10 +36,12 @@ and produces a signed bundle that can be reconstructed offline.
 
 The machinery is already working. Citadel has published actual-run ROMA and
 local-model studies, including negative results where plausible routing ideas
-used more energy or missed their precommitted savings gates. The grant funds
-the remaining scientific and engineering work: learning an adaptive policy
-that improves expected verified-operation value across stacks and hardware,
-then testing it under frozen completion, cost, integrity, and reproducibility
+used more energy or missed their precommitted savings gates. A later frozen
+Claude-plus-local pilot preserved 12/12 verified operations under both policies
+while reducing comparison cost 38.7% inside a calibrated support envelope. The
+grant funds the remaining scientific and engineering work: independent task
+selection, complete cost, learned policies, and multi-stack and hardware
+generalization under frozen completion, cost, integrity, and reproducibility
 gates.
 
 ### Who does this help?
@@ -53,8 +55,9 @@ negative results. Everyday Claude Code and Codex users get a simple `/do` entry
 point first, with control and evidence available only when their work needs it.
 
 The intended downstream benefit is reliable coding-agent capability at lower
-end-to-end cost. Citadel does not claim that benefit yet: the funded evaluation
-must reach the published completion and savings gates before making it.
+end-to-end cost. Citadel has positive prospective evidence only on twelve
+author-selected synthetic tasks; it does not claim general or production
+benefit before the funded independent evaluation reaches the published gates.
 
 ### In one line, what are you building?
 
@@ -73,7 +76,9 @@ GitHub's latest owner-visible 14-day window reported 524 unique cloners. Those
 are delivery and continuing-interest signals, not users or installations. The
 stronger qualification is what shipped: preregistered methods, signed actual-run
 cells, model-external repository verification, explicit unknown-cost handling,
-and negative findings preserved instead of marketed away. Funding scales a
+negative findings preserved instead of marketed away. The latest held-out
+hybrid result also preserved 12/12 completions while reducing comparison cost
+38.7% with every frozen gate passed. Funding scales the external validity of a
 working substrate; it does not fund the first prototype.
 
 Observation boundary: GitHub counts checked on 2026-08-01. Refresh immediately
@@ -118,9 +123,10 @@ live path changes before submission.
 
 ### What would the grant unlock?
 
-A $150,000 public-goods grant over nine months would turn Citadel's working
-control and falsification machinery into a representative, multi-stack economic
-optimizer. The work is evidence-gated and released in three go/no-go tranches.
+A $150,000 public-goods grant over nine months would turn Citadel's passed but
+bounded support-envelope result into an independently selected, complete-cost,
+representative multi-stack economic optimizer. The work is evidence-gated and
+released in three go/no-go tranches.
 
 First, we will freeze at least 60 unique artifact-producing repository
 operations and close the end-to-end cost boundary, including provider charges,

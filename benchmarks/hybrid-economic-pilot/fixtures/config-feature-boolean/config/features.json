@@ -1,0 +1,6 @@
+{
+  "schema": 3,
+  "service": "controller",
+  "audit_enabled": "true",
+  "dry_run": "false"
+}

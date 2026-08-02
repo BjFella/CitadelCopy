@@ -230,8 +230,8 @@ def slide_1(pdf: canvas.Canvas) -> None:
     pdf.setStrokeColor(LINE)
     pdf.roundRect(MARGIN, 86, 840, 112, 12, fill=0, stroke=1)
     metric(pdf, 88, 150, 145, "808", "public GitHub stars", GREEN)
-    metric(pdf, 292, 150, 155, "168", "signed prospective cells", GREEN)
-    metric(pdf, 510, 150, 145, "0", "adversarial false passes", GREEN)
+    metric(pdf, 292, 150, 155, "12 / 12", "verified under both policies", GREEN)
+    metric(pdf, 510, 150, 145, "-38.7%", "hybrid comparison cost", GREEN)
     metric(pdf, 714, 150, 150, "OPEN", "MIT code and public proof", CYAN)
     source(pdf, "Prepared 2026-08-01. Dated GitHub interest signal; not user or installation counts. Not submitted.")
 
@@ -300,28 +300,28 @@ def slide_3(pdf: canvas.Canvas) -> None:
 
 
 def slide_4(pdf: canvas.Canvas) -> None:
-    background(pdf, 4, "Actual-run evidence")
-    eyebrow(pdf, "Pinned Sentient ROMA diagnostic", MARGIN, 442)
-    title(pdf, "ROMA can emit reconstructable Citadel evidence.", MARGIN, 400, 840, 35)
-    text_block(pdf, "The frozen 24-cell diagnostic retired integration and proof risk while exposing the controller work the grant must fund.", MARGIN, 350, 820, 14, 19, MUTED)
+    background(pdf, 4, "Passed economic evidence")
+    eyebrow(pdf, "Prospective Claude plus local hybrid v2", MARGIN, 442)
+    title(pdf, "Same verified outcomes. Seven fewer Claude calls.", MARGIN, 400, 840, 35)
+    text_block(pdf, "A calibrated support envelope routed bounded operations to local 3B, recovered one rejected artifact, and preserved every strong-baseline completion.", MARGIN, 350, 820, 14, 19, MUTED)
 
-    metric(pdf, 72, 300, 155, "24 / 24", "cells measured", GREEN)
-    metric(pdf, 286, 300, 155, "0", "false passes", GREEN)
-    metric(pdf, 500, 300, 155, "0", "control or integrity failures", GREEN)
-    metric(pdf, 714, 300, 165, "4", "policies compared", CYAN)
+    metric(pdf, 72, 300, 155, "12 / 12", "Citadel verified tasks", GREEN)
+    metric(pdf, 286, 300, 155, "12 / 12", "always-Claude verified tasks", GREEN)
+    metric(pdf, 500, 300, 155, "12 -> 5", "Claude calls", CYAN)
+    metric(pdf, 714, 300, 165, "-38.7%", "comparison cost", GREEN)
 
     card(pdf, MARGIN, 82, 408, 148, CYAN, CYAN_SOFT)
-    eyebrow(pdf, "Risk retired", 88, 203)
+    eyebrow(pdf, "What the controller did", 88, 203)
     y = 173
-    y = bullet(pdf, "Pinned ROMA execution emitted requested and observed route identity.", 86, y, 350, CYAN, 11.5)
-    y = bullet(pdf, "A model-external artifact verifier decided completion.", 86, y - 4, 350, BLUE, 11.5)
-    bullet(pdf, "Signed receipts reconstruct offline without a Citadel service.", 86, y - 4, 350, GREEN, 11.5)
+    y = bullet(pdf, "Eight local 3B attempts inside four frozen supported operation shapes.", 86, y, 350, CYAN, 11.5)
+    y = bullet(pdf, "One verifier rejection recovered with Claude; no failed output counted.", 86, y - 4, 350, BLUE, 11.5)
+    bullet(pdf, "Every identity, path, false-pass, cost, quality, and integrity gate passed.", 86, y - 4, 350, GREEN, 11.5)
 
     card(pdf, 492, 82, 408, 148, AMBER, AMBER_SOFT)
-    eyebrow(pdf, "Funded risk", 520, 203, AMBER)
-    text_block(pdf, "The initial Citadel + ROMA heuristic verified 4/6 cells in 1042.8s versus frontier 6/6 in 47.7s. It avoided no strong whole-operation attempts.", 520, 174, 345, 11.7, 15.5, INK, FONT, max_lines=4)
-    pill(pdf, "No savings claim - gate failed", 520, 101, AMBER, WHITE)
-    source(pdf, "Evidence: benchmarks/roma-operation-control/published-run/REPORT.md  |  Verify: npm run operation-proof:verify")
+    eyebrow(pdf, "Exact claim boundary", 520, 203, AMBER)
+    text_block(pdf, "Twelve new author-selected synthetic tasks, one model pair, and one workstation. Comparison USD is not the allocated Pro subscription bill; whole-system cost remains unknown.", 520, 174, 345, 11.7, 15.5, INK, FONT, max_lines=4)
+    pill(pdf, "Bounded gate passed", 520, 101, GREEN, WHITE)
+    source(pdf, "Evidence: benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md  |  Verify: npm run hybrid:v2:verify")
 
 
 def evidence_row(pdf: canvas.Canvas, y: float, tag: str, verdict: str, summary: str, accent, fill) -> None:
@@ -360,7 +360,7 @@ def slide_5(pdf: canvas.Canvas) -> None:
 
     card(pdf, 492, 82, 408, 148, AMBER, AMBER_SOFT)
     eyebrow(pdf, "Claim discipline", 520, 203, AMBER)
-    text_block(pdf, "Three frozen savings stories were rejected under the same public evidence contract. Those failures define the controller requirements instead of being marketed away.", 520, 174, 345, 11.7, 15.5, INK, FONT, max_lines=4)
+    text_block(pdf, "Failed frozen policies remain public. Their baseline and escalation defects became a narrower support envelope that later passed every held-out gate.", 520, 174, 345, 11.7, 15.5, INK, FONT, max_lines=4)
     pill(pdf, "Funding scales a working base", 520, 101, GREEN, WHITE)
     source(pdf, "GitHub observed 2026-08-01. Clone window: 2026-07-18 to 2026-07-31. Clones are not installs, users, or adoption.")
 
@@ -368,8 +368,8 @@ def slide_5(pdf: canvas.Canvas) -> None:
 def slide_6(pdf: canvas.Canvas) -> None:
     background(pdf, 6, "Funded work")
     eyebrow(pdf, "Nine-month research and engineering program", MARGIN, 442)
-    title(pdf, "Funding buys the unproven result.", MARGIN, 400, 790, 38)
-    text_block(pdf, "Scale a working control and proof layer into a representative optimizer - or publish a reusable negative result.", MARGIN, 348, 820, 14, 19, MUTED)
+    title(pdf, "Funding buys external validity.", MARGIN, 400, 790, 38)
+    text_block(pdf, "Turn one passed bounded result into an independently valid public optimizer.", MARGIN, 348, 820, 14, 19, MUTED)
 
     milestones = [
         ("01", "Representative workload", "60+ artifact-producing operations and complete cost boundary", "$30k", CYAN, CYAN_SOFT),
@@ -450,7 +450,7 @@ def slide_8(pdf: canvas.Canvas) -> None:
     y = 278
     y = bullet(pdf, "Directly targets Sentient's Token and Economic Optimization request.", 86, y, 350, CYAN, 12.2)
     y = bullet(pdf, "Already binds a pinned Sentient ROMA stack without replacing its planner.", 86, y - 5, 350, BLUE, 12.2)
-    bullet(pdf, "Signed evidence lowers substrate risk and exposes the remaining research risk.", 86, y - 5, 350, GREEN, 12.2)
+    bullet(pdf, "A passed 38.7% bounded result lowers substrate risk and exposes the remaining generalization risk.", 86, y - 5, 350, GREEN, 12.2)
 
     card(pdf, 490, 174, 410, 170, VIOLET, VIOLET_SOFT)
     eyebrow(pdf, "What stays public", 518, 313, VIOLET)

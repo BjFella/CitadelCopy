@@ -30,10 +30,10 @@ SLIDE_SECONDS = 20
 SLIDES = (
     ("01-product-entry.png", "Start with /do.", "Progressive power without another IDE or orchestration language."),
     ("01-product-entry.png", "The operation is the unit.", "Route, execute, verify, record, and resume from repository state."),
-    ("02-evidence-hero.png", "Every claim has a boundary.", "Observed runtime, model-external verdicts, explicit cost lenses, signed receipts."),
-    ("03-policy-comparison.png", "V1: savings not robust.", "27/36 verified cells · timeout sensitivity reverses the economic direction."),
-    ("03-policy-comparison.png", "V2: matched completion. More cost.", "12 escalations · 15.7% more GPU energy · plausible policy rejected."),
-    ("02-evidence-hero.png", "V3: artifacts passed. Economics failed.", "6/12 each · zero false passes · 7.1% energy reduction missed the gate."),
+    ("03-policy-comparison.png", "Three calibrations failed honestly.", "Timeout-sensitive savings · escalation cost · missed artifact gate."),
+    ("03-policy-comparison.png", "Hybrid calibration: 12/12. Gate missed.", "Four Claude calls avoided · 28.4% reduction · frozen target was 30%."),
+    ("02-evidence-hero.png", "Hybrid v2: outcomes held. Gate passed.", "12/12 both · Claude calls 12 to 5 · comparison cost down 38.7%."),
+    ("02-evidence-hero.png", "Funding buys external validity.", "Independent production tasks · more stacks, models, tools, and hardware."),
 )
 
 

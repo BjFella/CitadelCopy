@@ -1,6 +1,6 @@
 # Citadel public evidence manifest
 
-Generated from committed canonical artifacts. As of 2026-08-01T05:23:49.666Z.
+Generated from committed canonical artifacts. As of 2026-08-02T01:11:56.820Z.
 
 | Evidence | Result | Boundary |
 |---|---|---|
@@ -10,6 +10,9 @@ Generated from committed canonical artifacts. As of 2026-08-01T05:23:49.666Z.
 | Prospective local v1 | adaptive 27/36 verified, 9 failed, 0 unknown; baseline 24/36 verified, 11 failed, 1 unknown | Frozen gate failed; timeout sensitivity -3.5% GPU energy; identity gate false |
 | Capability-profile follow-up | profile 24/36 verified, 12 failed, 0 unknown; baseline 24/36 | Matched baseline cell completion; 15.7% more GPU energy; gate failed |
 | Representative repository pilot | profile 6/12 verified; baseline 6/12; 6 unique fixture tasks | 7.1% less measured GPU energy missed the 20% gate; evidence failed |
+| Fresh local repository calibration | candidate 8/12; baseline 8/12; 12 unique tasks | 34.6% more measured GPU energy; invalid baseline; evidence failed |
+| Hybrid calibration | candidate 12/12; baseline 12/12; 4 Claude calls avoided | 28.4% cost reduction missed 30%; paired sensitivity 30.1%; evidence failed |
+| Calibrated hybrid v2 | candidate 12/12; baseline 12/12; 8 local attempts, 1 recovery | 38.7% comparison-cost reduction at 100.0% relative completion; evidence passed |
 | Fresh-clone onboarding | 5/5 command stages in 28.17s | Doctor health unknown; model execution not-attempted |
 
 ## Claim boundaries
@@ -22,8 +25,12 @@ Generated from committed canonical artifacts. As of 2026-08-01T05:23:49.666Z.
 - The capability-profile v2 corrigendum discloses v1-informed design, task-template overlap, and deterministic repetition semantics without changing the frozen negative result.
 - The 24-cell representative repository-operation shakedown matched 6/12 verified cells under both policies with zero false passes and zero path violations. Its 7.1% measured GPU-energy reduction missed the frozen 20% gate, so the evidence result is failed and no general savings claim is permitted.
 - The representative shakedown contains six unique fixture tasks repeated twice per policy; timing repetitions are not independent tasks and the small fixture set is not production generalization.
+- A fresh 12-task local-only repository calibration preserved 8/12 verified completions under both policies but used 34.6% more GPU energy; its baseline also failed the frozen overall and high-risk validity floors.
+- The first 12-task Claude-plus-local hybrid preserved 12/12 completions and reduced comparison cost 28.4%, missing the frozen 30% gate. A post-run paired-cost sensitivity reaches 30.1% but does not change the failed verdict.
+- The separately frozen calibrated hybrid v2 preserved 12/12 completions, reduced provider-reported and locally modeled comparison cost 38.7%, and passed every frozen gate on twelve new author-selected synthetic tasks.
+- Hybrid v2 establishes a positive result only inside its preregistered support envelope on one model pair and one machine. Task selection was author-controlled, comparison USD is not the operator subscription bill, and production generalization is not claimed.
 - The fresh-clone proof completed five command stages; doctor semantic health remained unknown, and no real-user utility or model-task completion is claimed.
 - Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.
 - GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained.
 
-Manifest: `sha256:f05407839b4db5845b63562584f3755d90c6d8f7d48ea92772a8389329f97cf0`
+Manifest: `sha256:28dd7d49b8818b8366facd9a657ddd01463c07f529463e98abe68d7d6a895772`

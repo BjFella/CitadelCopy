@@ -11,8 +11,9 @@ preview is 1200 by 630.
    Caption: Citadel starts with one command and opens progressively from task
    routing into durable state, coordination, and governed operation control.
 2. [`02-evidence-hero.png`](../assets/application/02-evidence-hero.png)
-   Caption: The evaluator path leads with a failed result and the exact boundary
-   that prevents a benchmark artifact from becoming a savings claim.
+   Caption: The evaluator path leads with a bounded passed result: both policies
+   verified 12/12, Claude calls fell from twelve to five, and comparison cost
+   fell 38.7%, with the exact generalization and cash-cost boundaries attached.
 3. [`03-policy-comparison.png`](../assets/application/03-policy-comparison.png)
    Caption: Separately frozen studies expose a timeout-sensitive apparent gain,
    a capability-policy regression, and a representative pilot that missed its
@@ -28,6 +29,10 @@ preview is 1200 by 630.
 - [`citadel-sentient-walkthrough.mp4`](../assets/application/citadel-sentient-walkthrough.mp4)
 - Narration source: [`walkthrough-narration.txt`](../assets/application/walkthrough-narration.txt)
 - Rebuild: `py -3 scripts/render-application-walkthrough.py`
+
+The walkthrough preserves the failed calibration trail, then presents the
+separately frozen hybrid v2 result and its author-selection, workstation,
+model-pair, comparison-telemetry, whole-system-energy, and actual-cash limits.
 
 The narration uses generated text-to-speech and should be labeled as such if
 uploaded to a platform that requires synthetic-media disclosure.

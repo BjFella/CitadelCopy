@@ -1,0 +1,11 @@
+'use strict';
+const assert = require('assert');
+const { readHeader } = require('./src/headers');
+const entries = [{ name: 'Content-Type', value: 'json' }, { name: 'content-type', value: 'text' }];
+const snapshot = JSON.stringify(entries);
+assert.strictEqual(readHeader(entries, 'CONTENT-TYPE'), 'json');
+assert.strictEqual(readHeader(entries, 'content-type'), 'json');
+assert.strictEqual(readHeader(entries, 'missing'), null);
+assert.strictEqual(readHeader(null, 'x'), null);
+assert.strictEqual(readHeader(entries, null), null);
+assert.strictEqual(JSON.stringify(entries), snapshot);
