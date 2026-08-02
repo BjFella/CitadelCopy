@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "kind": "citadel-application-adapter-conformance",
-  "as_of": "2026-08-01T05:23:49.666Z",
+  "as_of": "2026-08-02T01:11:56.820Z",
   "contract": {
     "required": [
       "requested_identity",
@@ -51,6 +51,21 @@
       "cost_lenses": {
         "provider_invoice": "known-zero-local",
         "actual_end_to_end_cash": "unknown"
+      }
+    },
+    {
+      "id": "citadel-hybrid-claude-ollama",
+      "runtime_family": "frontier-plus-open-local-route",
+      "evidence_level": "prospective-actual-run",
+      "status": "passed",
+      "requested_identity": "Claude Sonnet 5 baseline plus pinned Qwen2.5-Coder 3B support route",
+      "observed_identity": "12/12 candidate and 12/12 baseline completions",
+      "outcome_verification": "fresh repository fixture plus deterministic external verifier",
+      "cost_lenses": {
+        "provider_equivalent": "known",
+        "local_gpu": "measured",
+        "actual_subscription_cash": "unknown",
+        "whole_system_energy": "unknown"
       }
     },
     {

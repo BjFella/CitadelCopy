@@ -1,0 +1,2 @@
+'use strict';
+const assert=require('assert');const {copyOwnMetadata}=require('./src/metadata');const input=Object.create({inherited:true});input.safe=1;input.constructor='bad';input.prototype='bad';Object.defineProperty(input,'__proto__',{value:{polluted:true},enumerable:true});Object.defineProperty(input,'hidden',{value:2,enumerable:false});const output=copyOwnMetadata(input);assert.deepStrictEqual(output,{safe:1});assert.strictEqual(Object.getPrototypeOf(output),Object.prototype);assert.strictEqual({}.polluted,undefined);assert.strictEqual(input.safe,1);

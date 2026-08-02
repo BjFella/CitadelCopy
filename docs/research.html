@@ -67,22 +67,22 @@
       </div>
       <aside class="claim-card" aria-label="Research status">
         <div class="claim-label">Research status</div>
-        <h2>The measurement loop works. Three economic claims did not.</h2>
+        <h2>The measurement loop works. A bounded economic claim passed.</h2>
         <p>
-          Two separately frozen 72-cell studies preserved every failure and
-          unknown. V1's direction reverses under timeout sensitivity; v2 showed
-          verifier escalation can cost more. A later 24-cell repository-fixture
-          shakedown preserved artifact integrity but missed its economic gates.
+          Three earlier local policies and the first Claude-plus-local hybrid
+          retained their failed gates. A separately frozen calibrated hybrid
+          then preserved 12/12 verified operations and reduced comparison cost
+          38.7% on twelve new tasks.
         </p>
-        <code>control integration: passed<br />false-pass gate: passed<br />30% economic target: not demonstrated</code>
+        <code>verified completion: 12 / 12 both policies<br />comparison cost: -38.7%<br />general production result: not demonstrated</code>
       </aside>
     </header>
 
     <div class="proof-strip" aria-label="Citadel research evidence summary">
-      <div class="proof-stat"><strong>168</strong><span>signed prospective local cells</span></div>
-      <div class="proof-stat"><strong>3</strong><span>separately frozen studies</span></div>
-      <div class="proof-stat"><strong>14</strong><span>verifier escalations observed</span></div>
-      <div class="proof-stat"><strong>0</strong><span>adversarial false passes</span></div>
+      <div class="proof-stat"><strong>240</strong><span>signed prospective comparison cells</span></div>
+      <div class="proof-stat"><strong>6</strong><span>separately frozen studies</span></div>
+      <div class="proof-stat"><strong>7</strong><span>Claude calls avoided in passing v2</span></div>
+      <div class="proof-stat"><strong>38.7%</strong><span>comparison-cost reduction</span></div>
     </div>
 
     <section id="thesis">
@@ -127,9 +127,9 @@
         <p>
           Each rung answers a different question. Implementation evidence shows
           the mechanism exists. Retrospective evidence calibrates it. Prospective
-          evidence shows the public runtime seam works. Three comparative studies
-          now expose a timeout-sensitive apparent gain, a policy regression, and
-          repository-artifact integrity without laundering any into a success claim.
+          evidence shows the public runtime seam works. Six comparative studies
+          show the progression from timeout sensitivity and escalation regressions
+          to a passed, narrowly calibrated hybrid support envelope.
         </p>
       </div>
       <div class="proof-ledger">
@@ -174,6 +174,18 @@
           <h3>Representative fixture shakedown</h3>
           <p>Six artifact-producing fixture tasks, two policies, and two timing repetitions produced 24 signed cells. Both policies verified 6/12; zero false passes and path violations survived replay, while the 7.1% energy reduction missed the frozen 20% gate.</p>
           <span class="ledger-state">Integrity passed; economics failed</span>
+        </article>
+        <article class="proof-ledger-item">
+          <div class="ledger-id">08 / HYBRID CALIBRATION</div>
+          <h3>Valid baseline, narrow miss</h3>
+          <p>Claude and Citadel each verified 12/12 fresh tasks. Citadel avoided four Claude calls and reduced comparison cost 28.4%, missing the frozen 30% gate.</p>
+          <span class="ledger-state">Quality passed; economics failed</span>
+        </article>
+        <article class="proof-ledger-item">
+          <div class="ledger-id">09 / HYBRID V2</div>
+          <h3>Calibrated support envelope</h3>
+          <p>On twelve new tasks, both policies verified 12/12. Citadel used local 3B eight times, recovered once, reduced Claude calls from twelve to five, and reduced comparison cost 38.7%.</p>
+          <span class="ledger-state">Every frozen gate passed</span>
         </article>
       </div>
     </section>
@@ -220,10 +232,10 @@
       <div class="section-heading">
         <div><div class="proof-kicker">Claim boundary</div><h2>Credibility comes from saying exactly where the proof ends.</h2></div>
         <p>
-          Citadel has enough evidence to show that its controller can be held
-          accountable to economic claims. It does not yet have enough evidence
-          to claim the funded multi-stack result. The site and repository use
-          the same boundary.
+          Citadel now has a positive economic result inside a frozen support
+          envelope and enough evidence to show that the controller can be held
+          accountable when a policy fails. It does not yet have the independent,
+          complete-cost, multi-stack evidence needed for a general claim.
         </p>
       </div>
       <div class="claim-boundary-list">
@@ -235,7 +247,8 @@
             <li>Model-external deterministic verification can reject false, partial, and adversarial outputs.</li>
             <li>Signed evidence can preserve passed, failed, and unknown outcomes.</li>
             <li>Clean hosted verification reproduces the committed proof bundle.</li>
-            <li>Three prospective local studies reject a timeout-sensitive apparent gain, a cost-increasing capability policy, and a representative pilot that missed its economic gates.</li>
+            <li>Four retained calibration studies reject timeout-sensitive, escalation-heavy, baseline-invalid, and narrowly missed policies.</li>
+            <li>A separately frozen hybrid v2 preserved 12/12 completions and reduced comparison cost 38.7% inside a preregistered support envelope.</li>
           </ul>
         </article>
         <article class="claim-boundary-column">
@@ -244,7 +257,7 @@
             <li>Best-in-class agent performance or broad benchmark leadership.</li>
             <li>A general quality advantage across repositories or model families.</li>
             <li>Lower latency than direct or frontier-only execution.</li>
-            <li>Thirty percent lower end-to-end cost at the quality target.</li>
+            <li>Thirty percent lower actual end-to-end cash across independent production tasks.</li>
             <li>Production reliability across many external users and environments.</li>
           </ul>
         </article>
@@ -263,7 +276,7 @@
           concrete rather than hypothetical.
         </p>
         <div class="links">
-          <a class="button primary" href="https://github.com/SethGammon/Citadel/tree/main/benchmarks/operation-control-v2">Inspect v2 evidence</a>
+          <a class="button primary" href="https://github.com/SethGammon/Citadel/tree/main/benchmarks/hybrid-economic-pilot-v2">Inspect passed hybrid evidence</a>
           <a class="button" href="operation-control.html">Operation proof</a>
           <a class="button" href="optimizer.html">Optimizer proof</a>
           <a class="button" href="https://sentient.foundation/product-requests">Sentient request</a>
@@ -278,7 +291,7 @@
   </main>
 
   <footer>
-    <div class="shell">Citadel research program · operation control, model-external verification, and honest agent economics · current performance gate open.</div>
+    <div class="shell">Citadel research program · operation control, model-external verification, and honest agent economics · bounded performance gate passed; generalization gate open.</div>
   </footer>
   <script src="site-system.js"></script>
 </body>

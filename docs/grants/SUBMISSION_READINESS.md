@@ -50,8 +50,8 @@ The mandatory supporting document is ready at:
 
 - format: PDF, 16:9 landscape;
 - pages: 8;
-- size: 972,188 bytes;
-- SHA-256: `148da44b029d54d50eb4f89cb4c706857bd24131e706a98ec244f1a11cb750f6`;
+- size: 972,341 bytes;
+- SHA-256: `aefc72aaad09ba0e6f9b33afa00725e135655a098118c5045d6d819d71fa3d99`;
 - source renderer: `scripts/render-sentient-grant-packet.py`;
 - visual QA: all eight pages rendered to PNG and inspected at both 72 and 96
   DPI, including the normal-viewer scale that exposed the original legibility
@@ -59,8 +59,11 @@ The mandatory supporting document is ready at:
 - text QA: eight pages, 960 by 540 points, required headings extractable,
   replacement-character check passed.
 
-The packet deliberately distinguishes a passed evidence/integrity result from
-failed optimizer performance gates. It does not claim current economic savings.
+The packet distinguishes retained failed optimizer gates from the later passed
+hybrid support-envelope result. It claims the exact 38.7% comparison-cost
+reduction only for twelve author-selected synthetic tasks and does not claim an
+allocated subscription bill, complete end-to-end cash, production reliability,
+or general savings.
 
 ## Canonical application choices
 
@@ -96,6 +99,16 @@ dollar-for-dollar and unused funds remain unspent.
 - The representative repository pilot verified 6/12 cells for each policy with
   zero false passes and path violations, but its 7.1% energy reduction missed
   the frozen 20% gate and token use increased 13.2%.
+- The first fresh Claude-plus-local hybrid verified 12/12 tasks under both
+  policies and reduced comparison cost 28.4%, missing its frozen 30% gate. The
+  failed verdict remains published.
+- The separately frozen calibrated hybrid v2 used twelve new tasks. Always-
+  Claude and Citadel each verified 12/12; Citadel used eight local attempts,
+  one Claude recovery, and five Claude calls total versus twelve, reducing
+  provider-reported plus locally modeled comparison cost from $0.063711 to
+  $0.039071 (38.7%). Every frozen gate passed.
+- Hybrid v2 tasks are author-selected synthetic fixtures, comparison USD is not
+  Seth's allocated subscription bill, and whole-system cost remains unknown.
 - GitHub showed 808 stars, 79 forks, and 520 commits reachable from `main` on
   2026-08-01. Of those, 496 were attributed to Seth's Git identity and 360 were
   non-merge commits attributed to that identity. Owner-visible traffic for
@@ -106,7 +119,9 @@ dollar-for-dollar and unused funds remain unspent.
 
 ## Claims not allowed
 
-- Citadel currently saves money in representative use.
+- Citadel generally saves money in representative or production use.
+- The 38.7% hybrid comparison-cost reduction is an actual subscription-bill or
+  complete end-to-end cash reduction.
 - Citadel is best in class across agent optimizers.
 - The signed bundles prove independent third-party execution.
 - Repetitions are independent task successes.

@@ -521,11 +521,11 @@ function main() {
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'pricing-assumptions.json'), 'utf8')),
   ));
   assert(publicIndex.includes('href="optimizer.html">Optimizer Proof</a>'));
-  assert(optimizerPage.includes('Measurement contract proven'));
-  assert(optimizerPage.includes('The verifier rejected three economic stories.'));
-  assert(optimizerPage.includes('168 / 168 signed'));
+  assert(optimizerPage.includes('The verifier rejected weak policies, then accepted a bounded one.'));
+  assert(optimizerPage.includes('240 signed prospective comparison cells'));
   assert(optimizerPage.includes('V3 · artifacts verified, savings gate missed'));
-  assert(optimizerPage.includes('ECONOMIC_TARGET_OPEN'));
+  assert(optimizerPage.includes('INDEPENDENT_ECONOMIC_VALIDATION_OPEN'));
+  assert(optimizerPage.includes('comparison cost: -38.7%'));
   assert(optimizerPage.includes('Fixture math exercises a 23.2507%'));
   assert.strictEqual((optimizerPage.match(/class="policy-tab"/g) || []).length, 4);
 

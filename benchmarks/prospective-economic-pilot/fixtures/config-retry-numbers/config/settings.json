@@ -1,0 +1,7 @@
+{
+  "schema": 2,
+  "service": "relay",
+  "enabled": true,
+  "retries": "4",
+  "backoff_ms": "250"
+}

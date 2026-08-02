@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Citadel's evaluator-facing evidence index: signed operation receipts, three prospective local studies, cross-stack conformance, fresh-clone onboarding, and exact claim boundaries." />
+  <meta name="description" content="Citadel's evaluator-facing evidence index: 240 signed prospective comparison cells, a bounded hybrid economic result, cross-stack conformance, fresh-clone onboarding, and exact claim boundaries." />
 <meta name="theme-color" content="#06111f" />
   <link rel="canonical" href="https://sethgammon.github.io/Citadel/evidence.html" />
   <link rel="manifest" href="site.webmanifest" />
@@ -151,28 +151,28 @@
         <h1>Inspect the claim.<br /><span>Then try to break it.</span></h1>
         <p class="evidence-lede">Citadel binds an operation's declared route to what actually ran, its measured and modeled cost lenses, and whether a deterministic verifier outside the routed model accepted the outcome. <strong>Failed policies stay failed. Unknown cost stays unknown.</strong></p>
         <div class="site-button-row" style="margin-top:30px;">
-          <a class="site-button primary" href="#comparisons">See the three local studies</a>
+          <a class="site-button primary" href="#comparisons">See the six comparative studies</a>
           <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/docs/EVIDENCE_MANIFEST.md">Open generated manifest</a>
           <a class="site-button" href="walkthrough.html">Watch the two-minute walkthrough</a>
         </div>
       </div>
       <aside class="result-card" aria-label="Latest research result">
-        <span class="status">Latest gate · failed honestly</span>
-        <h2>Repository artifacts verified. The savings gate did not.</h2>
-        <p>The representative shakedown moved beyond exact answers: six fixture repositories, two policies, and two timing repetitions. Both policies verified 6/12 cells, with zero false passes and zero path violations.</p>
+        <span class="status">Latest gate · passed within scope</span>
+        <h2>Verified outcomes preserved. Comparison cost fell 38.7%.</h2>
+        <p>On twelve new repository tasks, always-Claude and Citadel each verified 12/12. Citadel used local 3B eight times, recovered once, and reduced Claude calls from twelve to five.</p>
         <div class="result-metrics">
-          <div class="result-metric"><strong>6/12</strong><span>profile verified</span></div>
-          <div class="result-metric"><strong>6/12</strong><span>always-7B verified</span></div>
-          <div class="result-metric"><strong>7.1%</strong><span>less GPU energy; gate missed</span></div>
-          <div class="result-metric"><strong>0</strong><span>false passes</span></div>
+          <div class="result-metric"><strong>12/12</strong><span>Citadel verified</span></div>
+          <div class="result-metric"><strong>12/12</strong><span>always-Claude verified</span></div>
+          <div class="result-metric"><strong>38.7%</strong><span>lower comparison cost</span></div>
+          <div class="result-metric"><strong>5</strong><span>Claude calls versus 12</span></div>
         </div>
       </aside>
     </header>
 
     <section class="evidence-section" id="comparisons">
       <div class="evidence-heading">
-        <div><div class="site-kicker">Three separately frozen studies</div><h2>The evidence changed the plan.</h2></div>
-        <p>V1's aggregate was timeout-sensitive. V2 showed that verification escalation can cost more. The representative shakedown proved repository-artifact replay while still missing its frozen economic gates.</p>
+        <div><div class="site-kicker">Six separately frozen studies</div><h2>The failures changed the policy.</h2></div>
+        <p>Local studies exposed timeout, escalation, and baseline-validity defects. The first hybrid missed narrowly. Calibrated hybrid v2 then passed unchanged quality and cost gates on twelve untouched tasks.</p>
       </div>
       <div class="comparison-grid">
         <article class="comparison-card">
@@ -209,6 +209,28 @@
           </div>
           <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/representative-operation-pilot-v2/published-run/REPORT.md">Method + signed result</a>
         </article>
+        <article class="comparison-card negative">
+          <small>V4 · hybrid calibration</small>
+          <h3>Quality valid; economic gate missed narrowly.</h3>
+          <p>Both policies verified 12/12 fresh tasks. The risk-only policy avoided four Claude calls but made four unsupported local attempts, reducing comparison cost 28.4% against a frozen 30% gate.</p>
+          <div class="metric-list">
+            <div><strong>12/12</strong><span>both policies verified</span></div>
+            <div><strong>28.4%</strong><span>comparison-cost reduction</span></div>
+            <div><strong>Failed</strong><span>frozen economic result</span></div>
+          </div>
+          <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/hybrid-economic-pilot/published-run/REPORT.md">Calibration report</a>
+        </article>
+        <article class="comparison-card wide">
+          <small>V5 · calibrated hybrid v2</small>
+          <h3>Same verified outcomes; bounded economic gate passed.</h3>
+          <p>Twelve new tasks, a valid Claude Sonnet 5 baseline, and a preregistered support envelope. Citadel used eight local attempts, recovered once, reduced Claude calls from twelve to five, and reduced comparison cost 38.7%.</p>
+          <div class="metric-list">
+            <div><strong>12/12</strong><span>both policies verified</span></div>
+            <div><strong>38.7%</strong><span>comparison-cost reduction</span></div>
+            <div><strong>Passed</strong><span>every frozen gate</span></div>
+          </div>
+          <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md">Passed method + signed result</a>
+        </article>
       </div>
     </section>
 
@@ -236,8 +258,14 @@
         <a class="evidence-row" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/representative-operation-pilot-v2/published-run/REPORT.md">
           <span class="evidence-id">06 / REPOSITORY</span><h3>Representative fixture shakedown</h3><p>Six artifact-producing tasks × 2 policies × 2 timing repetitions; both policies verified 6/12 cells; integrity gates passed and economic gates failed.</p><span class="evidence-state failed">Gate failed</span>
         </a>
+        <a class="evidence-row" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/hybrid-economic-pilot/published-run/REPORT.md">
+          <span class="evidence-id">07 / HYBRID CAL</span><h3>Claude plus local calibration</h3><p>Both policies verified 12/12 fresh tasks; four Claude calls were avoided; 28.4% comparison-cost reduction missed the frozen 30% gate.</p><span class="evidence-state failed">Gate missed</span>
+        </a>
+        <a class="evidence-row" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md">
+          <span class="evidence-id">08 / HYBRID V2</span><h3>Calibrated support envelope</h3><p>Both policies verified 12/12 new tasks; Citadel reduced Claude calls from twelve to five and comparison cost 38.7% with every gate passed.</p><span class="evidence-state">All gates passed</span>
+        </a>
         <a class="evidence-row" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/fresh-clone-onboarding/REPORT.md">
-          <span class="evidence-id">07 / ONBOARD</span><h3>Fresh-clone governed path</h3><p>Five unattended engineering stages completed from a clean local clone in 28.17 seconds; the nested doctor command exited zero but reported semantic health as unknown.</p><span class="evidence-state">5 stages completed</span>
+          <span class="evidence-id">09 / ONBOARD</span><h3>Fresh-clone governed path</h3><p>Five unattended engineering stages completed from a clean local clone in 28.17 seconds; the nested doctor command exited zero but reported semantic health as unknown.</p><span class="evidence-state">5 stages completed</span>
         </a>
       </div>
     </section>
@@ -245,7 +273,7 @@
     <section class="evidence-section" id="boundaries">
       <div class="evidence-heading">
         <div><div class="site-kicker">Claim boundary</div><h2>What the work permits us to say.</h2></div>
-        <p>Citadel is not presented as a best-in-class model router. Its demonstrated advantage is that operation policies can be controlled, observed, graded outside the routed model, and rejected.</p>
+        <p>Citadel is not presented as a universally best-in-class model router. It now demonstrates a narrower, useful result: an operation policy can be controlled, observed, graded outside the routed model, rejected when it fails, and accepted when it preserves verified outcomes while clearing a frozen economic gate.</p>
       </div>
       <div class="boundary-grid">
         <article class="boundary-card">
@@ -256,13 +284,14 @@
             <li>Deterministic verification outside the routed model rejects failed and adversarial answers.</li>
             <li>Signed chains preserve every passed, failed, and unknown cell.</li>
             <li>A plausible policy can be shown to cost more before deployment.</li>
+            <li>On twelve author-selected tasks inside a declared support envelope, Citadel preserved 12/12 verified outcomes while reducing Claude calls from twelve to five and comparison cost by 38.7%.</li>
             <li>Repository changes can be checked for exact artifacts and allowed-path boundaries without trusting the model's own report.</li>
           </ul>
         </article>
         <article class="boundary-card open">
           <h3>Still open</h3>
           <ul>
-            <li>Thirty percent lower end-to-end cost at the funded quality target.</li>
+            <li>Thirty percent lower actual end-to-end cash cost across independently selected production tasks.</li>
             <li>Generalization across repositories, agent stacks, model families, and hardware.</li>
             <li>Actual cash accounting where subscription allocation or whole-system energy is absent.</li>
             <li>Learned operation-value prediction that prices likely escalation and recovery.</li>
@@ -277,15 +306,10 @@
         <div>
           <div class="site-kicker">Offline verification</div>
           <h3>Recompute the proof without asking a model.</h3>
-          <p>These commands recompute routes, exact-answer verdicts, model identity, cost derivations, source bindings, artifact digests, receipt chains, and Ed25519 signatures from committed evidence.</p>
+          <p>This command runs fifteen offline checks across the retained failed calibrations, the passed hybrid result, routes, exact-answer verdicts, model identity, cost derivations, source bindings, artifact digests, receipt chains, Ed25519 signatures, public claims, the application package, and the site story.</p>
           <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/docs/grants/EVALUATOR_START_HERE.md">Evaluator guide</a>
         </div>
-        <pre class="command-block"><code>npm run readiness:verify
-npm run readiness:v2:verify
-npm run representative:v2:verify
-npm run operation-proof:verify
-npm run application:evidence:check
-npm run onboarding:fresh-clone:verify</code></pre>
+        <pre class="command-block"><code>npm run grant:verify</code></pre>
       </div>
     </section>
 
@@ -309,7 +333,7 @@ npm run onboarding:fresh-clone:verify</code></pre>
     </section>
   </main>
 
-  <footer class="evidence-shell evidence-footer">Citadel public evidence · observed 2026-08-01 · three prospective local studies · zero adversarial false passes · savings target still open.</footer>
+  <footer class="evidence-shell evidence-footer">Citadel public evidence · observed 2026-08-01 · six prospective studies · zero adversarial false passes · bounded economic gate passed; generalization remains open.</footer>
   <script src="site-system.js"></script>
 </body>
 </html>

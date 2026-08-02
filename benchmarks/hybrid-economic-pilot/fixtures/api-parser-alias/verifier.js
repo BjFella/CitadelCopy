@@ -1,0 +1,11 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const parser = require('./src/parser');
+const { loadRecord } = require('./src/consumer');
+assert.deepStrictEqual(Object.keys(parser).sort(), ['parseLegacy', 'parseRecord']);
+assert.strictEqual(parser.parseLegacy, parser.parseRecord);
+assert.deepStrictEqual(loadRecord('{"id":4}'), { id: 4 });
+const consumer = fs.readFileSync('src/consumer.js', 'utf8');
+assert(consumer.includes('parseRecord'));
+assert(!consumer.includes('parseLegacy'));

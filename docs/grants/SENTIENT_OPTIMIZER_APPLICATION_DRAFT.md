@@ -9,8 +9,9 @@ Evidence observed: 2026-08-01 UTC
 **Citadel Operation Control: Verifiable Economic Governance for Open Agent Stacks**
 
 Citadel is an open operation-control and evidence plane for agent operations.
-Its core contract is stack-neutral, while current external-stack adoption is
-demonstrated only with ROMA. It binds model assignment, decomposition, concurrency, subtask
+Its core contract is stack-neutral; current external agent-stack adoption is
+demonstrated with ROMA, while actual runtime evidence also spans Claude Code and
+Ollama. It binds model assignment, decomposition, concurrency, subtask
 ceilings, retries, tools, timeouts, and escalation to a signed plan; observes
 what the underlying stack and providers actually exercised; and lets a
 deterministic verifier outside the routed model decide whether the operation
@@ -49,18 +50,35 @@ task successes. That signed negative result is
 published unchanged. It demonstrates why the funded controller must optimize
 expected verified operation value rather than model size or prompt labels.
 
+Two later fresh 24-cell repository pilots closed the most important remaining
+gap. The first used Claude Sonnet 5 as a valid strong baseline and local Qwen
+2.5 Coder 3B as the bounded route. Both policies verified 12/12 tasks, but a
+coarse risk rule triggered four unnecessary weak-first attempts. Citadel avoided
+four Claude calls and reduced comparison cost 28.4%, missing its frozen 30%
+gate. That failed result remained intact.
+
+Citadel then froze a narrower support envelope learned from the failure and
+tested it on twelve new tasks never shown to either model. Always-Claude
+verified 12/12 at $0.063711 provider-reported equivalent cost. Citadel also
+verified 12/12, used local 3B eight times, recovered one verifier rejection with
+Claude, reduced Claude calls from 12 to 5, and cost $0.039071: a 38.7%
+reduction. Every frozen baseline-validity, relative-quality, cost, execution-
+identity, path, false-pass, and integrity gate passed. This is a positive result
+inside an author-selected synthetic support envelope, not production or general
+savings; subscription allocation and whole-system energy remain unknown.
+
 ## Short application answer
 
 Citadel makes optimization claims about open agents falsifiable. It attaches to
 an existing stack, controls the whole operation rather than only choosing a
-model, reconciles the declared plan against provider-level observations, keeps
-unknown cost unknown, and signs model-externally verified outcomes. The working
-ROMA integration and 24-cell proof reduce integration and evaluation risk. The
-funded work is to turn that proven control plane into an adaptive policy that
-meets precommitted absolute-completion, relative-quality, and end-to-end cost
-gates across multiple open agent stacks. Citadel is currently demonstrated
-research infrastructure and falsification machinery, not a demonstrated
-economic optimizer.
+model, reconciles the declared plan against runtime observations, keeps unknown
+cost unknown, and signs model-externally verified outcomes. A prospective
+Claude-plus-local pilot now preserves 12/12 verified completions while reducing
+comparison cost 38.7% inside a frozen support envelope. The funded work is to
+replace author-selected synthetic scope with independent tasks, complete
+end-to-end cost, learned policies, and multiple stacks, model families, and
+hardware profiles. Citadel is a demonstrated bounded economic optimizer and
+open falsification substrate, not yet a generalized production optimizer.
 
 ## Sentient request addressed
 
@@ -346,6 +364,39 @@ its initial offline replay exposed an ephemeral temporary-path mismatch. The
 source was not patched in place. A separately frozen v2 normalized only that
 ephemeral root before the 24-cell run.
 
+### Prospective hybrid economic result
+
+Calibration report:
+[`benchmarks/hybrid-economic-pilot/published-run/REPORT.md`](../../benchmarks/hybrid-economic-pilot/published-run/REPORT.md)
+
+Passed held-out report:
+[`benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md`](../../benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md)
+
+One-command verification:
+
+```text
+npm run hybrid:v2:verify
+```
+
+| Policy | Unique tasks | Verified | Local attempts | Claude calls | Recoveries | Comparison cost |
+|---|---:|---:|---:|---:|---:|---:|
+| Always Claude Sonnet 5 | 12 | 12/12 | 0 | 12 | 0 | $0.063711 |
+| Citadel calibrated support route | 12 | 12/12 | 8 | 5 | 1 | $0.039071 |
+
+V2 froze twelve new tasks after the first hybrid policy missed its 30% gate.
+The candidate routed only four declared operation shapes to local 3B and sent
+unsupported work directly to Claude. It preserved every baseline completion,
+reduced Claude calls by seven, and reduced comparison cost 38.7%. All quality,
+cost, identity, path, false-pass, and integrity gates passed.
+
+The result is deliberately bounded. Task selection was author-controlled and
+synthetic, the support envelope was calibrated from prior failures, Claude's
+reported equivalent cost is not Seth's allocated Pro subscription bill, local
+whole-system energy is incomplete, and one run on one model pair does not prove
+production generalization. Those are the funded gaps, not footnotes erased by
+the positive result. The ranked rejection-risk treatment is in
+[`REVIEWER_OBJECTIONS.md`](REVIEWER_OBJECTIONS.md).
+
 ## Why this is differentiated
 
 Citadel is not claiming the first model router or the first agent orchestrator.
@@ -373,7 +424,8 @@ reconcilable evidence.
 - It integrates with Sentient ROMA at an exact public commit.
 - It runs on real open/local models rather than a simulated routing table.
 - The stack-neutral core and proof artifacts remain MIT-licensed public goods.
-- The evidence layer has already rejected two of Citadel's own optimizer claims.
+- The evidence layer has retained multiple failed optimizer claims and one
+  passed, separately frozen support-envelope result.
 - V1 recorded more verified cells but its apparent savings reverse under a
   matched-timeout sensitivity, preventing an overclaim.
 - V2 matched baseline cell completion while robustly showing that naive
@@ -381,11 +433,15 @@ reconcilable evidence.
 - The representative repository-operation shakedown preserved zero false passes
   and zero path violations, but failed its frozen economic gates and remains
   published as failed.
+- The first Claude-plus-local hybrid preserved 12/12 completions but missed its
+  30% cost gate at 28.4%; calibrated v2 then preserved 12/12 on twelve fresh
+  tasks and reduced comparison cost 38.7% with every frozen gate passed.
 - The work distinguishes activity, completion, control integrity, and cost.
 - Citadel already provides operation lifecycle, recovery, executor profiles,
   worktree isolation, receipts, and verification, reducing substrate risk.
-- Funding buys the still-unproven adaptive result, not a reconstruction of a
-  slide-deck prototype.
+- Funding buys independent selection, complete cost, learned policies, and
+  cross-stack generalization of a bounded positive result, not reconstruction
+  of a slide-deck prototype.
 
 ## Funded work
 

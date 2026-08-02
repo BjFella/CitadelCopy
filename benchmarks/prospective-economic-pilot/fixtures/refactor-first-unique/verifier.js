@@ -1,0 +1,10 @@
+'use strict';
+const assert = require('assert');
+const { uniqueById } = require('./src/unique');
+const first = { id: 1, value: 'first' };
+const second = { id: 2, value: 'middle' };
+const duplicate = { id: 1, value: 'last' };
+const input = [first, second, duplicate];
+assert.deepStrictEqual(uniqueById(input), [first, second]);
+assert.deepStrictEqual(input, [first, second, duplicate]);
+assert.deepStrictEqual(uniqueById([]), []);

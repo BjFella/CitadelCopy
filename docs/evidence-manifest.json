@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "kind": "citadel-public-evidence-manifest",
-  "as_of": "2026-08-01T05:23:49.666Z",
+  "as_of": "2026-08-02T01:11:56.820Z",
   "claim_policy": "Every value in this manifest is generated from a canonical committed artifact. Public prose is separately contract-tested. Unknown is never converted to zero.",
   "claims": {
     "optimizer_history": {
@@ -164,6 +164,111 @@
       },
       "actual_cash_status": "unknown"
     },
+    "prospective_repository_calibration": {
+      "evidence_class": "prospective-local-repository-operation-calibration",
+      "cells": 24,
+      "unique_tasks": 12,
+      "evidence_result": "failed",
+      "baseline_verified": 8,
+      "baseline_total": 12,
+      "candidate_verified": 8,
+      "candidate_total": 12,
+      "gpu_energy_reduction": -0.345575,
+      "modeled_cost_reduction": -0.538644,
+      "baseline_risk_strata": [
+        {
+          "risk": "low",
+          "cells": 4,
+          "verified": 4,
+          "verified_rate": 1
+        },
+        {
+          "risk": "moderate",
+          "cells": 6,
+          "verified": 4,
+          "verified_rate": 0.666667
+        },
+        {
+          "risk": "high",
+          "cells": 2,
+          "verified": 0,
+          "verified_rate": 0
+        }
+      ],
+      "path_violations": 0,
+      "false_passes": 0,
+      "actual_cash_status": "unknown"
+    },
+    "hybrid_economic_calibration": {
+      "evidence_class": "prospective-hybrid-repository-operation-calibration",
+      "cells": 24,
+      "unique_tasks": 12,
+      "evidence_result": "failed",
+      "baseline_verified": 12,
+      "baseline_total": 12,
+      "candidate_verified": 12,
+      "candidate_total": 12,
+      "cloud_calls_avoided": 4,
+      "comparison_cost_reduction": 0.283571,
+      "paired_cost_sensitivity": 0.300625,
+      "path_violations": 0,
+      "false_passes": 0,
+      "actual_cash_status": "unknown"
+    },
+    "calibrated_hybrid_economic_pilot": {
+      "evidence_class": "prospective-calibrated-hybrid-repository-operation",
+      "cells": 24,
+      "unique_tasks": 12,
+      "evidence_result": "passed",
+      "baseline_verified": 12,
+      "baseline_total": 12,
+      "candidate_verified": 12,
+      "candidate_total": 12,
+      "local_attempts": 8,
+      "cloud_attempts": 5,
+      "escalations": 1,
+      "cloud_calls_avoided": 7,
+      "baseline_comparison_cost_usd": 0.063711,
+      "candidate_comparison_cost_usd": 0.039070523,
+      "comparison_cost_reduction": 0.386754,
+      "quality_ratio": 1,
+      "risk_strata": [
+        {
+          "risk": "low",
+          "cells": 4,
+          "verified": 4,
+          "verified_rate": 1
+        },
+        {
+          "risk": "moderate",
+          "cells": 4,
+          "verified": 4,
+          "verified_rate": 1
+        },
+        {
+          "risk": "high",
+          "cells": 4,
+          "verified": 4,
+          "verified_rate": 1
+        }
+      ],
+      "path_violations": 0,
+      "false_passes": 0,
+      "integrity_failures": 0,
+      "gates": {
+        "baseline_absolute_quality": true,
+        "baseline_risk_strata": true,
+        "relative_quality": true,
+        "comparison_cost": true,
+        "terminal_coverage": true,
+        "execution_identity": true,
+        "zero_path_violations": true,
+        "zero_false_passes": true,
+        "integrity": true
+      },
+      "actual_cash_status": "unknown",
+      "whole_system_energy_status": "unknown"
+    },
     "fresh_clone_onboarding": {
       "evidence_class": "unattended-clean-clone-engineering-proof",
       "status": "completed",
@@ -184,6 +289,10 @@
     "The capability-profile v2 corrigendum discloses v1-informed design, task-template overlap, and deterministic repetition semantics without changing the frozen negative result.",
     "The 24-cell representative repository-operation shakedown matched 6/12 verified cells under both policies with zero false passes and zero path violations. Its 7.1% measured GPU-energy reduction missed the frozen 20% gate, so the evidence result is failed and no general savings claim is permitted.",
     "The representative shakedown contains six unique fixture tasks repeated twice per policy; timing repetitions are not independent tasks and the small fixture set is not production generalization.",
+    "A fresh 12-task local-only repository calibration preserved 8/12 verified completions under both policies but used 34.6% more GPU energy; its baseline also failed the frozen overall and high-risk validity floors.",
+    "The first 12-task Claude-plus-local hybrid preserved 12/12 completions and reduced comparison cost 28.4%, missing the frozen 30% gate. A post-run paired-cost sensitivity reaches 30.1% but does not change the failed verdict.",
+    "The separately frozen calibrated hybrid v2 preserved 12/12 completions, reduced provider-reported and locally modeled comparison cost 38.7%, and passed every frozen gate on twelve new author-selected synthetic tasks.",
+    "Hybrid v2 establishes a positive result only inside its preregistered support envelope on one model pair and one machine. Task selection was author-controlled, comparison USD is not the operator subscription bill, and production generalization is not claimed.",
     "The fresh-clone proof completed five command stages; doctor semantic health remained unknown, and no real-user utility or model-task completion is claimed.",
     "Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.",
     "GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained."
@@ -215,7 +324,7 @@
     },
     {
       "path": "benchmarks/sentient-readiness-v2/published-run/bundle.json",
-      "digest": "sha256:1ced06e46008f21a1d0f79bf6812ef029308bf7ff5bb2e2b67f24b0ff8321f06"
+      "digest": "sha256:8cec1d9893d2802abd4806ba828e6ecc61a1f386f03b1d4d52e54a567e539ce9"
     },
     {
       "path": "benchmarks/sentient-readiness-v2/DEPENDENCY_CLOSURE.json",
@@ -234,9 +343,21 @@
       "digest": "sha256:9c5b632af551cc0c3d9ad0c1ce5dfecd082ae8e68fcd0b70aeed59b0823b9538"
     },
     {
+      "path": "benchmarks/prospective-economic-pilot/published-run/bundle.json",
+      "digest": "sha256:8a90bf5a705b74c71818c7c7ed2156b89c927f617617d06d0fefa3702cc6c884"
+    },
+    {
+      "path": "benchmarks/hybrid-economic-pilot/published-run/bundle.json",
+      "digest": "sha256:89b06dfbfe858a29493f4742feb4a3419da9a9e43304aaa03969859f7124973e"
+    },
+    {
+      "path": "benchmarks/hybrid-economic-pilot-v2/published-run/bundle.json",
+      "digest": "sha256:48e367888e6c51cb612c57b494eeec73d5b13b26eb660f9da56daff4dcd9a78e"
+    },
+    {
       "path": "benchmarks/fresh-clone-onboarding/REPORT.json",
       "digest": "sha256:4bd806d7bbae4a4f9a8e83180a5f92fb17dc96e98e98e000f574296b8f288259"
     }
   ],
-  "manifest_digest": "sha256:f05407839b4db5845b63562584f3755d90c6d8f7d48ea92772a8389329f97cf0"
+  "manifest_digest": "sha256:28dd7d49b8818b8366facd9a657ddd01463c07f529463e98abe68d7d6a895772"
 }

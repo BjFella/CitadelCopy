@@ -31,9 +31,10 @@ assert.strictEqual(manifest.claims.fresh_clone_onboarding.status, 'completed');
 assert.strictEqual(manifest.claims.fresh_clone_onboarding.stages_completed, 5);
 
 const conformance = buildConformance(manifest);
-assert.strictEqual(conformance.adapters.filter((adapter) => adapter.evidence_level === 'prospective-actual-run').length, 3);
+assert.strictEqual(conformance.adapters.filter((adapter) => adapter.evidence_level === 'prospective-actual-run').length, 4);
 assert.strictEqual(conformance.adapters.find((adapter) => adapter.id === 'codex-direct').status, 'unknown');
 assert.strictEqual(conformance.adapters.find((adapter) => adapter.id === 'claude-code-direct').status, 'passed');
+assert.strictEqual(conformance.adapters.find((adapter) => adapter.id === 'citadel-hybrid-claude-ollama').status, 'passed');
 
 checkOutputs();
 process.stdout.write('application evidence and adapter conformance passed\n');
