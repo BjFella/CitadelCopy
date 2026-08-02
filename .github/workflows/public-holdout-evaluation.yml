@@ -1,0 +1,121 @@
+name: Public holdout evaluator
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Gold preflight or submitted prediction patches
+        required: true
+        type: choice
+        options: [gold, prediction]
+      selection_path:
+        description: Frozen public selection record
+        required: true
+        default: benchmarks/public-holdout-capstone/selection.json
+      pool_path:
+        description: Frozen candidate pool
+        required: true
+        default: benchmarks/public-holdout-capstone/candidate-pool.json
+      prediction_path:
+        description: Prediction JSON; required only in prediction mode
+        required: false
+        default: benchmarks/public-holdout-capstone/predictions.json
+      reserve_per_stratum:
+        description: Gold candidates per frozen feature stratum
+        required: true
+        default: '20'
+      reserve_offset_per_stratum:
+        description: Zero-based offset within each public feature-stratum order
+        required: true
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      count: ${{ steps.matrix.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: matrix
+        shell: bash
+        run: node scripts/public-holdout-matrix.js "${{ inputs.mode }}" "${{ inputs.selection_path }}" "${{ inputs.pool_path }}" "${{ inputs.prediction_path }}" "${{ inputs.reserve_per_stratum }}" "${{ inputs.reserve_offset_per_stratum }}" >> "$GITHUB_OUTPUT"
+
+  evaluate:
+    needs: prepare
+    if: ${{ needs.prepare.outputs.count != '0' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Check out Citadel protocol and predictions
+        uses: actions/checkout@v4
+        with:
+          path: citadel
+      - name: Check out pinned official evaluator
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/SWE-bench-Live
+          ref: 70ec57e852e3f2d195790fe71f553e272c691833
+          path: swe-bench-live
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: swe-bench-live/pyproject.toml
+      - name: Install official evaluator
+        run: python -m pip install -e ./swe-bench-live
+      - name: Evaluate in pinned container
+        id: evaluate
+        shell: bash
+        env:
+          INSTANCE_ID: ${{ matrix.instance_id }}
+          SPLIT: ${{ matrix.split }}
+          MODE: ${{ inputs.mode }}
+          PREDICTION_PATH: ${{ github.workspace }}/citadel/${{ inputs.prediction_path }}
+        run: |
+          repetitions=1
+          patch_dir="$PREDICTION_PATH"
+          if [ "$MODE" = gold ]; then
+            repetitions=3
+            patch_dir=gold
+          fi
+          for repetition in $(seq 1 "$repetitions"); do
+            output="${{ github.workspace }}/evaluator-output/run-${repetition}"
+            mkdir -p "$output"
+            set +e
+            (
+              cd swe-bench-live
+              python -m evaluation.evaluation \
+                --dataset SWE-bench-Live/MultiLang \
+                --split "$SPLIT" \
+                --instance_ids "$INSTANCE_ID" \
+                --platform linux \
+                --patch_dir "$patch_dir" \
+                --output_dir "$output" \
+                --workers 1 \
+                --overwrite 1
+            )
+            status=$?
+            set -e
+            printf '%s\n' "$status" > "$output/process-exit-status.txt"
+          done
+      - name: Write content-addressed evaluator summary
+        if: always()
+        env:
+          CITADEL_TASK_REPO: ${{ matrix.repo }}
+        run: node citadel/scripts/public-holdout-evaluator-summary.js "${{ inputs.mode }}" "${{ matrix.instance_id }}" "${{ matrix.split }}" "${{ matrix.feature_key }}" "${{ github.workspace }}/evaluator-output" "$([ '${{ inputs.mode }}' = 'gold' ] && echo 3 || echo 1)" "${{ github.workspace }}/evaluator-output/summary.json"
+      - name: Upload verifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.mode }}-${{ matrix.artifact_name }}
+          path: evaluator-output
+          if-no-files-found: error
+          retention-days: 30
