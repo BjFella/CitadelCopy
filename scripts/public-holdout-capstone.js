@@ -78,7 +78,8 @@ async function buildCandidatePool() {
 
 function buildRequest(roundText, roundTime) {
   const pool = validatePool(readJson(POOL_FILE));
-  const request = createSelectionRequest({ pool, round: Number(roundText), roundTime, sourceDigests: sourceDigests(), attestationPublicKey: publicKey() });
+  const supersedesRequestId = fs.existsSync(REQUEST_FILE) ? readJson(REQUEST_FILE).request_id : null;
+  const request = createSelectionRequest({ pool, round: Number(roundText), roundTime, sourceDigests: sourceDigests(), attestationPublicKey: publicKey(), supersedesRequestId });
   writeJson(REQUEST_FILE, request);
   return request;
 }
