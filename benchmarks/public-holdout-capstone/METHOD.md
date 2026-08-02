@@ -2,6 +2,10 @@
 
 Status: implementation and candidate-pool construction. No model has been run on a selected task. The selection request must be merged to protected `main` before its committed future beacon round.
 
+## Freeze supersession record
+
+The first public request, `sha256:2f82dbbdf4b71c0d3ff58946ba09c90bd95af7930b27f200513526f7b1a0c880`, was merged in PR #233 before selection. A non-benchmark smoke on Citadel's own repository then exposed `ENAMETOOLONG`: the Claude prompt was passed as a Windows command-line argument. No candidate was selected and no benchmark task was sent to any model. The replacement runner streams the same bounded prompt over stdin, and the replacement request explicitly binds the superseded request ID. Only the newest request merged before the committed round governs selection.
+
 ## Question
 
 Can an evidence-conditioned Citadel controller reduce the comparison cost of real repository repair operations while remaining non-inferior to an always-Claude baseline under model-external tests?

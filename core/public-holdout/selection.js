@@ -35,7 +35,7 @@ function relayUrls(round) {
   ];
 }
 
-function createSelectionRequest({ pool, round, roundTime, frozenAt = new Date().toISOString(), sourceDigests = {}, attestationPublicKey }) {
+function createSelectionRequest({ pool, round, roundTime, frozenAt = new Date().toISOString(), sourceDigests = {}, attestationPublicKey, supersedesRequestId = null }) {
   if (!pool || typeof pool.pool_id !== 'string') throw new TypeError('candidate pool required');
   if (!Number.isSafeInteger(round) || round < 1) throw new TypeError('future drand round required');
   if (!roundTime || Number.isNaN(Date.parse(roundTime)) || Date.parse(roundTime) <= Date.parse(frozenAt)) throw new Error('drand round must be in the future when frozen');
@@ -45,6 +45,7 @@ function createSelectionRequest({ pool, round, roundTime, frozenAt = new Date().
     request_id: null,
     frozen_at: frozenAt,
     pool_id: pool.pool_id,
+    supersedes_request_id: supersedesRequestId,
     eligible_candidate_digests: pool.candidates.filter((candidate) => candidate.eligible).map((candidate) => digest(candidate)).sort(),
     dataset: DATASET,
     design: DESIGN,
