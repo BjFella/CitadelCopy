@@ -400,7 +400,7 @@
     },
     {
       "path": "benchmarks/public-holdout-pilot/REPORT.md",
-      "digest": "sha256:46de77831e877a5026adb7d71d8feee5e8010a93d8cc2847e52e1cc61c3c8132"
+      "digest": "sha256:e01ba67287a33be5073203865f6efe1427f869fd3af9dc369a002ac738de419a"
     },
     {
       "path": "benchmarks/public-holdout-pilot/VALIDATION.md",
@@ -411,5 +411,5 @@
       "digest": "sha256:4bd806d7bbae4a4f9a8e83180a5f92fb17dc96e98e98e000f574296b8f288259"
     }
   ],
-  "manifest_digest": "sha256:2de7ced5e6afdae22e71a9ec6b3841493226184aa4030ed6a60b3f5a9164816f"
+  "manifest_digest": "sha256:87ab6303dbc59ecd53b3a08756f55c5b218782de8f023d86d4accf90832ca593"
 }

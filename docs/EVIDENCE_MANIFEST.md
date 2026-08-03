@@ -37,4 +37,4 @@ Generated from committed canonical artifacts. As of 2026-08-03T20:33:04Z.
 - Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.
 - GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained.
 
-Manifest: `sha256:2de7ced5e6afdae22e71a9ec6b3841493226184aa4030ed6a60b3f5a9164816f`
+Manifest: `sha256:87ab6303dbc59ecd53b3a08756f55c5b218782de8f023d86d4accf90832ca593`
