@@ -5,16 +5,16 @@ Seth can confirm.
 
 ## Verified public record
 
-Observed 2026-08-01:
+Observed 2026-08-03:
 
 - Applicant/project owner: **SethGammon**, owner of the public
   [SethGammon/Citadel](https://github.com/SethGammon/Citadel) repository.
 - Current maintainer model: one maintainer and release authority, disclosed as
   a bus-factor risk rather than presented as a team.
 - License: MIT.
-- Public repository metrics: **808 stars, 79 forks, and 520 commits** reachable
-  from `main`. Of those commits, 496 are attributed to Seth's Git identity and
-  360 are non-merge commits attributed to that identity. These are delivery and
+- Public repository metrics: **809 stars, 80 forks, and 538 commits** reachable
+  from `main`. Of those commits, 514 are attributed to Seth's Git identity and
+  374 are non-merge commits attributed to that identity. These are delivery and
   repository-history signals, not manually typed code, active users, successful
   installations, retention, or revenue.
 - Owner-visible GitHub traffic for 2026-07-18 through 2026-07-31 reported 1,237

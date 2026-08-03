@@ -11,6 +11,8 @@ const checks = Object.freeze([
   ['prospective-economic', 'scripts/prospective-economic-pilot.js', ['verify']],
   ['hybrid-calibration', 'scripts/hybrid-economic-pilot.js', ['verify']],
   ['hybrid-v2', 'scripts/hybrid-economic-pilot-v2.js', ['verify']],
+  ['public-holdout-pilot-tests', 'scripts/test-public-holdout-pilot.js', []],
+  ['public-holdout-pilot', 'scripts/public-holdout-pilot.js', ['verify']],
   ['operation-control', 'scripts/operation-control-proof.js', ['verify']],
   ['prospective-runtime', 'scripts/operation-control-prospective.js', []],
   ['optimizer-bundle', 'scripts/optimizer-proof-bundle.js', ['verify', 'benchmarks/optimizer-proof/proof-bundle']],

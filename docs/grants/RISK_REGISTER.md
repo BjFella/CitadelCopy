@@ -7,6 +7,8 @@
 | Timeout sensitivity | One timeout can create an apparent policy saving | Publish matched-pair and precommitted timeout/outlier sensitivity; v1's direction reversal is now a named artifact |
 | Cherry-picked reruns | Retrying only failures manufactures a stronger aggregate | Intent-before-cell ledger; immutable cell paths; ambiguous runs are unknown and never retried automatically |
 | Weak or correlated verifier | The same model can reward its own mistake | Deterministic verifier outside the routed model where possible; different-family arbiter only for irreducible judgment; publish verifier identity and never imply third-party independence |
+| Weak strong-model baseline | A controller can appear quality-preserving only because the comparator also fails | Always-frontier must clear 80% overall and 70% per stratum before economics govern; the public holdout's 2/16 Claude result is retained as baseline-invalid |
+| Retrieval or edit-protocol bottleneck | Both model families can fail because required code was not retrieved or full-file JSON was unusable | Fund and freeze a patch/edit contract, retrieval-coverage tests, gold/reference reconstruction, parse telemetry, and no-hidden-test boundary before the larger evaluation |
 | Model substitution | Requested and actual runtime paths can differ | Requested/observed reconciliation, exact manifest IDs, provider receipts, fail-closed unknown state |
 | Missing costs | Token-only accounting hides tools, retries, local compute, and people | Separate actual, marginal, market-equivalent, energy, amortization, setup, and human lenses |
 | Local hardware generalization | One GTX 1070 result may not transfer | Funded benchmark spans hardware profiles; current result is labeled single-machine |

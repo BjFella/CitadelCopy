@@ -16,13 +16,20 @@
 - [x] Representative replay retained: both policies 6/12 verified, zero false passes, zero path violations, 7.1% measured GPU-energy reduction below the 20% gate.
 - [x] Transitive source-closure manifests and local measurement audit published with explicit limitations.
 - [x] Claim-discipline contract rejects stale or inflated application wording.
+- [x] Public-random capstone terminal `setup-unknown` record retained without
+  reinterpreting its failed 20/60 assignment.
+- [x] Secondary public holdout completed across 24 distinct repositories with
+  16 routes published before model calls and all 32 official verdicts retained.
+- [x] Human-readable public-holdout report and independent calculation/data
+  validation publish the 3/16 controller, 2/16 Claude, baseline-invalid result.
 - [x] Clean hosted browser smoke check on the final merged site.
 
 ## Presentation
 
 - [x] Progressive `/do`-first public site.
 - [x] Research and claim-boundary pages.
-- [x] Evaluator six-link entry point including dated delivery evidence.
+- [x] Evaluator eight-link entry point including the public holdout, its
+  validation, and dated delivery evidence.
 - [x] Claim-to-evidence and technical comparison matrices.
 - [x] Evidence-gated budget and risk register.
 - [x] Reproducible clean-environment onboarding matrix explicitly scoped and

@@ -2,7 +2,7 @@
 
 Status: internal draft, not approved or submitted
 
-Evidence observed: 2026-08-01 UTC
+Evidence observed: 2026-08-03 UTC
 
 ## Project
 
@@ -67,18 +67,35 @@ identity, path, false-pass, and integrity gate passed. This is a positive result
 inside an author-selected synthetic support envelope, not production or general
 savings; subscription allocation and whole-system energy remain unknown.
 
+Citadel then tested whether that promise survived outside-authored repository
+work. The primary public-random capstone stopped `setup-unknown` before model
+inference when its signed gold preflight yielded only 41 of 60 required
+evaluation tasks. A disclosed secondary pilot used 24 distinct public
+repositories: eight calibration tasks and sixteen untouched evaluation tasks,
+balanced across four language/issue-length strata. All routes were signed and
+published before evaluation calls, and Microsoft's pinned SWE-bench-Live
+evaluator returned all 32 route verdicts. Direct Claude verified 2/16; Qwen 3B
+verified 1/16; the sealed Qwen-first controller verified the union, 3/16, at
+1.26% lower comparison cost. Although the frozen descriptive sample rule is
+positive, the direct-Claude baseline passed only 12.5% overall and 0% in three
+strata. Citadel therefore rejects this as a generalized quality-preserving or
+savings result. The result identifies retrieval, edit representation, baseline
+strength, and calibration power as the funded bottlenecks.
+
 ## Short application answer
 
 Citadel makes optimization claims about open agents falsifiable. It attaches to
 an existing stack, controls the whole operation rather than only choosing a
 model, reconciles the declared plan against runtime observations, keeps unknown
-cost unknown, and signs model-externally verified outcomes. A prospective
-Claude-plus-local pilot now preserves 12/12 verified completions while reducing
-comparison cost 38.7% inside a frozen support envelope. The funded work is to
-replace author-selected synthetic scope with independent tasks, complete
-end-to-end cost, learned policies, and multiple stacks, model families, and
-hardware profiles. Citadel is a demonstrated bounded economic optimizer and
-open falsification substrate, not yet a generalized production optimizer.
+cost unknown, and signs model-externally verified outcomes. A synthetic
+support-envelope pilot preserved 12/12 verified completions while reducing
+comparison cost 38.7%. A later outside-authored public holdout did not validate
+that result: direct Claude passed 2/16 and the controller 3/16, making baseline
+quality the rejection boundary despite a 1.26% comparison-cost reduction. The
+funded work is to fix the retrieval/edit substrate, establish valid strong
+baselines, complete end-to-end cost, learn policies, and generalize across
+stacks, model families, and hardware. Citadel is a working open falsification
+substrate with one bounded positive result, not yet a production optimizer.
 
 ## Sentient request addressed
 
@@ -397,6 +414,39 @@ production generalization. Those are the funded gaps, not footnotes erased by
 the positive result. The ranked rejection-risk treatment is in
 [`REVIEWER_OBJECTIONS.md`](REVIEWER_OBJECTIONS.md).
 
+### Outside-authored public holdout diagnostic
+
+Final report and validation:
+[`REPORT.md`](../../benchmarks/public-holdout-pilot/REPORT.md) -
+[`VALIDATION.md`](../../benchmarks/public-holdout-pilot/VALIDATION.md)
+
+One-command verification:
+
+```text
+node scripts/public-holdout-pilot.js verify
+```
+
+| Route or policy | Distinct evaluation tasks | Official passes | Comparison cost | Claim status |
+|---|---:|---:|---:|---|
+| Qwen 2.5 Coder 3B direct | 16 | 1/16 | $0.013633 derived equivalent | Negative route evidence |
+| Claude Sonnet direct | 16 | 2/16 | $4.794071 provider equivalent | Baseline invalid for general claim |
+| Sealed Qwen-first controller | 16 | 3/16 | $4.733624 mixed comparison | Descriptive signal only |
+
+The pilot used eight calibration and sixteen untouched evaluation tasks from 24
+distinct outside-authored repositories. The assignment was balanced across four
+strata, used no repository twice, and inherited a public-random parent selection
+plus signed three-of-three gold preflight. Sixteen routes were signed and merged
+before evaluation calls. The official evaluator returned 32/32 verdicts with no
+unknowns.
+
+The controller's observed verified rate was 18.75% versus 12.5% for direct
+Claude, and its comparison cost was 1.26% lower. The exploratory cost interval
+crosses zero. Direct Claude also passed 0% in three strata, so matching or
+slightly exceeding it does not establish useful quality preservation. This is a
+successful falsification and infrastructure result, not a successful external
+economic validation. The primary 20/60 capstone remains separately published
+as terminal `setup-unknown`; the secondary method does not rewrite it.
+
 ## Why this is differentiated
 
 Citadel is not claiming the first model router or the first agent orchestrator.
@@ -436,12 +486,17 @@ reconcilable evidence.
 - The first Claude-plus-local hybrid preserved 12/12 completions but missed its
   30% cost gate at 28.4%; calibrated v2 then preserved 12/12 on twelve fresh
   tasks and reduced comparison cost 38.7% with every frozen gate passed.
+- The later public holdout used 24 outside-authored repositories, published its
+  route ledger before evaluation calls, and retained all 32 official verdicts.
+  It rejected a general savings claim because direct Claude passed only 2/16,
+  even though the controller passed 3/16 at 1.26% lower comparison cost.
 - The work distinguishes activity, completion, control integrity, and cost.
 - Citadel already provides operation lifecycle, recovery, executor profiles,
   worktree isolation, receipts, and verification, reducing substrate risk.
-- Funding buys independent selection, complete cost, learned policies, and
-  cross-stack generalization of a bounded positive result, not reconstruction
-  of a slide-deck prototype.
+- Funding buys a stronger retrieval/edit substrate, valid baselines, complete
+  cost, learned policies, and cross-stack generalization. It funds the failure
+  exposed by outside-authored evidence, not reconstruction of a slide-deck
+  prototype.
 
 ## Funded work
 
@@ -552,9 +607,9 @@ Those are the exact uncertainties the funded milestones address.
 
 ## Applicant and adoption evidence
 
-SethGammon owns and maintains the public MIT repository. On 2026-08-01 it had
-808 stars, 79 forks, and 520 commits reachable from `main`; 496 were attributed
-to Seth's Git identity and 360 were non-merge commits attributed to that
+SethGammon owns and maintains the public MIT repository. On 2026-08-03 it had
+809 stars, 80 forks, and 538 commits reachable from `main`; 514 were attributed
+to Seth's Git identity and 374 were non-merge commits attributed to that
 identity. GitHub's owner-visible 14-day traffic reported 524 unique cloners and
 380 unique visitors. Those are delivery and interest signals, not manually
 typed code, users, installations, adoption, or economic impact. The adoption

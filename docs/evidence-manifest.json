@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "kind": "citadel-public-evidence-manifest",
-  "as_of": "2026-08-02T01:11:56.820Z",
+  "as_of": "2026-08-03T20:33:04Z",
   "claim_policy": "Every value in this manifest is generated from a canonical committed artifact. Public prose is separately contract-tested. Unknown is never converted to zero.",
   "claims": {
     "optimizer_history": {
@@ -269,6 +269,27 @@
       "actual_cash_status": "unknown",
       "whole_system_energy_status": "unknown"
     },
+    "public_holdout_fast_pilot": {
+      "evidence_class": "prospective-secondary-public-holdout-diagnostic",
+      "status": "complete-secondary-diagnostic",
+      "assigned_tasks": 24,
+      "calibration_tasks": 8,
+      "evaluation_tasks": 16,
+      "unique_repositories": 24,
+      "sealed_routes": 16,
+      "qwen_verified": 1,
+      "claude_verified": 2,
+      "evaluator_unknowns": 0,
+      "baseline_verified_rate": 0.125,
+      "controller_verified_rate": 0.1875,
+      "paired_quality_difference": 0.0625,
+      "baseline_comparison_cost_usd": 4.794071,
+      "controller_comparison_cost_usd": 4.733623979,
+      "comparison_cost_reduction": 0.012608703750945693,
+      "frozen_sample_signal": true,
+      "baseline_validity": "failed-for-general-optimization-claim",
+      "actual_cash_status": "unknown"
+    },
     "fresh_clone_onboarding": {
       "evidence_class": "unattended-clean-clone-engineering-proof",
       "status": "completed",
@@ -293,6 +314,9 @@
     "The first 12-task Claude-plus-local hybrid preserved 12/12 completions and reduced comparison cost 28.4%, missing the frozen 30% gate. A post-run paired-cost sensitivity reaches 30.1% but does not change the failed verdict.",
     "The separately frozen calibrated hybrid v2 preserved 12/12 completions, reduced provider-reported and locally modeled comparison cost 38.7%, and passed every frozen gate on twelve new author-selected synthetic tasks.",
     "Hybrid v2 establishes a positive result only inside its preregistered support envelope on one model pair and one machine. Task selection was author-controlled, comparison USD is not the operator subscription bill, and production generalization is not claimed.",
+    "The secondary public-holdout pilot used 24 distinct outside-authored repositories, sealed all routes before evaluation calls, and published 32 official verdicts with no evaluator unknowns.",
+    "The public-holdout controller verified 3/16 tasks versus 2/16 for direct Claude and used 1.26% less comparison cost, but direct Claude passed only 12.5% overall and 0% in three strata. The frozen in-sample signal is not a valid generalized optimization result.",
+    "The public-holdout result makes retrieval, edit representation, baseline strength, and calibration power the next technical bottlenecks. It does not establish production reliability or actual cash savings.",
     "The fresh-clone proof completed five command stages; doctor semantic health remained unknown, and no real-user utility or model-task completion is claimed.",
     "Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.",
     "GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained."
@@ -355,9 +379,37 @@
       "digest": "sha256:48e367888e6c51cb612c57b494eeec73d5b13b26eb660f9da56daff4dcd9a78e"
     },
     {
+      "path": "benchmarks/public-holdout-pilot/assignment.json",
+      "digest": "sha256:1fc77359451b26702f7f4323e45e998e4cad443f755993eaece1895d44de5de0"
+    },
+    {
+      "path": "benchmarks/public-holdout-pilot/route-ledger.json",
+      "digest": "sha256:077945c6ca1d721aa98f0af38c2145a95a6f8d5ecd42cbe73ea0d0782bf8b47b"
+    },
+    {
+      "path": "benchmarks/public-holdout-pilot/verdicts/evaluation--qwen-3b.json",
+      "digest": "sha256:de8b7f62043db63d795324dcf3600bf075ef08bc8ad7290d37c48be9807af17d"
+    },
+    {
+      "path": "benchmarks/public-holdout-pilot/verdicts/evaluation--claude-sonnet.json",
+      "digest": "sha256:dd3ce42780e3c68d79c82bd697cf91eb0947515daa35c1c08425caeb69faac37"
+    },
+    {
+      "path": "benchmarks/public-holdout-pilot/final-analysis.json",
+      "digest": "sha256:95086fc335715072d4433c4133bfb093e6a6b78b954e8b946d85665e5dee9f9c"
+    },
+    {
+      "path": "benchmarks/public-holdout-pilot/REPORT.md",
+      "digest": "sha256:e01ba67287a33be5073203865f6efe1427f869fd3af9dc369a002ac738de419a"
+    },
+    {
+      "path": "benchmarks/public-holdout-pilot/VALIDATION.md",
+      "digest": "sha256:edf1b5f2f9cc77cb6606cc6f443f03009d2f26aa6f968565cbe044a46051a61f"
+    },
+    {
       "path": "benchmarks/fresh-clone-onboarding/REPORT.json",
       "digest": "sha256:4bd806d7bbae4a4f9a8e83180a5f92fb17dc96e98e98e000f574296b8f288259"
     }
   ],
-  "manifest_digest": "sha256:28dd7d49b8818b8366facd9a657ddd01463c07f529463e98abe68d7d6a895772"
+  "manifest_digest": "sha256:87ab6303dbc59ecd53b3a08756f55c5b218782de8f023d86d4accf90832ca593"
 }

@@ -9,23 +9,23 @@
     },
     {
       "path": "EVIDENCE_MANIFEST.md",
-      "bytes": 4446,
-      "digest": "sha256:91bd2ee9dec5124f296d54728b0dd3cd67d99dc5c50aca0471ac27740c701e25"
+      "bytes": 5271,
+      "digest": "sha256:3f076817596712a157b718b867536b0e14fa1fa13b22185159d6ff73b9de1e6e"
     },
     {
       "path": "assets/application/01-product-entry.png",
-      "bytes": 583468,
-      "digest": "sha256:0cc246392e49cf010cdbf48de9a4e6216c221d302a3ddffd686c3e9ae2bf12d7"
+      "bytes": 478651,
+      "digest": "sha256:36a1f5513fab57f3b94cb37ce477d8809d827b8150bd926f603c5e4e86914cf4"
     },
     {
       "path": "assets/application/02-evidence-hero.png",
-      "bytes": 467711,
-      "digest": "sha256:bf9204b2cb335e828b1c64392f773cb3f57999f68a329faef9d555dd2d603842"
+      "bytes": 451672,
+      "digest": "sha256:54b822904e364b22ecbee5909361ad477e9391f416a37d7879fa3ed0d4c6bd1c"
     },
     {
       "path": "assets/application/03-policy-comparison.png",
-      "bytes": 714831,
-      "digest": "sha256:a3354a38d0ba09ae709c52e761af6d95fc8e6c8cedf410bd97e04c62a480f0b3"
+      "bytes": 464748,
+      "digest": "sha256:53d86bb71a51e19b5109c5c9002fed5f123085c1b8b0d731d31efc82954f5980"
     },
     {
       "path": "assets/application/citadel-live-verification-demo.mp4",
@@ -64,53 +64,53 @@
     },
     {
       "path": "evidence-manifest.json",
-      "bytes": 14491,
-      "digest": "sha256:73371867a8b0f4131feea0929e8a8f25fd41bcacdf84af8abd6fc39892423547"
+      "bytes": 17203,
+      "digest": "sha256:3e3fc8468b46b63be19aaaaffabe1ac111faacf777488b0b51a357d0a1e51367"
     },
     {
       "path": "evidence.html",
-      "bytes": 27975,
-      "digest": "sha256:e362bdeca4dfc4ee8be8a5587a855029bb9ba3ddf0c04a04e0a5d42fc77bff7f"
+      "bytes": 30047,
+      "digest": "sha256:e7cf6b038fa7af09ff8e3ccac549b0c45ade16e68186c08a179334edc560fabf"
     },
     {
       "path": "grants/APPLICANT_AND_ADOPTION.md",
       "bytes": 3800,
-      "digest": "sha256:8a309ec06f0ea0e9a32275509c2b3289df8f0bd8efb0de4e6e7c843634917611"
+      "digest": "sha256:e839269a11381058ca1347afdab79d96d94f8141db7135bda8893a8506c74453"
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 4200,
-      "digest": "sha256:ff3d2a5b5ffcbe57308cff7d4302a0f25009c73282c42c1409cace2fa3a29bff"
+      "bytes": 4682,
+      "digest": "sha256:bc21efc55fe11262e074e4977145405f9fb51ce16504c4fc69a60164193c09d3"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
-      "bytes": 2454,
-      "digest": "sha256:8fca36e07159a4114fc05bc0b9e51ba9d952e72ab9996120ba7642a093347846"
+      "bytes": 2555,
+      "digest": "sha256:78173a1408fbf20b1704c698de550d962bb3b10bee31f6e6a55aac7176a482cd"
     },
     {
       "path": "grants/CLAIM_EVIDENCE_MATRIX.md",
-      "bytes": 2982,
-      "digest": "sha256:3f5be36f3fae515d1f8296df55626a148b4c758d85b445d8e56a46d8ab762575"
+      "bytes": 3947,
+      "digest": "sha256:d81cddae9fe12296768461dbe9fb68ea0622e7677eb35233d2b5c7492970584c"
     },
     {
       "path": "grants/DEMO_SCRIPT.md",
       "bytes": 2396,
-      "digest": "sha256:90522d030a1bce54d4397a89d9baa29629fc3d2258188ac890c29bcac8fbc393"
+      "digest": "sha256:54a866fa7903ad6e990bdecf3ec0c59b45c181131671baa4f5133195d51a2399"
     },
     {
       "path": "grants/EVALUATOR_START_HERE.md",
-      "bytes": 3837,
-      "digest": "sha256:1d66bed31160f81bec2c3649f09960f4e3d19ab011f37636892cb06407fe5c26"
+      "bytes": 4081,
+      "digest": "sha256:43dfe6ed251b834b8a81ed77efde013922f1cffd36b5bd5f6d8e40fd86697e50"
     },
     {
       "path": "grants/GITHUB_DELIVERY_EVIDENCE.md",
-      "bytes": 2732,
-      "digest": "sha256:89df0a4932b93a93f0687fc44b7f8b917eaa3b5d28718e34d54fbb39da120254"
+      "bytes": 2738,
+      "digest": "sha256:5fe69371bcd5dde1afb7e57eeb082305d5b3b93ea0b0c74f837f1522859ae70a"
     },
     {
       "path": "grants/MILESTONES_AND_BUDGET.md",
-      "bytes": 8648,
-      "digest": "sha256:1f682c1e6f1435f54003b4bf478efd902aa7641f1714b05e0a5f5bd1312b3aeb"
+      "bytes": 8810,
+      "digest": "sha256:c7f4a938218262d858eba7f3aa5c4807e1eb9dae19ca67601941e67035564928"
     },
     {
       "path": "grants/PUBLIC_GOODS_AND_GOVERNANCE.md",
@@ -119,28 +119,28 @@
     },
     {
       "path": "grants/REVIEWER_OBJECTIONS.md",
-      "bytes": 5560,
-      "digest": "sha256:688af24556683e786440342cefc6269fbccac0508dc6146ec18f5a405797ae5c"
+      "bytes": 6478,
+      "digest": "sha256:d85cc7b91206afd30751147a5349f01efae17a4e54c652c9dfcf182c7c15d743"
     },
     {
       "path": "grants/RISK_REGISTER.md",
-      "bytes": 3856,
-      "digest": "sha256:08f51ec5cbb20bd379342f9bdb703de0736191c18250c9b90a4f1291aaad48c6"
+      "bytes": 4445,
+      "digest": "sha256:1b31687bccb0b28caacb9ea5ed8278b9fe6679ee5d38cbdcfda0ebec964ccae7"
     },
     {
       "path": "grants/SENTIENT_BELIEFS.md",
-      "bytes": 1933,
-      "digest": "sha256:edc756e4bb27bbddbe984273a127e8689611187faf6bc15b925b0e3020fb311d"
+      "bytes": 2004,
+      "digest": "sha256:428cbcf1e0fe3fdd2098f42dd82b5b6892eb6549db80d63ce11f97d1b143a906"
     },
     {
       "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
-      "bytes": 29408,
-      "digest": "sha256:4d663fb322084f7cc6b4c2d99f09b33ee40c34a2908f657dc53c8134e2797e1f"
+      "bytes": 32670,
+      "digest": "sha256:7b48c499aac6c3460b3acdb36503850cec8a2f18e1ef6edde658e89aa11fd297"
     },
     {
       "path": "grants/SUBMISSION_READINESS.md",
-      "bytes": 7941,
-      "digest": "sha256:97f23c79c28bb056865a3687f89e38842f10a6fab7c872edf6f80cab9cdc1d84"
+      "bytes": 9014,
+      "digest": "sha256:cfa55b72a229eb872c11eb1d44092b8888fa8e8d6396bfc532ee03032cf0045a"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -149,8 +149,8 @@
     },
     {
       "path": "grants/TYPEFORM_ANSWER_PACK.md",
-      "bytes": 8443,
-      "digest": "sha256:1c568d324436d2845bcfabaf92d6e93d5af5718f0d2a63f4cd67dc7477fa2078"
+      "bytes": 8909,
+      "digest": "sha256:e694d059a8d17d4ce1e69e76221f568322ef45bd8993d83edf708ba40161e8ce"
     },
     {
       "path": "index.html",
@@ -164,13 +164,13 @@
     },
     {
       "path": "optimizer.html",
-      "bytes": 32914,
-      "digest": "sha256:db533b8c6293ab9d050d4ab24111111bf1b91600ab814b344af9c9faeafd90a7"
+      "bytes": 33901,
+      "digest": "sha256:5b4aca3deefe108a9dc5459c5fa4deef0a6f0536646382686a2bc000098d0820"
     },
     {
       "path": "research.html",
-      "bytes": 18391,
-      "digest": "sha256:19764d23085d1c9b9f53288377730bebeb60a0ed0fae487dd2883933e23d367c"
+      "bytes": 19263,
+      "digest": "sha256:01ef1253df0736ea1a9a0463b38c44bdae9fdfa34078e92cdbad57cd9091711c"
     },
     {
       "path": "robots.txt",
@@ -199,9 +199,9 @@
     },
     {
       "path": "walkthrough.html",
-      "bytes": 9512,
-      "digest": "sha256:89eb7f2ec16d9d9e6f493f2a28281671abbd417b7e15a19abb050ba631c58b04"
+      "bytes": 9620,
+      "digest": "sha256:fcfa572d3523fe0a7ebd391fd0aeb8c6df65ce772f62a1d93de6903fcabf840e"
     }
   ],
-  "source_digest": "sha256:688290b461e9b89357d84be91b8e64f6f7d9f038e4566ce6789cbd9c94b608a7"
+  "source_digest": "sha256:2d6faa99fb9f0e5beeb39b9e5090a25ecb14d554bf500b0378a67dae1f6223ea"
 }

@@ -157,14 +157,14 @@
         </div>
       </div>
       <aside class="result-card" aria-label="Latest research result">
-        <span class="status">Latest gate · passed within scope</span>
-        <h2>Verified outcomes preserved. Comparison cost fell 38.7%.</h2>
-        <p>On twelve new repository tasks, always-Claude and Citadel each verified 12/12. Citadel used local 3B eight times, recovered once, and reduced Claude calls from twelve to five.</p>
+        <span class="status">Latest diagnostic · baseline invalid</span>
+        <h2>Outside-authored work exposed the bottleneck.</h2>
+        <p>Across sixteen untouched evaluation repositories, direct Claude verified 2/16 and the sealed Qwen-first controller verified 3/16. The controller used 1.26% less comparison cost, but a 12.5% baseline cannot support a quality-preservation or savings claim.</p>
         <div class="result-metrics">
-          <div class="result-metric"><strong>12/12</strong><span>Citadel verified</span></div>
-          <div class="result-metric"><strong>12/12</strong><span>always-Claude verified</span></div>
-          <div class="result-metric"><strong>38.7%</strong><span>lower comparison cost</span></div>
-          <div class="result-metric"><strong>5</strong><span>Claude calls versus 12</span></div>
+          <div class="result-metric"><strong>3/16</strong><span>controller verified</span></div>
+          <div class="result-metric"><strong>2/16</strong><span>direct Claude verified</span></div>
+          <div class="result-metric"><strong>1.26%</strong><span>lower comparison cost</span></div>
+          <div class="result-metric"><strong>32/32</strong><span>official verdicts published</span></div>
         </div>
       </aside>
     </header>
@@ -172,7 +172,7 @@
     <section class="evidence-section" id="comparisons">
       <div class="evidence-heading">
         <div><div class="site-kicker">Six separately frozen studies</div><h2>The failures changed the policy.</h2></div>
-        <p>Local studies exposed timeout, escalation, and baseline-validity defects. The first hybrid missed narrowly. Calibrated hybrid v2 then passed unchanged quality and cost gates on twelve untouched tasks.</p>
+        <p>Local studies exposed timeout, escalation, and baseline-validity defects. A calibrated synthetic support envelope passed. The outside-authored follow-up then showed that the retrieval/edit substrate and strong baseline were not ready.</p>
       </div>
       <div class="comparison-grid">
         <article class="comparison-card">
@@ -231,6 +231,18 @@
           </div>
           <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md">Passed method + signed result</a>
         </article>
+        <article class="comparison-card negative wide">
+          <small>V6 · outside-authored public holdout</small>
+          <h3>Evidence sequence passed; optimization claim did not.</h3>
+          <p>Twenty-four distinct repositories supplied eight calibration and sixteen untouched evaluation tasks. Routes were published before calls. Qwen verified 1/16, direct Claude 2/16, and the Qwen-first controller 3/16 at 1.26% lower comparison cost. The baseline was too weak for a general result.</p>
+          <div class="metric-list">
+            <div><strong>24</strong><span>distinct repositories</span></div>
+            <div><strong>32/32</strong><span>official verdicts</span></div>
+            <div><strong>Invalid</strong><span>strong-baseline claim</span></div>
+          </div>
+          <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/public-holdout-pilot/REPORT.md">Final report</a>
+          <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/public-holdout-pilot/VALIDATION.md">Validation</a>
+        </article>
       </div>
     </section>
 
@@ -267,6 +279,9 @@
         <a class="evidence-row" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/fresh-clone-onboarding/REPORT.md">
           <span class="evidence-id">09 / ONBOARD</span><h3>Fresh-clone governed path</h3><p>Five unattended engineering stages completed from a clean local clone in 28.17 seconds; the nested doctor command exited zero but reported semantic health as unknown.</p><span class="evidence-state">5 stages completed</span>
         </a>
+        <a class="evidence-row" href="https://github.com/SethGammon/Citadel/blob/main/benchmarks/public-holdout-pilot/REPORT.md">
+          <span class="evidence-id">10 / PUBLIC HOLDOUT</span><h3>Outside-authored route diagnostic</h3><p>24 distinct repositories, 16 sealed evaluation routes, 32 official verdicts; direct Claude 2/16 and controller 3/16. Baseline validity failed for a general claim.</p><span class="evidence-state failed">Baseline invalid</span>
+        </a>
       </div>
     </section>
 
@@ -285,13 +300,15 @@
             <li>Signed chains preserve every passed, failed, and unknown cell.</li>
             <li>A plausible policy can be shown to cost more before deployment.</li>
             <li>On twelve author-selected tasks inside a declared support envelope, Citadel preserved 12/12 verified outcomes while reducing Claude calls from twelve to five and comparison cost by 38.7%.</li>
+            <li>On 24 distinct outside-authored repositories, Citadel sealed routes before model calls and published all 32 official evaluation verdicts.</li>
+            <li>The outside-authored result rejected its own optimization headline because direct Claude verified only 2/16, despite the controller's 3/16 and 1.26% lower comparison cost.</li>
             <li>Repository changes can be checked for exact artifacts and allowed-path boundaries without trusting the model's own report.</li>
           </ul>
         </article>
         <article class="boundary-card open">
           <h3>Still open</h3>
           <ul>
-            <li>Thirty percent lower actual end-to-end cash cost across independently selected production tasks.</li>
+            <li>Thirty percent lower actual end-to-end cash cost across outside-authored production tasks with a valid strong baseline.</li>
             <li>Generalization across repositories, agent stacks, model families, and hardware.</li>
             <li>Actual cash accounting where subscription allocation or whole-system energy is absent.</li>
             <li>Learned operation-value prediction that prices likely escalation and recovery.</li>
@@ -306,7 +323,7 @@
         <div>
           <div class="site-kicker">Offline verification</div>
           <h3>Recompute the proof without asking a model.</h3>
-          <p>This command runs fifteen offline checks across the retained failed calibrations, the passed hybrid result, routes, exact-answer verdicts, model identity, cost derivations, source bindings, artifact digests, receipt chains, Ed25519 signatures, public claims, the application package, and the site story.</p>
+          <p>This command runs seventeen offline checks across the retained failed calibrations, the passed hybrid result, the public holdout, routes, exact-answer verdicts, model identity, cost derivations, source bindings, artifact digests, receipt chains, Ed25519 signatures, public claims, the application package, and the site story.</p>
           <a class="site-button" href="https://github.com/SethGammon/Citadel/blob/main/docs/grants/EVALUATOR_START_HERE.md">Evaluator guide</a>
         </div>
         <pre class="command-block"><code>npm run grant:verify</code></pre>
@@ -333,7 +350,7 @@
     </section>
   </main>
 
-  <footer class="evidence-shell evidence-footer">Citadel public evidence · observed 2026-08-01 · six prospective studies · zero adversarial false passes · bounded economic gate passed; generalization remains open.</footer>
+  <footer class="evidence-shell evidence-footer">Citadel public evidence · observed 2026-08-03 · outside-authored baseline invalid · zero adversarial false passes · generalization remains open.</footer>
   <script src="site-system.js"></script>
 </body>
 </html>

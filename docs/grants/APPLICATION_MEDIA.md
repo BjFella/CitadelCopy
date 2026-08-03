@@ -2,8 +2,8 @@
 
 All images are normalized 1440 by 900 PNG captures from the rendered local site
 at the same source revision as the application package. Run
-`py -3 scripts/normalize-application-captures.py` after capture. The social
-preview is 1200 by 630.
+`node scripts/capture-application-media.js` to recapture all three at the exact target
+size. The social preview is 1200 by 630.
 
 ## Application images
 
@@ -11,13 +11,13 @@ preview is 1200 by 630.
    Caption: Citadel starts with one command and opens progressively from task
    routing into durable state, coordination, and governed operation control.
 2. [`02-evidence-hero.png`](../assets/application/02-evidence-hero.png)
-   Caption: The evaluator path leads with a bounded passed result: both policies
-   verified 12/12, Claude calls fell from twelve to five, and comparison cost
-   fell 38.7%, with the exact generalization and cash-cost boundaries attached.
+   Caption: The evaluator path leads with the latest outside-authored diagnostic:
+   direct Claude verified 2/16, the controller 3/16, and the weak baseline
+   invalidated a general optimization claim despite 1.26% lower comparison cost.
 3. [`03-policy-comparison.png`](../assets/application/03-policy-comparison.png)
-   Caption: Separately frozen studies expose a timeout-sensitive apparent gain,
-   a capability-policy regression, and a representative pilot that missed its
-   economic gates without hiding any result.
+   Caption: Two separately frozen studies make the boundary visible: a bounded
+   synthetic support envelope passed, while the outside-authored follow-up
+   invalidated the generalized strong-baseline claim. Both remain public.
 
 ## Social preview
 
@@ -30,9 +30,10 @@ preview is 1200 by 630.
 - Narration source: [`walkthrough-narration.txt`](../assets/application/walkthrough-narration.txt)
 - Rebuild: `py -3 scripts/render-application-walkthrough.py`
 
-The walkthrough preserves the failed calibration trail, then presents the
-separately frozen hybrid v2 result and its author-selection, workstation,
-model-pair, comparison-telemetry, whole-system-energy, and actual-cash limits.
+The walkthrough currently preserves the failed calibration trail and the
+separately frozen hybrid v2 result with its boundaries. It predates the public
+holdout and must not be described as the latest result; the application PDF and
+evidence page carry the current diagnostic.
 
 The narration uses generated text-to-speech and should be labeled as such if
 uploaded to a platform that requires synthetic-media disclosure.

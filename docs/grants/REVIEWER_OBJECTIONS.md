@@ -1,7 +1,7 @@
 # Sentient reviewer objection ledger
 
 Observed against Sentient's current Token and Economic Optimizer request and
-public-goods grant criteria on 2026-08-01. This is a rejection-risk ledger, not
+public-goods grant criteria on 2026-08-03. This is a rejection-risk ledger, not
 a confidence score or promise of funding.
 
 ## 1. The positive result may be benchmark-shaped
@@ -11,16 +11,23 @@ tasks, a valid 12/12 Claude baseline, a calibrated local support envelope, exact
 model identities, external verifiers, a 30% cost gate, and signed source-bound
 receipts. It preserved 12/12 completions and reduced comparison cost 38.7%.
 
-**Residual objection:** Seth authored the synthetic fixtures and chose the task
-mix after two disclosed calibration failures. This proves generalization from
-the calibration set into a narrow declared envelope, not independent or
-production-representative selection.
+A later public-random program selected outside-authored work. The primary
+capstone stopped `setup-unknown` before inference; a disclosed secondary pilot
+then assigned 24 distinct repositories, sealed routes before evaluation calls,
+and published all 32 official verdicts. Direct Claude passed 2/16 and the
+controller 3/16 at 1.26% lower comparison cost.
 
-**Application wording:** “Positive prospective evidence inside a calibrated,
-author-selected support envelope,” never “general savings” or “best in class.”
+**Residual objection:** The synthetic positive result did not survive as a
+strong external optimization result. The public-holdout baseline passed only
+12.5% overall and 0% in three strata, so the later point estimate cannot
+establish useful quality preservation or savings.
 
-**Funded closure:** preregistered outside task sources, multiple repositories,
-funder-recruited or public-beacon selection, untouched holdouts, and published
+**Application wording:** "One positive synthetic support-envelope result; one
+outside-authored diagnostic that exposed an invalid baseline," never "general
+savings" or "best in class."
+
+**Funded closure:** stronger retrieval and edit contracts, valid frontier
+baselines, a larger preregistered sample, multiple model families, and published
 negative strata.
 
 ## 2. Comparison USD is not actual end-to-end cash
@@ -33,8 +40,8 @@ allocation and whole-system energy are explicit and cannot count as zero.
 energy is unavailable, and CPU, idle GPU retention, setup, downloads, operator
 time, and utility are not fully measured.
 
-**Application wording:** “Provider-reported and locally modeled comparison
-cost,” not “38.7% lower bill” or “end-to-end cash savings.”
+**Application wording:** "Provider-reported and locally modeled comparison
+cost," not "lower bill" or "end-to-end cash savings."
 
 **Funded closure:** instrumented whole-system power, subscription allocation and
 API-price lenses, setup and human-time accounting, and sensitivity across
@@ -42,12 +49,13 @@ pricing regimes.
 
 ## 3. One model pair and one workstation may not transfer
 
-**Evidence now:** Actual execution spans Claude Sonnet 5, pinned Qwen 2.5 Coder
+**Evidence now:** Actual execution spans Claude Sonnet, pinned Qwen 2.5 Coder
 3B, earlier Qwen 7B studies, Ollama, Claude Code, and a pinned Sentient ROMA
-adapter. Hybrid v2 used one GTX 1070 workstation.
+adapter. The public holdout adds 24 distinct outside-authored repositories.
 
 **Residual objection:** The passing economic result is one Claude/local model
-pair, one hardware profile, one run, and one synthetic repository harness.
+pair, one hardware profile, one run, and one synthetic repository harness. The
+outside-authored follow-up found both routes weak.
 
 **Funded closure:** multiple open and frontier families, hardware tiers, agent
 stacks, tool routes, repositories, repeated untouched samples, and confidence
@@ -57,12 +65,14 @@ intervals.
 
 **Evidence now:** The failed local and first hybrid policies exposed escalation
 and baseline-validity costs. V2 converted those failures into a frozen support
-envelope that avoided unsupported weak-first calls and retained one verified
-recovery.
+envelope. The public holdout then used calibration-derived conservative
+probabilities and a sealed route ledger, but all sixteen tasks received the same
+Qwen-first route because the calibration history was too sparse and weak to
+discriminate.
 
-**Residual objection:** Eligibility is a hand-declared operation-shape policy.
-It does not yet learn online, optimize topology or tools, or estimate uncertainty
-from a representative history.
+**Residual objection:** The controller does not yet learn a useful per-task
+operation value, optimize topology or tools, or estimate uncertainty from a
+representative history.
 
 **Funded closure:** open policy learner, calibrated confidence, abstention and
 recovery models, topology/tool/retry actions, and a predeclared evaluation
@@ -70,13 +80,14 @@ against static routing.
 
 ## 5. The sample is small and lacks statistical power
 
-**Evidence now:** Hybrid v2 uses twelve unique tasks rather than repeated cells;
-all 24 policy cells and 13 candidate attempts are retained. The margin is 8.7
-points above the frozen economic threshold.
+**Evidence now:** Hybrid v2 uses twelve unique tasks rather than repeated cells.
+The secondary public holdout adds sixteen untouched evaluation tasks from
+sixteen more repositories, balanced across four strata, with all 32 route
+verdicts retained.
 
-**Residual objection:** Twelve tasks cannot support tight confidence intervals
-or rare-failure claims. A single deterministic sample does not estimate run
-variance.
+**Residual objection:** Sixteen evaluation tasks cannot support tight confidence
+intervals or rare-failure claims. The exploratory cost interval crosses zero.
+The secondary sample was preflight-informed after the primary quota failed.
 
 **Funded closure:** 60+ unique operations in the first funded milestone,
 stratified power analysis, repeated timing only where clearly labeled, and
@@ -98,20 +109,22 @@ signals. Do not equate them with users, installs, authored lines, or impact.
 environment onboarding, task completion, retention, and reproducible operator
 outcome evidence.
 
-## 7. Why fund work after a positive pilot?
+## 7. Why fund work after a mixed result?
 
-**Answer:** The grant no longer funds a thesis with only negative optimizer
-results. It funds the exact boundary between a passed narrow result and the
-public request: independent tasks, complete cost, multiple stacks and hardware,
-learned operation-level routing, and a reusable open benchmark. The existing
-proof reduces implementation and evaluation risk; it does not make the funded
-general result redundant.
+**Answer:** The grant funds a working falsification substrate and the exact
+failure it exposed. Citadel has one positive synthetic support-envelope result,
+then an outside-authored run that invalidated its strong-baseline assumption.
+The next work is concrete: improve retrieval and edit representation, establish
+valid baselines, learn discriminating operation-level routes, close cost, and
+repeat across stacks and hardware. The existing proof reduces infrastructure
+and evaluation risk without pretending the research question is solved.
 
 ## Bottom line
 
-Citadel is now materially stronger than “an orchestrator with receipts.” It has
-a prospective example where operation classification, model choice, external
-verification, recovery, and economic accounting jointly beat a valid strong
-baseline without losing a verified outcome. The largest remaining rejection
-risk is external validity, not absence of a positive result. That is fundable,
-but never guaranteed.
+Citadel is materially stronger than "an orchestrator with receipts" because it
+can prospectively bind selection, route, runtime, cost lens, and external
+verdict, then publish a result that weakens its own application. It has not yet
+shown a general economic optimizer. The largest rejection risks are now model
+and substrate quality, statistical power, complete cost, and whether Sentient
+wants to fund the open measurement layer before the optimizer itself is proven.
+Those are real risks, not wording problems.

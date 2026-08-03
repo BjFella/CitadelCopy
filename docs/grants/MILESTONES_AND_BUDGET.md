@@ -43,7 +43,7 @@ will not be silently taken from benchmark compute.
 
 | Milestone | Months | Depends on | Public acceptance gate | Allocation |
 |---|---:|---|---|---:|
-| 1. Representative workload and economic closure | 1-2 | Current signed calibration artifacts | At least 60 unique, artifact-producing repository operations are defined across five task strata; repeat trials are not counted as independent tasks; cost components are measured or explicitly unknown | $30,000 |
+| 1. Operation substrate, workload, and economic closure | 1-2 | Current signed calibration and public-holdout artifacts | Replace the failed full-file JSON boundary with a patch/edit contract; prove deterministic retrieval and gold/reference edit reconstruction; define at least 60 unique artifact-producing operations across five strata; repeat trials are not independent tasks; cost components are measured or explicitly unknown | $30,000 |
 | 2. Adapter and conformance SDK | 2-4 | M1 operation schema and task contract | ROMA plus two additional open stacks satisfy one versioned contract for requested/observed identity, tools, artifacts, attempts, model-external verdicts, failure preservation, and cost lenses | $28,000 |
 | 3. Expected verified-operation controller | 4-6 | M1 data and M2 adapters | Held-out routing decisions are reproducible; the controller prices likely verification, escalation, and recovery; zero adversarial false passes | $35,000 |
 | 4. Multi-stack prospective evaluation | 6-8 | M1-M3 frozen release candidate | Always frontier first clears the baseline-validity floor: at least 80% verified overall and 70% in every preregistered task stratum. Citadel then must reach at least 80% absolute verified completion, at least 95% of that valid frontier rate, and at least 30% lower measured end-to-end cost, with cluster-aware uncertainty; every negative and unknown cell is published | $32,000 |
@@ -72,8 +72,9 @@ another row or milestone.
 ## Tranches and go/no-go rules
 
 1. **Tranche A — $45,000:** M1 plus the initial M2 schema. Continue only if the
-   representative workload, baseline matrix, measurement boundary, and adapter
-   contract are frozen and publicly reconstructable.
+   retrieval/edit contract, representative workload, baseline matrix,
+   measurement boundary, and adapter contract are frozen and publicly
+   reconstructable.
 2. **Tranche B — $60,000:** remaining M2 and M3. Continue only if at least three
    stacks can emit conformant receipts and the controller can be evaluated
    without changing the stacks' native planning logic.
