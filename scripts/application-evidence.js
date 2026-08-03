@@ -43,6 +43,11 @@ function buildManifest() {
   const prospectiveRepository = readJson('benchmarks/prospective-economic-pilot/published-run/bundle.json');
   const hybrid = readJson('benchmarks/hybrid-economic-pilot/published-run/bundle.json');
   const hybridV2 = readJson('benchmarks/hybrid-economic-pilot-v2/published-run/bundle.json');
+  const publicHoldoutAssignment = readJson('benchmarks/public-holdout-pilot/assignment.json');
+  const publicHoldoutRoutes = readJson('benchmarks/public-holdout-pilot/route-ledger.json');
+  const publicHoldoutQwenVerdicts = readJson('benchmarks/public-holdout-pilot/verdicts/evaluation--qwen-3b.json');
+  const publicHoldoutClaudeVerdicts = readJson('benchmarks/public-holdout-pilot/verdicts/evaluation--claude-sonnet.json');
+  const publicHoldoutAnalysis = readJson('benchmarks/public-holdout-pilot/final-analysis.json');
   const onboarding = readJson('benchmarks/fresh-clone-onboarding/REPORT.json');
   const romaPolicies = Object.fromEntries(roma.summary.policies.map((entry) => [entry.policy_id, entry]));
   const readinessPolicies = Object.fromEntries(readiness.summary.policies.map((entry) => [entry.policy_id, entry]));
@@ -58,7 +63,7 @@ function buildManifest() {
   const manifest = {
     schema: 1,
     kind: 'citadel-public-evidence-manifest',
-    as_of: hybridV2.completed_at,
+    as_of: '2026-08-03T20:33:04Z',
     claim_policy: 'Every value in this manifest is generated from a canonical committed artifact. Public prose is separately contract-tested. Unknown is never converted to zero.',
     claims: {
       optimizer_history: {
@@ -235,6 +240,27 @@ function buildManifest() {
         actual_cash_status: hybridV2.summary.actual_subscription_cash_status,
         whole_system_energy_status: hybridV2.summary.whole_system_energy_status,
       },
+      public_holdout_fast_pilot: {
+        evidence_class: 'prospective-secondary-public-holdout-diagnostic',
+        status: 'complete-secondary-diagnostic',
+        assigned_tasks: publicHoldoutAssignment.assignments.calibration.length + publicHoldoutAssignment.assignments.evaluation.length,
+        calibration_tasks: publicHoldoutAssignment.assignments.calibration.length,
+        evaluation_tasks: publicHoldoutAssignment.assignments.evaluation.length,
+        unique_repositories: publicHoldoutAssignment.unique_repository_count,
+        sealed_routes: publicHoldoutRoutes.routes.length,
+        qwen_verified: publicHoldoutQwenVerdicts.verdicts.filter((verdict) => verdict.verification_status === 'passed').length,
+        claude_verified: publicHoldoutClaudeVerdicts.verdicts.filter((verdict) => verdict.verification_status === 'passed').length,
+        evaluator_unknowns: [...publicHoldoutQwenVerdicts.verdicts, ...publicHoldoutClaudeVerdicts.verdicts].filter((verdict) => verdict.verification_status === 'unknown').length,
+        baseline_verified_rate: publicHoldoutAnalysis.primary.point_estimate.baseline_verified_rate,
+        controller_verified_rate: publicHoldoutAnalysis.primary.point_estimate.candidate_verified_rate,
+        paired_quality_difference: publicHoldoutAnalysis.primary.point_estimate.paired_quality_difference,
+        baseline_comparison_cost_usd: publicHoldoutAnalysis.primary.point_estimate.baseline_comparison_cost_usd,
+        controller_comparison_cost_usd: publicHoldoutAnalysis.primary.point_estimate.candidate_comparison_cost_usd,
+        comparison_cost_reduction: publicHoldoutAnalysis.primary.point_estimate.comparison_cost_reduction,
+        frozen_sample_signal: publicHoldoutAnalysis.primary.sample_gates.overall_preliminary_signal,
+        baseline_validity: 'failed-for-general-optimization-claim',
+        actual_cash_status: publicHoldoutAnalysis.actual_subscription_cash_status,
+      },
       fresh_clone_onboarding: {
         evidence_class: 'unattended-clean-clone-engineering-proof',
         status: onboarding.status,
@@ -259,6 +285,9 @@ function buildManifest() {
       'The first 12-task Claude-plus-local hybrid preserved 12/12 completions and reduced comparison cost 28.4%, missing the frozen 30% gate. A post-run paired-cost sensitivity reaches 30.1% but does not change the failed verdict.',
       'The separately frozen calibrated hybrid v2 preserved 12/12 completions, reduced provider-reported and locally modeled comparison cost 38.7%, and passed every frozen gate on twelve new author-selected synthetic tasks.',
       'Hybrid v2 establishes a positive result only inside its preregistered support envelope on one model pair and one machine. Task selection was author-controlled, comparison USD is not the operator subscription bill, and production generalization is not claimed.',
+      'The secondary public-holdout pilot used 24 distinct outside-authored repositories, sealed all routes before evaluation calls, and published 32 official verdicts with no evaluator unknowns.',
+      'The public-holdout controller verified 3/16 tasks versus 2/16 for direct Claude and used 1.26% less comparison cost, but direct Claude passed only 12.5% overall and 0% in three strata. The frozen in-sample signal is not a valid generalized optimization result.',
+      'The public-holdout result makes retrieval, edit representation, baseline strength, and calibration power the next technical bottlenecks. It does not establish production reliability or actual cash savings.',
       'The fresh-clone proof completed five command stages; doctor semantic health remained unknown, and no real-user utility or model-task completion is claimed.',
       'Actual end-to-end cash remains unknown wherever subscription allocation or whole-system energy is unmeasured.',
       'GPU energy arithmetic reconstructs from retained average watts and request wall duration across both local studies; raw 500 ms power samples were not retained.',
@@ -278,6 +307,13 @@ function buildManifest() {
       artifact('benchmarks/prospective-economic-pilot/published-run/bundle.json', prospectiveRepository),
       artifact('benchmarks/hybrid-economic-pilot/published-run/bundle.json', hybrid),
       artifact('benchmarks/hybrid-economic-pilot-v2/published-run/bundle.json', hybridV2),
+      artifact('benchmarks/public-holdout-pilot/assignment.json', publicHoldoutAssignment),
+      artifact('benchmarks/public-holdout-pilot/route-ledger.json', publicHoldoutRoutes),
+      artifact('benchmarks/public-holdout-pilot/verdicts/evaluation--qwen-3b.json', publicHoldoutQwenVerdicts),
+      artifact('benchmarks/public-holdout-pilot/verdicts/evaluation--claude-sonnet.json', publicHoldoutClaudeVerdicts),
+      artifact('benchmarks/public-holdout-pilot/final-analysis.json', publicHoldoutAnalysis),
+      textArtifact('benchmarks/public-holdout-pilot/REPORT.md'),
+      textArtifact('benchmarks/public-holdout-pilot/VALIDATION.md'),
       artifact('benchmarks/fresh-clone-onboarding/REPORT.json', onboarding),
     ],
   };
@@ -295,6 +331,7 @@ function renderManifest(manifest) {
   const y = manifest.claims.prospective_repository_calibration;
   const h = manifest.claims.hybrid_economic_calibration;
   const v = manifest.claims.calibrated_hybrid_economic_pilot;
+  const u = manifest.claims.public_holdout_fast_pilot;
   const f = manifest.claims.fresh_clone_onboarding;
   return `# Citadel public evidence manifest
 
@@ -311,6 +348,7 @@ Generated from committed canonical artifacts. As of ${manifest.as_of}.
 | Fresh local repository calibration | candidate ${y.candidate_verified}/${y.candidate_total}; baseline ${y.baseline_verified}/${y.baseline_total}; ${y.unique_tasks} unique tasks | ${Math.abs(y.gpu_energy_reduction * 100).toFixed(1)}% more measured GPU energy; invalid baseline; evidence ${y.evidence_result} |
 | Hybrid calibration | candidate ${h.candidate_verified}/${h.candidate_total}; baseline ${h.baseline_verified}/${h.baseline_total}; ${h.cloud_calls_avoided} Claude calls avoided | ${(h.comparison_cost_reduction * 100).toFixed(1)}% cost reduction missed 30%; paired sensitivity ${(h.paired_cost_sensitivity * 100).toFixed(1)}%; evidence ${h.evidence_result} |
 | Calibrated hybrid v2 | candidate ${v.candidate_verified}/${v.candidate_total}; baseline ${v.baseline_verified}/${v.baseline_total}; ${v.local_attempts} local attempts, ${v.escalations} recovery | ${(v.comparison_cost_reduction * 100).toFixed(1)}% comparison-cost reduction at ${(v.quality_ratio * 100).toFixed(1)}% relative completion; evidence ${v.evidence_result} |
+| Public holdout fast pilot | controller ${(u.controller_verified_rate * u.evaluation_tasks).toFixed(0)}/${u.evaluation_tasks}; direct Claude ${(u.baseline_verified_rate * u.evaluation_tasks).toFixed(0)}/${u.evaluation_tasks}; ${u.unique_repositories} distinct repositories | ${(u.comparison_cost_reduction * 100).toFixed(2)}% lower comparison cost; baseline validity failed; diagnostic only |
 | Fresh-clone onboarding | ${f.stages_completed}/${f.steps_total} command stages in ${(f.total_duration_ms / 1000).toFixed(2)}s | Doctor health ${f.doctor_health}; model execution ${f.model_execution} |
 
 ## Claim boundaries

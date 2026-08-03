@@ -1,6 +1,6 @@
 # GitHub delivery and interest evidence
 
-Observed on 2026-08-01 after pull request 230 merged to `main`. This record
+Observed on 2026-08-03 after pull request 244 merged to `main`. This record
 separates public repository history, maintainer attribution, and owner-visible
 traffic. None of these measures is a user, installation, retention, revenue, or
 economic-impact count.
@@ -10,12 +10,12 @@ economic-impact count.
 | Measure | Observed value | Provenance |
 |---|---:|---|
 | Repository created | 2026-03-20 | GitHub repository API and first commit `6c043814f403ab34fac16ac81f5d37233b84358b` |
-| Public age at observation | 134 days | Calendar difference through 2026-08-01 |
-| Stars | 808 | GitHub repository API |
-| Forks | 79 | GitHub repository API |
-| Commits reachable from `main` | 520 | `git rev-list --count origin/main` |
-| Commits attributed to Seth's Git identity | 496 | GitHub contributors API and `git shortlog -sne origin/main` |
-| Non-merge commits attributed to Seth's Git identity | 360 | `git rev-list --count --no-merges --author=gammon.seth@gmail.com origin/main` |
+| Public age at observation | 136 days | Calendar difference through 2026-08-03 |
+| Stars | 809 | GitHub repository API |
+| Forks | 80 | GitHub repository API |
+| Commits reachable from `main` | 538 | `git rev-list --count origin/main` |
+| Commits attributed to Seth's Git identity | 514 | `git rev-list --count --author=gammon.seth@gmail.com origin/main` |
+| Non-merge commits attributed to Seth's Git identity | 374 | `git rev-list --count --no-merges --author=gammon.seth@gmail.com origin/main` |
 
 Git author attribution establishes repository history and delivery ownership;
 it does not prove that every line was typed manually or without AI assistance.

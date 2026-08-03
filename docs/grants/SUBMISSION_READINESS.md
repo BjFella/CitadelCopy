@@ -2,7 +2,7 @@
 
 Status: application package prepared; external form not submitted
 
-Observed: 2026-08-01
+Observed: 2026-08-03
 
 ## Live form contract
 
@@ -34,7 +34,7 @@ Grant inputs and their types, confirms the 80-character limit and funding
 choices, proves the upload-to-thank-you branch, and requires a matching answer
 surface without entering or submitting response data.
 
-Observed live Grant contract fingerprint on 2026-08-01:
+Observed live Grant contract fingerprint on 2026-08-03:
 `sha256:611739716b3eb5ad7b16a2e93778f91b9b8cc06ff5ffcbe2eb843c4683544dcd`.
 Any mismatch is a review stop, not an instruction to update the digest blindly.
 
@@ -50,20 +50,21 @@ The mandatory supporting document is ready at:
 
 - format: PDF, 16:9 landscape;
 - pages: 8;
-- size: 972,341 bytes;
-- SHA-256: `aefc72aaad09ba0e6f9b33afa00725e135655a098118c5045d6d819d71fa3d99`;
+- size: 537,507 bytes;
+- SHA-256: `2f81f966bee724325e68fa068cabcdc02826378cbddf34e2319797e8c3240e44`;
 - source renderer: `scripts/render-sentient-grant-packet.py`;
-- visual QA: all eight pages rendered to PNG and inspected at both 72 and 96
-  DPI, including the normal-viewer scale that exposed the original legibility
-  problem;
+- visual QA: all eight pages rendered to PNG and inspected at 96 DPI, the
+  normal-viewer scale that exposed the original legibility problem;
 - text QA: eight pages, 960 by 540 points, required headings extractable,
   replacement-character check passed.
 
-The packet distinguishes retained failed optimizer gates from the later passed
-hybrid support-envelope result. It claims the exact 38.7% comparison-cost
-reduction only for twelve author-selected synthetic tasks and does not claim an
-allocated subscription bill, complete end-to-end cash, production reliability,
-or general savings.
+The packet distinguishes retained failed optimizer gates, the passed synthetic
+support-envelope result, and the later outside-authored diagnostic. It claims
+the exact 38.7% comparison-cost reduction only for twelve author-selected
+synthetic tasks. It reports the later 3/16 controller versus 2/16 direct-Claude
+result as a baseline-invalid diagnostic, not a savings result, and does not
+claim an allocated subscription bill, complete end-to-end cash, production
+reliability, or general savings.
 
 ## Canonical application choices
 
@@ -109,8 +110,19 @@ dollar-for-dollar and unused funds remain unspent.
   $0.039071 (38.7%). Every frozen gate passed.
 - Hybrid v2 tasks are author-selected synthetic fixtures, comparison USD is not
   Seth's allocated subscription bill, and whole-system cost remains unknown.
-- GitHub showed 808 stars, 79 forks, and 520 commits reachable from `main` on
-  2026-08-01. Of those, 496 were attributed to Seth's Git identity and 360 were
+- The primary public-random capstone stopped `setup-unknown` before inference
+  because only 41 of 60 required evaluation tasks cleared the signed gold
+  preflight. Its terminal record remains unchanged.
+- The disclosed secondary pilot assigned 24 distinct outside-authored
+  repositories: eight calibration and sixteen untouched evaluation tasks,
+  balanced across four strata. It published sixteen sealed routes before model
+  calls and received all 32 official evaluator verdicts.
+- Qwen 3B verified 1/16, direct Claude verified 2/16, and the Qwen-first
+  controller verified 3/16 at 1.26% lower comparison cost. Direct Claude passed
+  only 12.5% overall and 0% in three strata, so no general quality-preservation
+  or savings claim is allowed.
+- GitHub showed 809 stars, 80 forks, and 538 commits reachable from `main` on
+  2026-08-03. Of those, 514 were attributed to Seth's Git identity and 374 were
   non-merge commits attributed to that identity. Owner-visible traffic for
   2026-07-18 through 2026-07-31 reported 524 unique cloners and 380 unique
   visitors. These are dated delivery and interest signals, not manually typed
@@ -120,6 +132,8 @@ dollar-for-dollar and unused funds remain unspent.
 ## Claims not allowed
 
 - Citadel generally saves money in representative or production use.
+- The public-holdout sample signal proves a valid strong baseline, useful
+  quality preservation, or external economic generalization.
 - The 38.7% hybrid comparison-cost reduction is an actual subscription-bill or
   complete end-to-end cash reduction.
 - Citadel is best in class across agent optimizers.
@@ -134,9 +148,10 @@ dollar-for-dollar and unused funds remain unspent.
 
 A bounded stronger-open-model portability diagnostic on a free cloud GPU would
 address the current single-Qwen-family and single-GTX-1070 execution boundary.
-It is useful only if obtained at zero cost and published under a frozen method.
-It is not a submission blocker and cannot establish savings or generalization by
-itself. Do not delay a rolling grant indefinitely for free-GPU availability.
+The public holdout makes a stronger retrieval/edit protocol and a valid
+frontier baseline higher priorities. Free-GPU work is useful only if obtained
+at zero cost and published under a frozen method. It is not a submission blocker
+and cannot establish savings or generalization by itself.
 
 ## Human-owned final values
 

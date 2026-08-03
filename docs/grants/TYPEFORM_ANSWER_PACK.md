@@ -2,7 +2,7 @@
 
 Status: internal, paste-ready draft; not submitted
 
-Observed form: `https://form.typeform.com/to/IRj7WaKH`, checked 2026-08-01.
+Observed form: `https://form.typeform.com/to/IRj7WaKH`, checked 2026-08-03.
 
 This file maps the live Grant track exactly. It separates final project wording
 from applicant facts that Seth must confirm before submission.
@@ -36,13 +36,15 @@ and produces a signed bundle that can be reconstructed offline.
 
 The machinery is already working. Citadel has published actual-run ROMA and
 local-model studies, including negative results where plausible routing ideas
-used more energy or missed their precommitted savings gates. A later frozen
-Claude-plus-local pilot preserved 12/12 verified operations under both policies
-while reducing comparison cost 38.7% inside a calibrated support envelope. The
-grant funds the remaining scientific and engineering work: independent task
-selection, complete cost, learned policies, and multi-stack and hardware
-generalization under frozen completion, cost, integrity, and reproducibility
-gates.
+used more energy or missed precommitted gates. A frozen synthetic
+Claude-plus-local pilot preserved 12/12 operations under both policies while
+reducing comparison cost 38.7% inside a calibrated support envelope. Citadel
+then tested 24 distinct outside-authored repositories. The sealed controller
+verified 3/16 untouched evaluation tasks versus 2/16 for direct Claude at 1.26%
+lower comparison cost, but rejected this as an optimization success because the
+Claude baseline passed only 12.5%. The grant funds the exposed bottlenecks:
+better retrieval and edit contracts, valid baselines, complete cost, learned
+policies, and multi-stack and hardware generalization under frozen gates.
 
 ### Who does this help?
 
@@ -56,8 +58,9 @@ point first, with control and evidence available only when their work needs it.
 
 The intended downstream benefit is reliable coding-agent capability at lower
 end-to-end cost. Citadel has positive prospective evidence only on twelve
-author-selected synthetic tasks; it does not claim general or production
-benefit before the funded independent evaluation reaches the published gates.
+author-selected synthetic tasks and a negative outside-authored diagnostic. It
+does not claim general or production benefit before a valid strong baseline and
+the funded evaluation reach the published gates.
 
 ### In one line, what are you building?
 
@@ -70,18 +73,19 @@ Character count: 78 of 80.
 Seth Gammon is Citadel's solo builder and maintainer. He has taken it from a
 working Claude Code harness into an MIT-licensed operating and evidence layer
 for Claude Code, Codex, local Ollama models, and a pinned Sentient ROMA binding.
-In 134 public days it reached 808 stars and 79 forks; 496 of 520 main-branch
-commits are attributed to Seth's Git identity, including 360 non-merge commits.
+In 136 public days it reached 809 stars and 80 forks; 514 of 538 main-branch
+commits are attributed to Seth's Git identity, including 374 non-merge commits.
 GitHub's latest owner-visible 14-day window reported 524 unique cloners. Those
 are delivery and continuing-interest signals, not users or installations. The
 stronger qualification is what shipped: preregistered methods, signed actual-run
 cells, model-external repository verification, explicit unknown-cost handling,
-negative findings preserved instead of marketed away. The latest held-out
-hybrid result also preserved 12/12 completions while reducing comparison cost
-38.7% with every frozen gate passed. Funding scales the external validity of a
-working substrate; it does not fund the first prototype.
+and negative findings preserved instead of marketed away. The latest public
+holdout published 32 official verdicts across 16 untouched evaluation tasks and
+then rejected its own positive sample rule because the direct-Claude baseline
+passed only 2/16. Funding scales a working, self-falsifying substrate; it does
+not fund the first prototype or conceal the hardest result.
 
-Observation boundary: GitHub counts checked on 2026-08-01. Refresh immediately
+Observation boundary: GitHub counts checked on 2026-08-03. Refresh immediately
 before submission.
 
 ### What is open, what gets worse if it closed tomorrow, and for whom?
@@ -123,16 +127,18 @@ live path changes before submission.
 
 ### What would the grant unlock?
 
-A $150,000 public-goods grant over nine months would turn Citadel's passed but
-bounded support-envelope result into an independently selected, complete-cost,
-representative multi-stack economic optimizer. The work is evidence-gated and
-released in three go/no-go tranches.
+A $150,000 public-goods grant over nine months would turn Citadel's working
+control-and-evidence substrate into a valid, complete-cost, representative
+multi-stack economic optimizer. The work is evidence-gated and released in
+three go/no-go tranches.
 
-First, we will freeze at least 60 unique artifact-producing repository
-operations and close the end-to-end cost boundary, including provider charges,
-local compute, tools, setup, failures, and bounded human intervention. Second,
-we will harden the Sentient ROMA adapter and add two additional open-agent
-stacks to one conformance SDK. Third, we will build an expected
+First, we will replace the failed retrieval/full-file JSON boundary, establish a
+frontier baseline that clears 80% overall and 70% per stratum, freeze at least
+60 unique artifact-producing repository operations, and close the end-to-end
+cost boundary, including provider charges, local compute, tools, setup,
+failures, and bounded human intervention. Second, we will harden the Sentient
+ROMA adapter and add two additional open-agent stacks to one conformance SDK.
+Third, we will build an expected
 verified-operation controller that prices likely verification, escalation, and
 recovery rather than merely choosing a smaller model. Finally, we will run a
 prospective multi-stack evaluation and publish the raw privacy-safe evidence,

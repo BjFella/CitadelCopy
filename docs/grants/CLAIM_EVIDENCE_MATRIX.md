@@ -14,12 +14,16 @@ This view explains what each artifact permits Citadel to say publicly.
 | Repository-operation verification survives artifact checks | 24-cell representative fixture shakedown | Both policies verified 6/12 cells; zero false passes and zero path violations; the 7.1% energy reduction missed its frozen gate | Six fixture tasks establish production generalization or a savings result |
 | Clean-clone onboarding is executable | Five-step 28.17-second proof | Governed adoption and first route completed unattended | A human found it intuitive or a model completed useful work |
 | Citadel is stack-neutral at the contract layer | Claude, Ollama, ROMA actual evidence plus Codex contract tests | The shared evidence contract spans multiple runtime families | Every advertised runtime has equivalent actual-run evidence |
+| Public selection and preflight can stop an invalid study | Primary public capstone terminal record | The 20/60 assignment stopped `setup-unknown` before inference when only 41 evaluation tasks were eligible | The primary capstone completed or supports a model-performance claim |
+| A sealed controller can be evaluated on outside-authored work | Secondary public holdout: 24 repositories, 32 official evaluation verdicts | Routes were published before calls; Qwen passed 1/16, Claude 2/16, and Qwen-first 3/16 | The 1.26% comparison-cost reduction establishes useful quality preservation or savings |
+| The current outside-authored bottleneck is observable | Pilot report and validation | Direct Claude passed only 12.5%; retrieval, edit representation, baseline strength, and calibration power require funded work | Citadel has already demonstrated a production optimizer |
 
 ## Current external claim
 
 Citadel is an open operation-control and evidence plane with a working adaptive
-measurement loop. The exact-answer studies exposed a timeout-sensitive apparent
-gain and a robust capability-profile regression. A later representative fixture
-shakedown matched 6/12 verified cells under both policies with intact integrity
-gates, but missed its economic gates. Citadel has not yet demonstrated its
-funded multi-stack economic target.
+measurement loop. One synthetic support-envelope pilot preserved 12/12
+verified outcomes at 38.7% lower comparison cost. The later outside-authored
+pilot did not validate a general optimization claim: direct Claude verified
+2/16 and the controller 3/16 at 1.26% lower comparison cost. Citadel has proved
+that it can prospectively publish and falsify the operation claim; it has not
+yet demonstrated the funded multi-stack economic target.

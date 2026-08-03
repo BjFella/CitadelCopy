@@ -521,11 +521,11 @@ function main() {
     JSON.parse(fs.readFileSync(path.join(BENCHMARK, 'fixtures', 'pricing-assumptions.json'), 'utf8')),
   ));
   assert(publicIndex.includes('href="optimizer.html">Optimizer Proof</a>'));
-  assert(optimizerPage.includes('The verifier rejected weak policies, then accepted a bounded one.'));
-  assert(optimizerPage.includes('240 signed prospective comparison cells'));
+  assert(optimizerPage.includes('A controller must price verification, recovery, and its support boundary.'));
+  assert(optimizerPage.includes('24</strong><span>outside-authored repositories'));
   assert(optimizerPage.includes('V3 · artifacts verified, savings gate missed'));
-  assert(optimizerPage.includes('INDEPENDENT_ECONOMIC_VALIDATION_OPEN'));
-  assert(optimizerPage.includes('comparison cost: -38.7%'));
+  assert(optimizerPage.includes('VALID_EXTERNAL_BASELINE_OPEN'));
+  assert(optimizerPage.includes('comparison cost: -1.26%; not actual cash'));
   assert(optimizerPage.includes('Fixture math exercises a 23.2507%'));
   assert.strictEqual((optimizerPage.match(/class="policy-tab"/g) || []).length, 4);
 
