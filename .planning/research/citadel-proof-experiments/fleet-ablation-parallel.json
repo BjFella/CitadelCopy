@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "kind": "citadel_fleet_ablation_observation",
+  "suite_id": "citadel-fleet-ablation-seed-v1",
+  "arm": "parallel",
+  "mode": "isolated_parallel_worktrees",
+  "started_at": "2026-08-04T18:26:02.074Z",
+  "completed_at": "2026-08-04T18:28:36.097Z",
+  "identity": {
+    "provider": "openai",
+    "model": "codex-default-inherited",
+    "model_family": "openai-codex",
+    "runtime": "codex-collaboration-worker",
+    "runtime_version": "desktop-2026-08-04"
+  },
+  "checkout": "C:\\tmp\\citadel-fleet-ablation-20260804a\\parallel-main",
+  "worktrees": [
+    "C:\\tmp\\citadel-fleet-ablation-20260804a\\parallel-a",
+    "C:\\tmp\\citadel-fleet-ablation-20260804a\\parallel-b"
+  ],
+  "agent_count": 2,
+  "interventions": 0,
+  "rework_cycles": 0,
+  "scope_conflicts": 0,
+  "merge_conflicts": 0,
+  "tokens": null,
+  "cost_usd": null,
+  "telemetry_status": "unavailable",
+  "manifest_sha256": "sha256:e3528db79d858525531c8cfdb038778f62e19a7bdfde765f5399369868bcb0e7",
+  "wall_time_ms": 154023,
+  "checkout_head": "9874dfa1118d885256fb3851364d1de75f804ab7",
+  "source_tree_sha256": "sha256:b07ab956fd2529b88d24b428c029075431fdd606582443a9ecf3c8984a3e6147",
+  "isolation_verified": true,
+  "verifier": {
+    "command": "node test.js",
+    "exit_code": 0,
+    "stdout_sha256": "sha256:2c204b5cb6e4fe673ea9da98becff822dbfdaa52ded0b048403840894d28209b",
+    "stderr_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+  },
+  "accepted": true,
+  "receipt_digest": "sha256:b174d86ec6306c809bd728d01c82172e154689399a1979339d0b9987d04a7684"
+}
