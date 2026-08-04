@@ -1,0 +1,482 @@
+{
+  "schema": 1,
+  "kind": "citadel_operation_recovery_raw_evidence",
+  "experiment_id": "operation-recovery",
+  "recorded_at": "2026-08-04T00:00:00.000Z",
+  "evidence_scope": {
+    "method": "deterministic_in_process_fault_injection",
+    "supports": "deterministic recovery decisions at declared in-process fault boundaries",
+    "does_not_support": [
+      "process-kill behavior",
+      "power-loss behavior"
+    ]
+  },
+  "fault_boundaries": [
+    "before_pending_write",
+    "after_pending_write",
+    "before_effect",
+    "after_effect",
+    "before_completed_write",
+    "after_completed_write"
+  ],
+  "workloads": [
+    {
+      "id": "nonrepeatable",
+      "effect_class": "external-nonrepeatable"
+    },
+    {
+      "id": "safe-repeatable",
+      "effect_class": "workspace-reversible"
+    }
+  ],
+  "trials": [
+    {
+      "boundary": "before_pending_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "before_pending_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "executed",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "EVIDENCE_RECORDED",
+      "pre_recovery_plan_status": "complete",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "before_pending_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "before_pending_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "executed",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "EVIDENCE_RECORDED",
+      "pre_recovery_plan_status": "complete",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "after_pending_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "after_pending_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "blocked",
+      "recovery_status": "unknown",
+      "effect_attempts": 0,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": true,
+      "journal_states": [
+        "pending"
+      ],
+      "recovery_reason_code": "AMBIGUOUS_NONREPEATABLE_EFFECT",
+      "pre_recovery_plan_status": "blocked",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "after_pending_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "after_pending_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "repeated_safely",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "EVIDENCE_RECORDED",
+      "pre_recovery_plan_status": "ready",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "before_effect",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "before_effect",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "blocked",
+      "recovery_status": "unknown",
+      "effect_attempts": 0,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": true,
+      "journal_states": [
+        "pending"
+      ],
+      "recovery_reason_code": "AMBIGUOUS_NONREPEATABLE_EFFECT",
+      "pre_recovery_plan_status": "blocked",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "before_effect",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "before_effect",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "repeated_safely",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "EVIDENCE_RECORDED",
+      "pre_recovery_plan_status": "ready",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "after_effect",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 1,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "after_effect",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "blocked",
+      "recovery_status": "unknown",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": true,
+      "journal_states": [
+        "pending"
+      ],
+      "recovery_reason_code": "AMBIGUOUS_NONREPEATABLE_EFFECT",
+      "pre_recovery_plan_status": "blocked",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "after_effect",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "after_effect",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "repeated_safely",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "EVIDENCE_RECORDED",
+      "pre_recovery_plan_status": "ready",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "before_completed_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 1,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "before_completed_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "blocked",
+      "recovery_status": "unknown",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": true,
+      "journal_states": [
+        "pending"
+      ],
+      "recovery_reason_code": "AMBIGUOUS_NONREPEATABLE_EFFECT",
+      "pre_recovery_plan_status": "blocked",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "before_completed_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "before_completed_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "repeated_safely",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "EVIDENCE_RECORDED",
+      "pre_recovery_plan_status": "ready",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "after_completed_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 1,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "after_completed_write",
+      "workload": "nonrepeatable",
+      "effect_class": "external-nonrepeatable",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "skipped",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": false,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "ALREADY_COMPLETED",
+      "pre_recovery_plan_status": "complete",
+      "pre_recovery_journal_status": "verified"
+    },
+    {
+      "boundary": "after_completed_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "control",
+      "injected_fault_observed": true,
+      "recovery_execution": "naive_rerun",
+      "recovery_status": "completed",
+      "effect_attempts": 2,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [],
+      "recovery_reason_code": "NAIVE_RERUN_WITHOUT_JOURNAL"
+    },
+    {
+      "boundary": "after_completed_write",
+      "workload": "safe-repeatable",
+      "effect_class": "workspace-reversible",
+      "arm": "treatment",
+      "injected_fault_observed": true,
+      "recovery_execution": "skipped",
+      "recovery_status": "completed",
+      "effect_attempts": 1,
+      "duplicate_nonrepeatable_effects": 0,
+      "recovered_safely": true,
+      "ambiguous_block": false,
+      "journal_states": [
+        "pending",
+        "completed"
+      ],
+      "recovery_reason_code": "ALREADY_COMPLETED",
+      "pre_recovery_plan_status": "complete",
+      "pre_recovery_journal_status": "verified"
+    }
+  ],
+  "tamper_trials": [
+    {
+      "id": "content",
+      "detected": true,
+      "recovery_status": "blocked",
+      "journal_status": "corrupt",
+      "reason_code": "JOURNAL_CORRUPT"
+    },
+    {
+      "id": "chain",
+      "detected": true,
+      "recovery_status": "blocked",
+      "journal_status": "corrupt",
+      "reason_code": "JOURNAL_CORRUPT"
+    }
+  ],
+  "privacy_trials": [
+    {
+      "id": "effect-error-canary",
+      "effect_status": "unknown",
+      "effect_reason_code": "EFFECT_OUTCOME_UNKNOWN",
+      "scanned_surfaces": [
+        "journal_entries",
+        "recovery_plan"
+      ],
+      "leak_count": 0
+    }
+  ]
+}
