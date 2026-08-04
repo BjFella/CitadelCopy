@@ -6,7 +6,7 @@ started: "2026-08-04T17:08:14.4310319Z"
 completed_at: null
 direction: "Run every proposed Citadel proof experiment, act on valid findings, and reduce evidence-backed bloat without losing compatibility or reproducibility."
 phase_count: 8
-current_phase: 3
+current_phase: 4
 branch: "codex/proof-program-20260804"
 worktree_status: active
 ---
@@ -30,8 +30,8 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 |---|---|---|---|---|---:|
 | 1 | complete | research | Freeze experiment contracts and bloat baseline | Manifest and baseline reports exist; all proposed experiments have controls, metrics, gates, and external-dependency classifications | 3 |
 | 2 | complete | build | Run crash-recovery and safety-gate A/B experiments | Local A/B runners publish raw evidence and pass deterministic verification | 3 |
-| 3 | in-progress | build | Build and run Citadel JudgeEval | Blinded fixture suite reports false-pass and false-block matrices for validator and arbiter paths | 3 |
-| 4 | pending | build | Run Fleet isolation ablation | Serial and isolated-parallel arms run on matched fixtures with accepted-outcome, intervention, conflict, time, and cost evidence | 3 |
+| 3 | complete | build | Build and run Citadel JudgeEval | Blinded fixture suite reports false-pass and false-block matrices for validator and arbiter paths | 3 |
+| 4 | in-progress | build | Run Fleet isolation ablation | Serial and isolated-parallel arms run on matched fixtures with accepted-outcome, intervention, conflict, time, and cost evidence | 3 |
 | 5 | pending | build | Run Real User Proof v2 | Local instrument and proxy run complete; external-owner and D7 gates are either evidenced or explicitly blocked without simulated humans | 3 |
 | 6 | pending | build | Run deploy-steward paired experiment | Local paired simulator completes; public GitHub arm runs only after policy approval and publishes verifiable evidence | 3 |
 | 7 | pending | prune | Act on bloat findings | Package experiment improves packed metric without breaking runtime/evidence gates; safe deprecations and temp-state decisions are recorded | 3 |
@@ -63,7 +63,7 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 |---|---|---|---|---|---|---:|---|
 | phase:1 | experiment-contracts | test_result | yes | `node scripts/experiment-contracts.js verify`; 4/4 tamper tests | passed | 3 | Phase Validator passed; freeze retained |
 | phase:2 | recovery-safety-ab | test_result | yes | Recovery `c81d93...`; safety `e7d94c...`; independent validator pass | passed | 3 | Preserve narrow deterministic claim boundary |
-| phase:3 | judge-eval | test_result | yes | Judge confusion matrices | pending | 3 | Build blinded fixture corpus |
+| phase:3 | judge-eval | test_result | yes | 8-case sealed same-family proxy; independent validator pass | passed | 3 | Keep instrument-only; obtain external calibration before promotion |
 | phase:4 | fleet-ablation | test_result | yes | Matched serial/parallel report | pending | 3 | Build deterministic executor boundary |
 | phase:5 | real-user-proof | test_result | yes | V2 report and receipts | pending | 3 | Run instrument, then external owner gate |
 | phase:6 | deploy-steward | test_result | yes | Local and policy-approved public reports | pending | 3 | Run simulator before remote mutation |
@@ -78,6 +78,7 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | Frozen seven-track experiment contract | complete | 1 | Phase Validator passed; pack baseline is 9,678,793 packed bytes across 1,954 files |
 | Journaled recovery A/B | complete | 2 | Control duplicates 3; treatment 0; safe recovery 6/6; deterministic in-process faults only |
 | Safety-gate precision A/B | complete | 2 | 12 matched decisions; TPR 1; FPR 0; canary 0; no exploit or cross-OS claim |
+| Citadel JudgeEval instrument | complete | 3 | Control accuracy 0.625 vs acting-arbiter proxy 1.0; both false-accept 0; promotion blocked |
 
 ## Decision Log
 
@@ -89,6 +90,7 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 - 2026-08-04: Campaign telemetry helper is unavailable in this source checkout; campaign file and experiment reports remain authoritative.
 - 2026-08-04: Phase 1 passed independent validation. The contract hash is `d1995b49cd4e02198889d418f3a78f1eadb64be17ab94f4866e9ac6e99e0dd27`; contract evidence is not outcome evidence.
 - 2026-08-04: Phase 2 passed independent validation. Recovery proves deterministic in-process fault behavior, not process-kill or power-loss behavior. Safety proves decision-boundary precision, not execution containment or cross-OS portability.
+- 2026-08-04: Phase 3 passed as an instrument, not a product claim. A one-trial same-family proxy reduced unknown verdicts from 0.50 to 0.125 and raised exact accuracy from 0.625 to 1.0, but false accepts were already zero in both arms; the preregistered false-accept improvement gate failed.
 
 ## Review Queue
 
@@ -106,14 +108,15 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 
 ## Active Context
 
-Phase 3 is in progress. Build a blinded JudgeEval fixture and ingestion runner, run available acting/mechanical judges, and keep missing different-family or human calibration evidence blocked.
+Phase 4 is in progress. Build a matched serial/isolated-parallel Fleet runner and execute real agent work while separating measured provider observations from deterministic fixture checks.
 
 ## Continuation State
 
-Phase: 3
-Sub-step: build and run the local JudgeEval proxy plus external-ready ingestion contract
-Files modified: prior files plus recovery and safety experiment runners, tests, and hash-bound reports
+Phase: 4
+Sub-step: run matched serial and isolated-parallel agent tasks with receipt-bound metrics
+Files modified: prior files plus JudgeEval corpus, runner, tests, sealed proxy transcripts, and report
 Blocking: none for local phases; external-owner, vendor, and GitHub gates remain later
 checkpoint-phase-1: stash@{0}
 checkpoint-phase-2: 805627d
+checkpoint-phase-3: 9492f8f
 
