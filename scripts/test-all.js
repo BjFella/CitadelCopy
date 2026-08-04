@@ -166,6 +166,7 @@ const UNLOCK_TESTS = Object.freeze([
   ['JudgeEval experiment', 'test-experiment-judge-eval.js'],
   ['Fleet ablation experiment', 'test-experiment-fleet-ablation.js'],
   ['Deploy-steward A/B experiment', 'test-experiment-deploy-steward.js'],
+  ['Live GitHub steward A/B harness', 'test-live-github-steward-ab-proof.js'],
   ['Package-bloat experiment', 'test-experiment-package-bloat.js'],
   ['Governed lifecycle real-use proof', 'test-governed-lifecycle-usecases.js'],
   ['Fail-honest orchestration semantics', 'test-orchestration-semantics.js'],
