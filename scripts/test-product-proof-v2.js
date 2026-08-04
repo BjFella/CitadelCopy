@@ -13,8 +13,7 @@ const cli = require('./product-proof-trial');
 const EXPERIMENT_MANIFEST = path.join(
   __dirname,
   '..',
-  '.planning',
-  'research',
+  'benchmarks',
   'citadel-proof-experiments',
   'experiment-manifest.json',
 );

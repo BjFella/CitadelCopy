@@ -109,14 +109,18 @@ Citadel does not replace `CLAUDE.md` or `AGENTS.md`. Those files describe the pr
 
 ## What Citadel can prove
 
-Citadel's strongest current result is evidence integrity, not a blanket claim
-that it makes every coding agent better.
+Citadel has repeatable local evidence for several engineering invariants and a
+replayable public evaluation record. It does not yet have evidence for the
+blanket claim that it makes every coding agent better.
 
 | Evidence | Result | Boundary |
 |---|---|---|
 | Outside-authored public holdout | 24 distinct repositories, sealed routes, and 32 official verdicts. The controller verified 3/16 tasks versus 2/16 for direct Claude at 1.26% lower comparison cost. | Direct Claude verified only 12.5%, so the baseline was invalid. This is a diagnostic, not proof of reliability or savings. |
 | Bounded hybrid pilot | Both policies verified 12/12 synthetic tasks. A local Qwen 3B support route used 38.7% less comparison cost than always-Claude. | One model pair, one machine, and author-selected tasks. Actual subscription cash and production generalization remain unknown. |
 | Offline evidence replay | `npm run grant:verify` checks the signed artifacts, source bindings, receipt chains, reports, and public claims without calling a model. | Artifact integrity does not prove that an agent produced good work. |
+| Deterministic recovery and safety A/Bs | Journaled recovery produced 0 duplicate effects versus 3 for naive restart across six injected boundaries. Safety gates achieved 100% malicious recall and 0% benign false positives across 12 matched decisions. | Local deterministic fixtures only. No process-kill, power-loss, real exploit, or cross-OS claim. |
+| Leased deploy-steward state machine | Across three 15-PR batches per arm, independent loops produced 315 stale-head race attempts; the leased steward produced 0. | Fake provider only. This is not GitHub, Actions, branch-protection, or real-deployment evidence. |
+| Lean installed distribution | The npm tarball is more than 5% smaller and contains 77 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only material remains in the repository and hash-accounted. One Windows and Node environment was measured. |
 
 The public claim is deliberately narrow: Citadel can make agent evaluations
 inspectable, reproducible, and fail-honest. Comparative real-user utility
@@ -124,6 +128,7 @@ remains open.
 
 - [Evaluator start here](docs/grants/EVALUATOR_START_HERE.md)
 - [Generated evidence manifest](docs/EVIDENCE_MANIFEST.md)
+- [Experiment results, boundaries, and reproduction commands](docs/EXPERIMENTS.md)
 - [Outside-authored holdout](benchmarks/public-holdout-pilot/REPORT.md)
 - [Bounded hybrid pilot](benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md)
 - [Research site](https://sethgammon.github.io/Citadel/research.html)
@@ -192,7 +197,7 @@ The complete reference is in [`docs/`](docs/).
 
 <br>
 
-The current package includes <!-- GENERATED: skill-count -->49<!-- /GENERATED --> workflows and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. `/do` selects among them; they are not a prerequisite checklist.
+The current package includes <!-- GENERATED: skill-count -->48<!-- /GENERATED --> workflows and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. `/do` selects among them; they are not a prerequisite checklist.
 
 Citadel keeps operational state separate from application code:
 

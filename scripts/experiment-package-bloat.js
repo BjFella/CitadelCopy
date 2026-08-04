@@ -445,6 +445,25 @@ function compactIteration(iteration) {
   };
 }
 
+function normalizeHistory(value) {
+  assert(value && Array.isArray(value.iterations), 'package bloat history must contain iterations');
+  if (value.iterations.every((entry) => entry.measurement)) return value;
+  assert.equal(value.kind, 'citadel_package_bloat_result', 'compact history must be a recorded package bloat result');
+  return {
+    schema: 1,
+    kind: 'citadel_package_bloat_iteration_journal',
+    iterations: value.iterations.map((entry) => ({
+      ...entry,
+      measurement: {
+        exclusions: entry.exclusions,
+        packaging_profile: entry.packaging_profile,
+        runtime: entry.runtime,
+        guardrails: entry.guardrails,
+      },
+    })),
+  };
+}
+
 function adjudicateFinalHistory(journal, finalMeasurement, baseline = readJson(BASELINE_PATH)) {
   const resolved = structuredClone(journal);
   assert(resolved.iterations.length > 0 && resolved.iterations.length <= MAX_ITERATIONS, 'measured iteration history is invalid');
@@ -582,7 +601,7 @@ function runCli(argv = process.argv.slice(2)) {
   }
   if (command === 'run') {
     assert(options.history, 'run requires --history');
-    const journal = readJson(options.history);
+    const journal = normalizeHistory(readJson(options.history));
     const finalMeasurement = measureProfile({ requireAll: true });
     const result = buildResult(adjudicateFinalHistory(journal, finalMeasurement));
     const output = options.output || RESULT_PATH;
@@ -636,6 +655,7 @@ module.exports = Object.freeze({
   inventoryForExclusions,
   matchesExclusion,
   measureProfile,
+  normalizeHistory,
   stable,
   validatePackageManifest,
   validatePackagingProfile,

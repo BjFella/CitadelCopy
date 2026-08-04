@@ -1,19 +1,19 @@
 ---
 version: 1
 id: "95e45977-b0de-46b0-8ad5-267b09c55698"
-status: active
+status: complete
 started: "2026-08-04T17:08:14.4310319Z"
-completed_at: null
+completed_at: "2026-08-04T22:01:37.1734792Z"
 direction: "Run every proposed Citadel proof experiment, act on valid findings, and reduce evidence-backed bloat without losing compatibility or reproducibility."
 phase_count: 8
-current_phase: 7
+current_phase: 8
 branch: "codex/proof-program-20260804"
 worktree_status: active
 ---
 
 # Campaign: Citadel Proof Experiment Program
 
-Status: active
+Status: complete
 Started: 2026-08-04T17:08:14.4310319Z
 Direction: Run every proposed Citadel proof experiment, act on valid findings, and reduce evidence-backed bloat without losing compatibility or reproducibility.
 
@@ -34,21 +34,21 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | 4 | complete | build | Run Fleet isolation ablation | Serial and isolated-parallel arms run on matched fixtures with accepted-outcome, intervention, conflict, time, and cost evidence | 3 |
 | 5 | complete | build | Run Real User Proof v2 | Local instrument and proxy run complete; external-owner and D7 gates are either evidenced or explicitly blocked without simulated humans | 3 |
 | 6 | complete | build | Run deploy-steward paired experiment | Local paired simulator completes; public GitHub arm runs only after policy approval and publishes verifiable evidence | 3 |
-| 7 | in-progress | prune | Act on bloat findings | Package experiment improves packed metric without breaking runtime/evidence gates; safe deprecations and temp-state decisions are recorded | 3 |
-| 8 | pending | verify | Integrate, verify, and publish proof boundaries | Full strict suite and offline proof replay pass; README and evidence reports match actual results | 3 |
+| 7 | complete | prune | Act on bloat findings | Package experiment improves packed metric without breaking runtime/evidence gates; safe deprecations and temp-state decisions are recorded | 3 |
+| 8 | complete | verify | Integrate, verify, and publish proof boundaries | Full strict suite and offline proof replay pass; README and evidence reports match actual results | 3 |
 
 ## Phase End Conditions
 
 | Phase | Type | Check |
 |---:|---|---|
-| 1 | file_exists | `.planning/research/citadel-proof-experiments/experiment-manifest.json` |
-| 1 | file_exists | `.planning/research/citadel-proof-experiments/bloat-baseline.json` |
+| 1 | file_exists | `benchmarks/citadel-proof-experiments/experiment-manifest.json` |
+| 1 | file_exists | `benchmarks/citadel-proof-experiments/bloat-baseline.json` |
 | 1 | command_passes | `node scripts/experiment-contracts.js verify` |
 | 2 | command_passes | `node scripts/experiment-operation-recovery.js verify` |
 | 2 | command_passes | `node scripts/experiment-safety-gates.js verify` |
 | 3 | command_passes | `node scripts/experiment-judge-eval.js verify` |
 | 4 | command_passes | `node scripts/experiment-fleet-ablation.js verify` |
-| 5 | command_passes | `node scripts/product-proof-trial.js report --root proof-trial-temp --experiment-manifest .planning/research/citadel-proof-experiments/experiment-manifest.json` |
+| 5 | command_passes | `node scripts/product-proof-trial.js report --root proof-trial-temp --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json` |
 | 5 | manual | Independent repository owners supply blinded task judgments and D7 records |
 | 6 | command_passes | `node scripts/experiment-deploy-steward.js verify` |
 | 6 | manual | Policy-approved disposable GitHub repositories complete the public arm |
@@ -67,8 +67,8 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | phase:4 | fleet-ablation | test_result | yes | Real 2-agent serial/parallel run; independent validator pass | passed | 3 | Keep single-suite result instrument-only |
 | phase:5 | real-user-proof | test_result | yes | Manifest-bound empty external trial; independent validator pass | passed | 3 | Recruit real owners; retain 0-record result as blocked |
 | phase:6 | deploy-steward | test_result | yes | 3x15 local paired simulator passed; public arm policy-blocked | passed | 3 | Obtain explicit named GitHub mutation approval and build remote control before public arm |
-| phase:7 | package-bloat | command_result | yes | Before/after pack metrics and smoke gates | pending | 3 | Classify runtime versus evidence artifacts |
-| phase:8 | strict-suite | test_result | yes | `node scripts/test-all.js --strict` | pending | 3 | Integrate and verify |
+| phase:7 | package-bloat | command_result | yes | 9,678,793 to 9,105,033 packed bytes; 22,586,511 to 21,984,485 unpacked bytes; 1,954 to 1,877 files; result `9d8a70dc...` | passed | 0 | Preserve the scoped source/runtime boundary |
+| phase:8 | strict-suite | test_result | yes | Elevated strict suite all PASS; offline replay 17/17; final Arbiter ACCEPT | passed | 3 | Local campaign complete |
 
 ## Feature Ledger
 
@@ -82,6 +82,8 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | Fleet worktree ablation | complete | 4 | Both arms accepted; 196.834s serial vs 154.023s isolated parallel; one internal suite only |
 | Real User Proof v2 binding | complete | 5 | Frozen manifest receipt enforced; 0 scored records; utility false; preview suppressed and local |
 | Deploy-steward paired simulator | complete | 6 | Treatment 0 races vs control 315 across 45 PRs; fake-provider only; public arm blocked |
+| Lean self-contained npm profile | complete | 7 | 573,760 packed bytes removed (5.928%); 77 files removed; seven experiment tests and canonical contracts retained |
+| Deprecated research-fleet redirect cleanup | complete | 7 | Two-release redirect and unused duplicate fixture removed; `/research --parallel` and operation-graph compatibility retained |
 
 ## Decision Log
 
@@ -97,10 +99,13 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 - 2026-08-04: Phase 4 passed as an instrument. One matched two-task run showed 21.75% lower wall time for isolated parallel worktrees with both arms accepted and no conflicts; external task selection, repeated suites, accepted-outcome review, and cost telemetry remain missing.
 - 2026-08-04: Phase 5 passed as a fail-honest instrument. The CLI now rejects unknown options and binds stores to the frozen experiment manifest; the local trial intentionally has zero scored records, four missing attempts, no utility claim, and no D7 evidence.
 - 2026-08-04: Phase 6 local arm passed independent validation. Policy Enforcer blocked remote GitHub mutation under P-007 until the user explicitly approves creation of two public repos, Actions/protection configuration, and 30 PRs. P-008 also requires a paired remote control and strict protection/deploy realism before any claim.
+- 2026-08-04: Phase 7 kept the compatibility-first profile, not the smallest measured profile. The npm tarball is 9,105,033 packed and 21,984,485 unpacked bytes across 1,877 files; result hash `9d8a70dc8c0d6e0508c50a903aa4998727df0a888b2aa54f5c027cf73e05dd5a`. Installed smoke, seven regression tests, and all 17 offline proof checks pass. Canonical contracts moved to packaged `benchmarks/`; generated traces remain ignored.
+- 2026-08-04: Three Phase Validator attempts failed to return from their command loops after local gates passed, so Phase 7 was escalated to the acting Arbiter under the campaign protocol.
+- 2026-08-04: Phase 8 fixed the remaining Real User Proof manifest migration, made compact package results refreshable, passed the full elevated strict suite and 17/17 offline replay, corrected the Arbiter's stale-metric block, and received binding final ACCEPT.
 
 ## Review Queue
 
-- [ ] Architecture: Decide whether reproducible evidence remains in the primary npm package or becomes a separate release artifact/package.
+- [x] Architecture: Package canonical contracts and regression tests; keep generated traces and site-only evidence outside the runtime tarball.
 - [ ] External: Identify independent repository owners for Real User Proof v2.
 - [ ] External: Approve disposable public GitHub repositories if the local deploy-steward comparison justifies the public arm.
 
@@ -114,18 +119,19 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 
 ## Active Context
 
-Phase 7 is in progress. Optimize the shipped distribution with a five-iteration budget, strengthen installed-tarball verification first, and remove only evidence-backed compatibility bloat.
+Campaign complete. Local proof claims, blocked external claims, package accounting, and reproduction commands are published with a binding final Arbiter ACCEPT.
 
 ## Continuation State
 
-Phase: 7
-Sub-step: measure candidate package profiles, implement the smallest safe reduction, and rerun runtime/evidence gates
-Files modified: prior files plus deploy-steward paired runner, tests, contract, and local report
-Blocking: remote GitHub arm requires explicit named user approval and a paired strict-protection harness; local work continues
+Phase: complete
+Sub-step: none
+Files modified: proof experiment runners/tests/contracts, bounded public docs, package profile, canonical evidence inputs, and evidence-backed cleanup
+Blocking: remote GitHub arm still requires explicit named user approval and a paired strict-protection harness; Real User Proof still requires independent owners and elapsed D7 evidence
 checkpoint-phase-1: stash@{0}
 checkpoint-phase-2: 805627d
 checkpoint-phase-3: 9492f8f
 checkpoint-phase-4: 16a2d5e
 checkpoint-phase-5: 64706bb
 checkpoint-phase-6: e97c078
+checkpoint-phase-7: aac620b
 

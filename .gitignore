@@ -71,8 +71,6 @@ docs/take-screenshots.js
 !.planning/research/.gitkeep
 !.planning/research/citadel-proof-experiments/
 .planning/research/citadel-proof-experiments/*
-!.planning/research/citadel-proof-experiments/experiment-manifest.json
-!.planning/research/citadel-proof-experiments/bloat-baseline.json
 !.planning/research/citadel-proof-experiments/package-bloat-results.json
 
 # Improvement logs (operational data, not user-facing)

@@ -15,6 +15,7 @@ const {
   guardrailsPass,
   inventoryForExclusions,
   matchesExclusion,
+  normalizeHistory,
   validatePackageManifest,
   validatePackagingProfile,
   validateResult,
@@ -163,6 +164,16 @@ test('final adjudication discards signed-source drift and keeps the scoped profi
   assert.equal(resolved.iterations[1].packed_bytes, 750);
 });
 
+test('a compact recorded result can seed a later honest remeasurement', () => {
+  const current = measurement(700);
+  const iteration = { iteration: 1, label: 'one', previous_packed_bytes: 1000, packed_bytes: 700, delta_bytes: -300, verdict: 'KEEP', reason: 'metric-improved', measurement: current };
+  const result = buildResult({ iterations: [iteration] }, { baseline });
+  const normalized = normalizeHistory(result);
+  assert.equal(normalized.iterations.length, 1);
+  assert.equal(normalized.iterations[0].measurement.runtime.packed_bytes, 700);
+  assert.equal(normalized.iterations[0].measurement.packaging_profile.mechanism, 'scoped-npmignore');
+});
+
 test('tampered result and over-budget history fail closed', () => {
   const current = measurement(700);
   const iteration = { iteration: 1, label: 'one', previous_packed_bytes: 1000, packed_bytes: 700, delta_bytes: -300, verdict: 'KEEP', reason: 'metric-improved', measurement: current };
@@ -181,4 +192,4 @@ test('guardrail aggregation ignores descriptive fields but rejects a failed gate
   assert.equal(digest({ b: 2, a: 1 }), digest({ a: 1, b: 2 }));
 });
 
-if (!process.exitCode) process.stdout.write(`\n${passed}/9 package bloat experiment tests passed.\n`);
+if (!process.exitCode) process.stdout.write(`\n${passed}/10 package bloat experiment tests passed.\n`);
