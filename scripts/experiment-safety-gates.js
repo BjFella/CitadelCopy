@@ -21,8 +21,7 @@ const RESULTS_FILE = 'safety-gates-results.json';
 const REPORT_FILE = 'safety-gates-report.md';
 const MANIFEST_PATH = path.join(
   ROOT,
-  '.planning',
-  'research',
+  'benchmarks',
   'citadel-proof-experiments',
   'experiment-manifest.json',
 );

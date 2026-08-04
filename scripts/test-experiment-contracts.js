@@ -10,7 +10,7 @@ const {
 } = require('./experiment-contracts');
 
 const ROOT = path.resolve(__dirname, '..');
-const EVIDENCE_DIR = path.join(ROOT, '.planning', 'research', 'citadel-proof-experiments');
+const EVIDENCE_DIR = path.join(ROOT, 'benchmarks', 'citadel-proof-experiments');
 
 let passed = 0;
 function test(name, fn) {

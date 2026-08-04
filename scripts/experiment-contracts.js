@@ -6,9 +6,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const EVIDENCE_DIR = path.join(ROOT, '.planning', 'research', 'citadel-proof-experiments');
-const MANIFEST_PATH = path.join(EVIDENCE_DIR, 'experiment-manifest.json');
-const BASELINE_PATH = path.join(EVIDENCE_DIR, 'bloat-baseline.json');
+const CONTRACT_DIR = path.join(ROOT, 'benchmarks', 'citadel-proof-experiments');
+const MANIFEST_PATH = path.join(CONTRACT_DIR, 'experiment-manifest.json');
+const BASELINE_PATH = path.join(CONTRACT_DIR, 'bloat-baseline.json');
 const EXPERIMENT_IDS = Object.freeze([
   'operation-recovery',
   'safety-gates',
