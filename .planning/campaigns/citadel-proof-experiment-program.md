@@ -6,7 +6,7 @@ started: "2026-08-04T17:08:14.4310319Z"
 completed_at: null
 direction: "Run every proposed Citadel proof experiment, act on valid findings, and reduce evidence-backed bloat without losing compatibility or reproducibility."
 phase_count: 8
-current_phase: 6
+current_phase: 7
 branch: "codex/proof-program-20260804"
 worktree_status: active
 ---
@@ -33,8 +33,8 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | 3 | complete | build | Build and run Citadel JudgeEval | Blinded fixture suite reports false-pass and false-block matrices for validator and arbiter paths | 3 |
 | 4 | complete | build | Run Fleet isolation ablation | Serial and isolated-parallel arms run on matched fixtures with accepted-outcome, intervention, conflict, time, and cost evidence | 3 |
 | 5 | complete | build | Run Real User Proof v2 | Local instrument and proxy run complete; external-owner and D7 gates are either evidenced or explicitly blocked without simulated humans | 3 |
-| 6 | in-progress | build | Run deploy-steward paired experiment | Local paired simulator completes; public GitHub arm runs only after policy approval and publishes verifiable evidence | 3 |
-| 7 | pending | prune | Act on bloat findings | Package experiment improves packed metric without breaking runtime/evidence gates; safe deprecations and temp-state decisions are recorded | 3 |
+| 6 | complete | build | Run deploy-steward paired experiment | Local paired simulator completes; public GitHub arm runs only after policy approval and publishes verifiable evidence | 3 |
+| 7 | in-progress | prune | Act on bloat findings | Package experiment improves packed metric without breaking runtime/evidence gates; safe deprecations and temp-state decisions are recorded | 3 |
 | 8 | pending | verify | Integrate, verify, and publish proof boundaries | Full strict suite and offline proof replay pass; README and evidence reports match actual results | 3 |
 
 ## Phase End Conditions
@@ -66,7 +66,7 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | phase:3 | judge-eval | test_result | yes | 8-case sealed same-family proxy; independent validator pass | passed | 3 | Keep instrument-only; obtain external calibration before promotion |
 | phase:4 | fleet-ablation | test_result | yes | Real 2-agent serial/parallel run; independent validator pass | passed | 3 | Keep single-suite result instrument-only |
 | phase:5 | real-user-proof | test_result | yes | Manifest-bound empty external trial; independent validator pass | passed | 3 | Recruit real owners; retain 0-record result as blocked |
-| phase:6 | deploy-steward | test_result | yes | Local and policy-approved public reports | pending | 3 | Run simulator before remote mutation |
+| phase:6 | deploy-steward | test_result | yes | 3x15 local paired simulator passed; public arm policy-blocked | passed | 3 | Obtain explicit named GitHub mutation approval and build remote control before public arm |
 | phase:7 | package-bloat | command_result | yes | Before/after pack metrics and smoke gates | pending | 3 | Classify runtime versus evidence artifacts |
 | phase:8 | strict-suite | test_result | yes | `node scripts/test-all.js --strict` | pending | 3 | Integrate and verify |
 
@@ -81,6 +81,7 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 | Citadel JudgeEval instrument | complete | 3 | Control accuracy 0.625 vs acting-arbiter proxy 1.0; both false-accept 0; promotion blocked |
 | Fleet worktree ablation | complete | 4 | Both arms accepted; 196.834s serial vs 154.023s isolated parallel; one internal suite only |
 | Real User Proof v2 binding | complete | 5 | Frozen manifest receipt enforced; 0 scored records; utility false; preview suppressed and local |
+| Deploy-steward paired simulator | complete | 6 | Treatment 0 races vs control 315 across 45 PRs; fake-provider only; public arm blocked |
 
 ## Decision Log
 
@@ -95,6 +96,7 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 - 2026-08-04: Phase 3 passed as an instrument, not a product claim. A one-trial same-family proxy reduced unknown verdicts from 0.50 to 0.125 and raised exact accuracy from 0.625 to 1.0, but false accepts were already zero in both arms; the preregistered false-accept improvement gate failed.
 - 2026-08-04: Phase 4 passed as an instrument. One matched two-task run showed 21.75% lower wall time for isolated parallel worktrees with both arms accepted and no conflicts; external task selection, repeated suites, accepted-outcome review, and cost telemetry remain missing.
 - 2026-08-04: Phase 5 passed as a fail-honest instrument. The CLI now rejects unknown options and binds stores to the frozen experiment manifest; the local trial intentionally has zero scored records, four missing attempts, no utility claim, and no D7 evidence.
+- 2026-08-04: Phase 6 local arm passed independent validation. Policy Enforcer blocked remote GitHub mutation under P-007 until the user explicitly approves creation of two public repos, Actions/protection configuration, and 30 PRs. P-008 also requires a paired remote control and strict protection/deploy realism before any claim.
 
 ## Review Queue
 
@@ -112,17 +114,18 @@ Direction: Run every proposed Citadel proof experiment, act on valid findings, a
 
 ## Active Context
 
-Phase 6 is in progress. Run a paired deploy-steward state-machine simulator, then pass the public GitHub arm through a policy gate before any remote mutation.
+Phase 7 is in progress. Optimize the shipped distribution with a five-iteration budget, strengthen installed-tarball verification first, and remove only evidence-backed compatibility bloat.
 
 ## Continuation State
 
-Phase: 6
-Sub-step: build and run independent-loop control versus leased-steward treatment locally
-Files modified: prior files plus product-proof manifest binding, no-op persistence fix, spec, and local blocked report
-Blocking: none for local phases; external-owner, vendor, and GitHub gates remain later
+Phase: 7
+Sub-step: measure candidate package profiles, implement the smallest safe reduction, and rerun runtime/evidence gates
+Files modified: prior files plus deploy-steward paired runner, tests, contract, and local report
+Blocking: remote GitHub arm requires explicit named user approval and a paired strict-protection harness; local work continues
 checkpoint-phase-1: stash@{0}
 checkpoint-phase-2: 805627d
 checkpoint-phase-3: 9492f8f
 checkpoint-phase-4: 16a2d5e
 checkpoint-phase-5: 64706bb
+checkpoint-phase-6: e97c078
 
