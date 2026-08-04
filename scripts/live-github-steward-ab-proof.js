@@ -184,7 +184,7 @@ function workflowYaml(args, contract = loadContract()) {
 
 function extractStewardScript() {
   const text = fs.readFileSync(AGENTS_SOURCE, 'utf8');
-  const match = text.match(/<!-- BEGIN_STEWARD_SCRIPT -->\s*```js\n([\s\S]*?)\n```\s*<!-- END_STEWARD_SCRIPT -->/);
+  const match = text.match(/<!-- BEGIN_STEWARD_SCRIPT -->\s*```js\r?\n([\s\S]*?)\r?\n```\s*<!-- END_STEWARD_SCRIPT -->/);
   assert(match, 'standalone AGENTS.md steward block missing');
   return match[1];
 }
@@ -568,5 +568,5 @@ if (require.main === module) main().catch((error) => { console.error(error.stack
 module.exports = {
   parseArgs, validateArgs, loadContract, createPlan, protectionPayload, assertProtection, assertActionsPermissions,
   workflowYaml, deploymentRecorder, safeWorkDir, assertWorkDirMarker, classifyGhError,
-  checksPassed, summarizeArm, validateResult,
+  extractStewardScript, checksPassed, summarizeArm, validateResult,
 };

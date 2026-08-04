@@ -94,6 +94,12 @@ test('workflow exposes the exact required check and no write permission', () => 
   assert.doesNotMatch(yaml, /contents: write/);
 });
 
+test('standalone steward extraction accepts the checked-in line endings', () => {
+  const source = proof.extractStewardScript();
+  assert.match(source, /^#!\/usr\/bin\/env node\r?\n/);
+  assert.match(source, /function main\(/);
+});
+
 test('deployment recorder is SHA-keyed, idempotent, and durable on GitHub', () => {
   const source = proof.deploymentRecorder('owner/repo', 'citadel-proof');
   assert.match(source, /commits\/main/);
@@ -170,4 +176,4 @@ test('final validation fails honestly on missing, unknown, or incomplete evidenc
   assert(interventionRegression.failures.some((failure) => failure.includes('interventions exceeded control')));
 });
 
-if (!process.exitCode) process.stdout.write(`\n${passed}/10 live GitHub steward A/B harness tests passed\n`);
+if (!process.exitCode) process.stdout.write(`\n${passed}/11 live GitHub steward A/B harness tests passed\n`);
