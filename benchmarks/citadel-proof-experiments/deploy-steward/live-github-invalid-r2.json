@@ -25,7 +25,7 @@
     "kind": "non-idempotent-pr-reconciliation",
     "effect": "Resume recreated ten already-merged treatment PRs as PRs 16 through 25 before failing on existing PR 11.",
     "accidental_prs": [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
-    "cleanup_status": "preserved; no close, branch deletion, or repository deletion was authorized",
+    "cleanup_status": "completed 2026-08-05T18:08:00Z; accidental PRs 16 through 25 were closed with explanatory comments and duplicate branches agent-01 through agent-10 were deleted; original unfinished PRs 11 through 15 remain open",
     "fix": "Resume now verifies and retains the recorded PR identity, including merged PRs whose head branch was deleted."
   },
   "claim_boundary": "This run is negative integration evidence only. It is not included in the deploy-steward comparative result or any reliability, latency, or product claim."

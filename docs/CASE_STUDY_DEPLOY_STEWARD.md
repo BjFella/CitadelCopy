@@ -57,6 +57,11 @@ the identity of merged pull requests whose head branches had already been
 deleted, so it recreated ten pull requests. The run is disclosed as negative
 integration evidence rather than counted as a successful repetition.
 
+After explicit cleanup authorization, accidental PRs 16 through 25 were closed
+with explanatory comments and duplicate branches `agent-01` through `agent-10`
+were deleted. Original unfinished PRs 11 through 15 remain open as part of the
+invalid run's historical record.
+
 The resume logic now retains a recorded pull request after merge even when its
 head branch no longer exists. A regression test reproduces that condition. The
 replacement run `proof-20260805-r2b` completed against the unchanged frozen
