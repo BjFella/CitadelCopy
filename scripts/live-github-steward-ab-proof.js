@@ -385,8 +385,19 @@ function existingPr(repoSlug, owner, branch) {
   return prs[0] || null;
 }
 
+function recordedPr(armState, number, lookup = prDetail) {
+  const record = armState.prs.find((item) => item.index === number);
+  if (!record) return null;
+  const observed = lookup(armState.repoSlug, record.number);
+  assert.equal(observed.number, record.number, `recorded PR identity changed for index ${number}`);
+  assert(['OPEN', 'MERGED', 'CLOSED'].includes(observed.state), `recorded PR ${record.number} has unknown state`);
+  return record;
+}
+
 function ensurePr(state, statePath, armState, number, owner) {
   const branch = `agent-${String(number).padStart(2, '0')}`;
+  const retained = recordedPr(armState, number);
+  if (retained) return retained;
   let pr = existingPr(armState.repoSlug, owner, branch);
   if (!pr) {
     const remoteBranch = (() => { try { return gh(['api', `repos/${armState.repoSlug}/git/ref/heads/${branch}`, '--jq', '.object.sha']); } catch { return null; } })();
@@ -721,6 +732,6 @@ if (require.main === module) main().catch((error) => { console.error(error.stack
 module.exports = {
   parseArgs, validateArgs, loadContract, createPlan, protectionPayload, assertProtection, assertActionsPermissions,
   workflowYaml, deploymentRecorder, safeWorkDir, assertWorkDirMarker, classifyGhError,
-  extractStewardScript, hashContractSource, beginAttempt, bindArmOrder, beginTiming, completeTiming, elapsedMs,
+  extractStewardScript, hashContractSource, recordedPr, beginAttempt, bindArmOrder, beginTiming, completeTiming, elapsedMs,
   recordTelemetry, timedSyncTelemetry, waitWithTelemetry, checksPassed, summarizeArm, validateResult,
 };

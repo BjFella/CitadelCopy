@@ -11,6 +11,7 @@ const SCRIPT = path.join(__dirname, 'live-github-steward-ab-proof.js');
 const CONTRACT_PATH = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-contract.json');
 const PUBLISHED_RESULT = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-result.json');
 const REPEAT_SPEC = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-repeat-spec.json');
+const INVALID_R2 = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-invalid-r2.json');
 const proof = require('./live-github-steward-ab-proof');
 const contract = proof.loadContract();
 let passed = 0;
@@ -74,6 +75,17 @@ test('published live result stays bound to the frozen contract and public claims
 test('contract binding is stable across checkout line endings', () => {
   const source = fs.readFileSync(CONTRACT_PATH, 'utf8').replace(/\r\n/g, '\n');
   assert.equal(proof.hashContractSource(source), proof.hashContractSource(source.replace(/\n/g, '\r\n')));
+});
+
+test('resume retains a recorded merged PR even after its head branch is deleted', () => {
+  const armState = {
+    repoSlug: 'owner/repo',
+    prs: [{ index: 1, branch: 'agent-01', number: 1, url: 'https://example.test/pr/1', initialHead: 'frozen-head' }],
+  };
+  const retained = proof.recordedPr(armState, 1, (_repo, number) => ({ number, state: 'MERGED', headRefOid: null }));
+  assert.equal(retained.number, 1);
+  assert.equal(retained.initialHead, 'frozen-head');
+  assert.equal(proof.recordedPr(armState, 2, () => { throw new Error('must not query'); }), null);
 });
 
 test('default invocation produces a deterministic mutation-free plan', () => {
@@ -142,7 +154,11 @@ test('repeat specification counterbalances order and keeps timing descriptive', 
   const spec = JSON.parse(fs.readFileSync(REPEAT_SPEC, 'utf8'));
   assert.equal(spec.frozen_contract, 'live-github-contract.json');
   assert.equal(spec.frozen_baseline_result, 'live-github-result.json');
-  assert.deepEqual(spec.runs.map((run) => run.arm_order), ['control-first', 'treatment-first', 'control-first']);
+  assert.deepEqual(spec.runs.map((run) => run.arm_order), ['control-first', 'treatment-first', 'treatment-first', 'control-first']);
+  assert.equal(spec.runs.find((run) => run.run_id === 'proof-20260805-r2').status, 'invalidated-resume-defect');
+  const invalid = JSON.parse(fs.readFileSync(INVALID_R2, 'utf8'));
+  assert.equal(invalid.excluded_from_comparison, true);
+  assert.deepEqual(invalid.resume_defect.accidental_prs, [16, 17, 18, 19, 20, 21, 22, 23, 24, 25]);
   assert.equal(spec.analysis.descriptive_only.includes('per-arm-elapsed-ms'), true);
   assert.match(spec.analysis.timing_claim_boundary, /No latency or performance claim/);
 });
@@ -266,4 +282,4 @@ test('final validation fails honestly on missing, unknown, or incomplete evidenc
   assert(interventionRegression.failures.some((failure) => failure.includes('interventions exceeded control')));
 });
 
-if (!process.exitCode) process.stdout.write(`\n${passed}/18 live GitHub steward A/B harness tests passed\n`);
+if (!process.exitCode) process.stdout.write(`\n${passed}/19 live GitHub steward A/B harness tests passed\n`);
