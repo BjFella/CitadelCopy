@@ -10,13 +10,21 @@ const path = require('path');
 const SCRIPT = path.join(__dirname, 'live-github-steward-ab-proof.js');
 const CONTRACT_PATH = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-contract.json');
 const PUBLISHED_RESULT = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-result.json');
+const REPEAT_RESULTS = [
+  PUBLISHED_RESULT,
+  path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-result-r2b.json'),
+  path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-result-r3.json'),
+];
+const AGGREGATE_RESULT = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-aggregate.json');
 const REPEAT_SPEC = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-repeat-spec.json');
 const INVALID_R2 = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-invalid-r2.json');
 const proof = require('./live-github-steward-ab-proof');
 const contract = proof.loadContract();
 let passed = 0;
+let total = 0;
 
 function test(name, fn) {
+  total += 1;
   try { fn(); passed += 1; process.stdout.write(`PASS ${name}\n`); }
   catch (error) { process.stderr.write(`FAIL ${name}\n${error.stack}\n`); process.exitCode = 1; }
 }
@@ -70,6 +78,27 @@ test('published live result stays bound to the frozen contract and public claims
   assert.equal(result.treatment.failed_merge_races, 0);
   assert.equal(result.treatment.interventions, 0);
   assert.match(result.claim_boundary, /not production releases/);
+});
+
+test('published aggregate exactly sums valid runs and discloses the invalid run', () => {
+  const results = REPEAT_RESULTS.map((file) => JSON.parse(fs.readFileSync(file, 'utf8')));
+  const aggregate = JSON.parse(fs.readFileSync(AGGREGATE_RESULT, 'utf8'));
+  const sum = (arm, key) => results.reduce((total, result) => total + result[arm][key], 0);
+
+  assert.equal(aggregate.contract_sha256, proof.hashContractSource(fs.readFileSync(CONTRACT_PATH, 'utf8')));
+  assert.equal(aggregate.valid_run_count, results.length);
+  assert.deepEqual(aggregate.valid_runs.map((run) => run.run_id), results.map((result) => result.run_id));
+  assert(aggregate.excluded_runs.some((run) => run.run_id === 'proof-20260805-r2'));
+  for (const arm of ['control', 'treatment']) {
+    assert.equal(aggregate.aggregate[arm].merged, sum(arm, 'merged'));
+    assert.equal(aggregate.aggregate[arm].successful_deployments, sum(arm, 'successful_deployments'));
+    assert.equal(aggregate.aggregate[arm].failed_merge_races, sum(arm, 'failed_merge_races'));
+    assert.equal(aggregate.aggregate[arm].stale_branch_updates, sum(arm, 'stale_branch_updates'));
+    assert.equal(aggregate.aggregate[arm].interventions, sum(arm, 'interventions'));
+    assert(results.every((result) => result[arm].exactly_once_deployments));
+  }
+  assert.equal(aggregate.comparative_hypothesis_passed_in_every_valid_run, true);
+  assert.match(aggregate.claim_boundary, /one invalid run.*disclosed and excluded/i);
 });
 
 test('contract binding is stable across checkout line endings', () => {
@@ -282,4 +311,4 @@ test('final validation fails honestly on missing, unknown, or incomplete evidenc
   assert(interventionRegression.failures.some((failure) => failure.includes('interventions exceeded control')));
 });
 
-if (!process.exitCode) process.stdout.write(`\n${passed}/19 live GitHub steward A/B harness tests passed\n`);
+if (!process.exitCode) process.stdout.write(`\n${passed}/${total} live GitHub steward A/B harness tests passed\n`);

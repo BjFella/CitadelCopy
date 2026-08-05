@@ -2,7 +2,7 @@
   "schema": 1,
   "kind": "citadel_package_bloat_result",
   "experiment_id": "package-bloat",
-  "measured_at": "2026-08-05T00:21:01.642Z",
+  "measured_at": "2026-08-05T17:23:28.506Z",
   "baseline": {
     "source_commit": "d3aae97446b54696c521710ee8846f2211b276c3",
     "runtime": {
@@ -20,8 +20,8 @@
       "iteration": 1,
       "label": "live-github-proof",
       "previous_packed_bytes": 9678793,
-      "packed_bytes": 9113879,
-      "delta_bytes": -564914,
+      "packed_bytes": 9123230,
+      "delta_bytes": -555563,
       "verdict": "KEEP",
       "reason": "metric-improved-and-all-guardrails-passed",
       "final_adjudication": {
@@ -75,13 +75,13 @@
       },
       "runtime": {
         "filename": "citadel-1.3.0.tgz",
-        "packed_bytes": 9113879,
-        "unpacked_bytes": 22031502,
-        "file_count": 1881,
-        "sha256": "85c1e9441d31d00b0f39a503b363e57e4538a6f24de143d351984779a663fb5d",
-        "sha512_integrity": "sha512-i3hs39s00fmV/wDWyCDRT3MoklSw3ZrwIlqkC7vGFQGuWUvfYqNJMQpJlocZbsF0K4812fGjqf5kmp4a/91rrQ==",
-        "npm_shasum": "7b9b39f3399c771df810e65fb09ea2e541b9d1c3",
-        "file_manifest_sha256": "a5ae04778f9cb3b49554b4e602b05a4fd5f5ae00af5d73602e71f49602a60393"
+        "packed_bytes": 9123230,
+        "unpacked_bytes": 22066160,
+        "file_count": 1888,
+        "sha256": "af34b305cb2da1805bdbd0ddd39d4c1ff6e57151403a4b6938519e0c0e8dc1bf",
+        "sha512_integrity": "sha512-kdg7ZiZVsXhKALbaye+hGZbMtX1ZYrS7Axo/ysITr5REdfeDKDXsNv9VLVKy+rETT/RN5xmCm9uLFZnMzOAiSg==",
+        "npm_shasum": "8627d888e9ae97e963223c85095de06f372d9986",
+        "file_manifest_sha256": "918f46c4d5f60e56baf1820d3e09423d154ff5f6f96c00e1c3d00dfe8a9992a5"
       },
       "guardrails": {
         "npm_files_negations_effective": true,
@@ -102,7 +102,7 @@
     }
   ],
   "final": {
-    "source_head": "8270f843380fc4328a2c970ad81ed55f8185ab7d",
+    "source_head": "0b428444d3feb09301b7723918153fa4ab0e7bbe",
     "package_json_sha256": "1b0e0e1d3819ed4764107464b0a89e36bdebfc03c226d0d0481a51e66ac2b370",
     "exclusions": [
       "!docs/images/**",
@@ -150,13 +150,13 @@
     },
     "runtime": {
       "filename": "citadel-1.3.0.tgz",
-      "packed_bytes": 9113879,
-      "unpacked_bytes": 22031502,
-      "file_count": 1881,
-      "sha256": "85c1e9441d31d00b0f39a503b363e57e4538a6f24de143d351984779a663fb5d",
-      "sha512_integrity": "sha512-i3hs39s00fmV/wDWyCDRT3MoklSw3ZrwIlqkC7vGFQGuWUvfYqNJMQpJlocZbsF0K4812fGjqf5kmp4a/91rrQ==",
-      "npm_shasum": "7b9b39f3399c771df810e65fb09ea2e541b9d1c3",
-      "file_manifest_sha256": "a5ae04778f9cb3b49554b4e602b05a4fd5f5ae00af5d73602e71f49602a60393"
+      "packed_bytes": 9123230,
+      "unpacked_bytes": 22066160,
+      "file_count": 1888,
+      "sha256": "af34b305cb2da1805bdbd0ddd39d4c1ff6e57151403a4b6938519e0c0e8dc1bf",
+      "sha512_integrity": "sha512-kdg7ZiZVsXhKALbaye+hGZbMtX1ZYrS7Axo/ysITr5REdfeDKDXsNv9VLVKy+rETT/RN5xmCm9uLFZnMzOAiSg==",
+      "npm_shasum": "8627d888e9ae97e963223c85095de06f372d9986",
+      "file_manifest_sha256": "918f46c4d5f60e56baf1820d3e09423d154ff5f6f96c00e1c3d00dfe8a9992a5"
     },
     "source_only": {
       "file_count": 101,
@@ -209,8 +209,8 @@
       "observed_published_artifacts": [
         "npm-runtime-tarball"
       ],
-      "observed_total_published_bytes": 9113879,
-      "total_accounted_unpacked_bytes": 22868320,
+      "observed_total_published_bytes": 9123230,
+      "total_accounted_unpacked_bytes": 22902978,
       "cross_profile_packed_total": null,
       "boundary": "The npm tarball is the only artifact packed by this local experiment. Source-only files remain hash-accounted in GitHub/source, but no GitHub archive is produced; packed runtime bytes are not added to raw source bytes."
     },
@@ -231,25 +231,25 @@
       "source_repository_preserved": true
     },
     "timings_ms": {
-      "npm_pack": 6914,
-      "npm_install": 20693,
-      "installed_smoke": 1123,
-      "evidence_replay": 20059
+      "npm_pack": 7901,
+      "npm_install": 51131,
+      "installed_smoke": 1524,
+      "evidence_replay": 17420
     },
     "evidence_replay": {
       "command": "npm run grant:verify",
       "mode": "source-offline",
       "status": "passed",
-      "duration_ms": 20059,
-      "stdout_sha256": "2b47fd5a7ac5fb27110ea71b7d681c7f56aa57ffa1461a9dea8dffddb02b9364",
+      "duration_ms": 17420,
+      "stdout_sha256": "54f40b50f8a62ecc849437b622436260d8e3c573899d02888f3193f106deb9e1",
       "output_tail": "  ] | }"
     }
   },
   "improvement": {
-    "packed_bytes": 564914,
-    "packed_percent": 5.8366,
-    "unpacked_bytes": 555009,
-    "files": 73
+    "packed_bytes": 555563,
+    "packed_percent": 5.74,
+    "unpacked_bytes": 520351,
+    "files": 66
   },
   "gates": {
     "packed_bytes_below_frozen_baseline": true,
@@ -261,5 +261,5 @@
   "outcome": "passed",
   "stop_reason": "candidate-set-exhausted",
   "claim_boundary": "Observed locally on Windows/Node with a single npm runtime tarball. Scoped npm ignore files preserve the signed package.json evidence binding. Excluded files remain in source and are hash-accounted; no second release artifact or cross-OS acquisition claim was measured.",
-  "result_sha256": "2e724f036fb99a49bb793ae7af30a25d00c93105e078aa19456938c299f8908a"
+  "result_sha256": "ec170b16f5f01f8f85419392c1ced631193c23c8e0bd110dad54b82418a91679"
 }

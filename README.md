@@ -120,8 +120,8 @@ blanket claim that it makes every coding agent better.
 | Offline evidence replay | `npm run grant:verify` checks the signed artifacts, source bindings, receipt chains, reports, and public claims without calling a model. | Artifact integrity does not prove that an agent produced good work. |
 | Deterministic recovery and safety A/Bs | Journaled recovery produced 0 duplicate effects versus 3 for naive restart across six injected boundaries. Safety gates achieved 100% malicious recall and 0% benign false positives across 12 matched decisions. | Local deterministic fixtures only. No process-kill, power-loss, real exploit, or cross-OS claim. |
 | Leased deploy-steward state machine | Across three 15-PR batches per arm, independent loops produced 315 stale-head race attempts; the leased steward produced 0. | Fake provider only. This is not GitHub, Actions, branch-protection, or real-deployment evidence. |
-| Protected GitHub deploy-steward A/B | In matched public 15-PR arms, both policies merged 15/15 through strict Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. Independent loops incurred 34 failed merge races and 139 interventions; the steward incurred 0 races, 0 interventions, and 0 repairs. | One live run in two disposable public repositories. Deployments are GitHub Deployment API records with success statuses, not production releases. No speed, cost, or broad reliability claim. |
-| Lean installed distribution | The npm tarball is more than 5% smaller and contains 73 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only material remains in the repository and hash-accounted. One Windows and Node environment was measured. |
+| Protected GitHub deploy-steward A/B | Across three valid matched public runs, both policies merged 45/45 PRs through strict Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. Independent loops incurred 106 failed merge races, 315 stale updates, and 421 interventions; the steward incurred 0 of each. | Six disposable public repositories under one account, plus one disclosed invalid run. Deployments are GitHub API records, not production releases. No speed, cost, human-utility, or broad reliability claim. |
+| Lean installed distribution | The npm tarball is more than 5% smaller and contains 66 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only material remains in the repository and hash-accounted. One Windows and Node environment was measured. |
 
 The public claim is deliberately narrow: Citadel can make agent evaluations
 inspectable, reproducible, and fail-honest. Comparative real-user utility
@@ -130,6 +130,7 @@ remains open.
 - [Evaluator start here](docs/grants/EVALUATOR_START_HERE.md)
 - [Generated evidence manifest](docs/EVIDENCE_MANIFEST.md)
 - [Experiment results, boundaries, and reproduction commands](docs/EXPERIMENTS.md)
+- [Deploy-steward public case study](docs/CASE_STUDY_DEPLOY_STEWARD.md)
 - [Public deploy control](https://github.com/SethGammon/citadel-steward-proof-20260804-control) and [steward treatment](https://github.com/SethGammon/citadel-steward-proof-20260804-treatment)
 - [Outside-authored holdout](benchmarks/public-holdout-pilot/REPORT.md)
 - [Bounded hybrid pilot](benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md)

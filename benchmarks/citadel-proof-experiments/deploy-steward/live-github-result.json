@@ -25,6 +25,7 @@
     "successful_deployments": 15,
     "exactly_once_deployments": true,
     "failed_merge_races": 0,
+    "stale_branch_updates": 0,
     "serialized_branch_updates": 14,
     "interventions": 0,
     "repairs": 0

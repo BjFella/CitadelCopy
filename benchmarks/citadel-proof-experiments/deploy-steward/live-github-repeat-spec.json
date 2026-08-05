@@ -21,13 +21,13 @@
     {
       "run_id": "proof-20260805-r2b",
       "arm_order": "treatment-first",
-      "status": "planned-replacement",
+      "status": "published-repeat",
       "timing_available": true
     },
     {
       "run_id": "proof-20260805-r3",
       "arm_order": "control-first",
-      "status": "planned-repeat",
+      "status": "published-repeat",
       "timing_available": true
     }
   ],
