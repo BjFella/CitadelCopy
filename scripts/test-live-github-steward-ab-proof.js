@@ -8,7 +8,9 @@ const os = require('os');
 const path = require('path');
 
 const SCRIPT = path.join(__dirname, 'live-github-steward-ab-proof.js');
+const CONTRACT_PATH = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-contract.json');
 const PUBLISHED_RESULT = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-result.json');
+const REPEAT_SPEC = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-repeat-spec.json');
 const proof = require('./live-github-steward-ab-proof');
 const contract = proof.loadContract();
 let passed = 0;
@@ -69,6 +71,11 @@ test('published live result stays bound to the frozen contract and public claims
   assert.match(result.claim_boundary, /not production releases/);
 });
 
+test('contract binding is stable across checkout line endings', () => {
+  const source = fs.readFileSync(CONTRACT_PATH, 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(proof.hashContractSource(source), proof.hashContractSource(source.replace(/\n/g, '\r\n')));
+});
+
 test('default invocation produces a deterministic mutation-free plan', () => {
   const result = cp.spawnSync(process.execPath, [SCRIPT, '--run-id', 'proof-20260804'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
@@ -77,6 +84,8 @@ test('default invocation produces a deterministic mutation-free plan', () => {
   assert.equal(plan.repositories.control, 'citadel-steward-proof-20260804-control');
   assert.equal(plan.repositories.treatment, 'citadel-steward-proof-20260804-treatment');
   assert.equal(plan.totalPrs, 30);
+  assert.equal(plan.armOrderName, 'control-first');
+  assert.deepEqual(plan.armOrder, ['control', 'treatment']);
   assert.match(plan.contractSha256, /^[a-f0-9]{64}$/);
 });
 
@@ -87,6 +96,55 @@ test('argument validation requires explicit execute and exact cleanup confirmati
   assert.throws(() => proof.validateArgs(proof.parseArgs(['--run-id', 'BAD'])) , /stable lowercase slug/);
   assert.throws(() => proof.validateArgs(proof.parseArgs(['--run-id', 'stable-run', '--cleanup'])), /exact run ID/);
   assert.throws(() => proof.validateArgs(proof.parseArgs(['--run-id', 'stable-run', '--execute', '--cleanup', '--confirm-delete', 'stable-run'])), /mutually exclusive/);
+  assert.throws(() => proof.validateArgs(proof.parseArgs(['--run-id', 'stable-run', '--arm-order', 'random'])), /control-first or treatment-first/);
+});
+
+test('arm order is selectable, deterministic, and bound against resume drift', () => {
+  const treatmentArgs = proof.parseArgs(['--run-id', 'repeat-two', '--arm-order', 'treatment-first']);
+  proof.validateArgs(treatmentArgs);
+  const treatmentPlan = proof.createPlan(treatmentArgs, contract);
+  assert.equal(treatmentPlan.armOrderName, 'treatment-first');
+  assert.deepEqual(treatmentPlan.armOrder, ['treatment', 'control']);
+
+  const state = { arms: {} };
+  proof.bindArmOrder(state, treatmentPlan, contract);
+  assert.deepEqual(state.armOrder, ['treatment', 'control']);
+  assert.throws(() => proof.bindArmOrder(state, proof.createPlan({ runId: 'repeat-two', armOrder: 'control-first' }, contract), contract), /state arm order mismatch/);
+
+  const legacyProgress = { arms: { control: { phase: 'prs-created' } } };
+  assert.throws(() => proof.bindArmOrder(legacyProgress, treatmentPlan, contract), /legacy state with progress can only resume control-first/);
+});
+
+test('overall and per-arm timing helpers are deterministic and non-negative', () => {
+  const timing = {};
+  proof.beginTiming(timing, new Date('2026-08-05T12:00:00.000Z'));
+  proof.completeTiming(timing, new Date('2026-08-05T12:00:01.250Z'));
+  assert.deepEqual(timing, {
+    startedAt: '2026-08-05T12:00:00.000Z',
+    completedAt: '2026-08-05T12:00:01.250Z',
+    elapsedMs: 1250,
+  });
+  assert.throws(() => proof.elapsedMs('2026-08-05T12:00:01.000Z', '2026-08-05T12:00:00.000Z'), /non-negative elapsed/);
+});
+
+test('telemetry timestamps operations without asserting environment speed', () => {
+  const armState = { telemetry: [] };
+  const recorded = proof.recordTelemetry(armState, { event: 'race', cycle: 2 }, new Date('2026-08-05T12:00:00.000Z'));
+  assert.equal(recorded.at, '2026-08-05T12:00:00.000Z');
+  const ticks = [100, 137];
+  const value = proof.timedSyncTelemetry(armState, { event: 'api-timing', operation: 'test' }, () => 'ok', () => ticks.shift());
+  assert.equal(value, 'ok');
+  assert.equal(armState.telemetry[1].elapsedMs, 37);
+  assert.equal(armState.telemetry[1].outcome, 'success');
+});
+
+test('repeat specification counterbalances order and keeps timing descriptive', () => {
+  const spec = JSON.parse(fs.readFileSync(REPEAT_SPEC, 'utf8'));
+  assert.equal(spec.frozen_contract, 'live-github-contract.json');
+  assert.equal(spec.frozen_baseline_result, 'live-github-result.json');
+  assert.deepEqual(spec.runs.map((run) => run.arm_order), ['control-first', 'treatment-first', 'control-first']);
+  assert.equal(spec.analysis.descriptive_only.includes('per-arm-elapsed-ms'), true);
+  assert.match(spec.analysis.timing_claim_boundary, /No latency or performance claim/);
 });
 
 test('branch protection is strict, admin-enforced, and read back fail-closed', () => {
@@ -208,4 +266,4 @@ test('final validation fails honestly on missing, unknown, or incomplete evidenc
   assert(interventionRegression.failures.some((failure) => failure.includes('interventions exceeded control')));
 });
 
-if (!process.exitCode) process.stdout.write(`\n${passed}/13 live GitHub steward A/B harness tests passed\n`);
+if (!process.exitCode) process.stdout.write(`\n${passed}/18 live GitHub steward A/B harness tests passed\n`);

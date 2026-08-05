@@ -12,9 +12,13 @@ const ROOT = path.resolve(__dirname, '..');
 const CONTRACT_PATH = path.join(ROOT, 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-contract.json');
 const AGENTS_SOURCE = path.join(ROOT, 'examples', 'berman-agents-md-only', 'AGENTS.md');
 const OUTPUT_ROOT = path.join(ROOT, '.planning', 'live-proof');
+const ARM_ORDERS = {
+  'control-first': ['control', 'treatment'],
+  'treatment-first': ['treatment', 'control'],
+};
 
 function parseArgs(argv) {
-  const args = { pollMs: 5000, maxCycles: 180, ciSleepSeconds: 8 };
+  const args = { pollMs: 5000, maxCycles: 180, ciSleepSeconds: 8, armOrder: 'control-first' };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = argv[i + 1];
@@ -26,6 +30,7 @@ function parseArgs(argv) {
     else if (arg === '--poll-ms') { args.pollMs = Number(next); i += 1; }
     else if (arg === '--max-cycles') { args.maxCycles = Number(next); i += 1; }
     else if (arg === '--ci-sleep-seconds') { args.ciSleepSeconds = Number(next); i += 1; }
+    else if (arg === '--arm-order') { args.armOrder = next; i += 1; }
     else if (arg === '--help' || arg === '-h') args.help = true;
     else throw new Error(`unknown option: ${arg}`);
   }
@@ -41,6 +46,7 @@ function usage() {
     '',
     'The default is a mutation-free plan. --execute creates exactly two public',
     'repositories and 15 PRs per arm. Re-running the same run ID resumes state.',
+    'Use --arm-order control-first|treatment-first to counterbalance repeat runs.',
   ].join('\n');
 }
 
@@ -52,6 +58,9 @@ function validateArgs(args) {
   if (args.execute && args.cleanup) throw new Error('--execute and --cleanup are mutually exclusive');
   if (args.cleanup && args.confirmDelete !== args.runId) {
     throw new Error('--cleanup requires --confirm-delete with the exact run ID');
+  }
+  if (!Object.hasOwn(ARM_ORDERS, args.armOrder)) {
+    throw new Error('--arm-order must be control-first or treatment-first');
   }
   for (const key of ['pollMs', 'maxCycles', 'ciSleepSeconds']) {
     if (!Number.isFinite(args[key]) || args[key] < 0) throw new Error(`${key} must be a non-negative number`);
@@ -69,14 +78,24 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
+function hashContractSource(value) {
+  return sha256(String(value).replace(/\r\n/g, '\n'));
+}
+
 function createPlan(args, contract = loadContract()) {
   const prefix = `citadel-steward-${args.runId}`;
   return {
-    schema: 1,
+    schema: 2,
     experimentId: contract.experiment_id,
-    contractSha256: sha256(fs.readFileSync(CONTRACT_PATH)),
+    contractSha256: hashContractSource(fs.readFileSync(CONTRACT_PATH, 'utf8')),
     runId: args.runId,
     owner: args.owner || null,
+    armOrderName: args.armOrder || 'control-first',
+    armOrder: [...ARM_ORDERS[args.armOrder || 'control-first']],
+    timingScope: {
+      overall: 'full execute invocation including repository and PR setup',
+      arm: 'arm algorithm execution after matched repositories and PRs are prepared',
+    },
     mutationMode: args.execute ? 'execute' : args.cleanup ? 'cleanup' : 'plan-only',
     repositories: {
       control: `${prefix}-control`,
@@ -142,6 +161,58 @@ function checkpoint(state, statePath, patch = {}) {
   writeJsonAtomic(statePath, state);
 }
 
+function toIso(now = new Date()) {
+  return (now instanceof Date ? now : new Date(now)).toISOString();
+}
+
+function elapsedMs(startedAt, completedAt) {
+  const elapsed = new Date(completedAt).getTime() - new Date(startedAt).getTime();
+  assert(Number.isFinite(elapsed) && elapsed >= 0, 'timing timestamps must produce a non-negative elapsed duration');
+  return elapsed;
+}
+
+function beginTiming(target, now = new Date()) {
+  target.startedAt ||= toIso(now);
+  return target;
+}
+
+function completeTiming(target, now = new Date()) {
+  assert(target.startedAt, 'timing must be started before it is completed');
+  target.completedAt = toIso(now);
+  target.elapsedMs = elapsedMs(target.startedAt, target.completedAt);
+  return target;
+}
+
+function recordTelemetry(armState, event, now = new Date()) {
+  armState.telemetry ||= [];
+  const record = { ...event, at: event.at || toIso(now) };
+  armState.telemetry.push(record);
+  return record;
+}
+
+function timedSyncTelemetry(armState, event, fn, clock = () => Date.now()) {
+  const startedMs = clock();
+  try {
+    const value = fn();
+    recordTelemetry(armState, { ...event, outcome: 'success', elapsedMs: Math.max(0, clock() - startedMs) });
+    return value;
+  } catch (error) {
+    recordTelemetry(armState, { ...event, outcome: 'failure', elapsedMs: Math.max(0, clock() - startedMs), error: error.message });
+    throw error;
+  }
+}
+
+async function waitWithTelemetry(armState, delayMs, context = {}, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), clock = () => Date.now()) {
+  const startedMs = clock();
+  await sleep(delayMs);
+  return recordTelemetry(armState, {
+    event: 'action-wait',
+    scheduledMs: delayMs,
+    elapsedMs: Math.max(0, clock() - startedMs),
+    ...context,
+  });
+}
+
 function beginAttempt(state) {
   if (state.lastError) {
     state.errorHistory ||= [];
@@ -149,6 +220,17 @@ function beginAttempt(state) {
     delete state.lastError;
   }
   state.status = 'running';
+  return state;
+}
+
+function bindArmOrder(state, plan, contract = loadContract()) {
+  if (!state.armOrder) {
+    const hasProgress = Object.keys(state.arms || {}).length > 0;
+    if (hasProgress) assert.deepEqual(plan.armOrder, contract.arms, 'legacy state with progress can only resume control-first');
+    state.armOrder = [...plan.armOrder];
+    state.armOrderName = plan.armOrderName;
+  }
+  assert.deepEqual(state.armOrder, plan.armOrder, 'state arm order mismatch');
   return state;
 }
 
@@ -373,30 +455,44 @@ async function runControl(state, statePath, armState, args, contract) {
     for (const detail of open) {
       const mergeState = String(detail.mergeStateStatus || '').toUpperCase();
       if (mergeState === 'BEHIND') {
-        gh(['api', '-X', 'PUT', `repos/${armState.repoSlug}/pulls/${detail.number}/update-branch`, '-f', `expected_head_sha=${detail.headRefOid}`]);
-        armState.telemetry.push({ cycle, pr: detail.number, event: 'stale', head: detail.headRefOid });
-        armState.telemetry.push({ cycle, pr: detail.number, event: 'intervention', action: 'update-branch' });
+        timedSyncTelemetry(armState, { event: 'api-timing', operation: 'update-branch', cycle, pr: detail.number }, () => (
+          gh(['api', '-X', 'PUT', `repos/${armState.repoSlug}/pulls/${detail.number}/update-branch`, '-f', `expected_head_sha=${detail.headRefOid}`])
+        ));
+        recordTelemetry(armState, { cycle, pr: detail.number, event: 'stale', head: detail.headRefOid });
+        recordTelemetry(armState, { cycle, pr: detail.number, event: 'intervention', action: 'update-branch' });
       } else if (mergeState !== 'UNKNOWN' && checksPassed(detail, contract.required_check)) candidates.push(detail);
     }
-    const attempts = await Promise.allSettled(candidates.map((detail) => runAsync('gh', [
-      'pr', 'merge', String(detail.number), '--repo', armState.repoSlug, '--squash', '--delete-branch', '--match-head-commit', detail.headRefOid,
-    ]).then(() => ({ detail }))));
+    const attempts = await Promise.allSettled(candidates.map(async (detail) => {
+      const startedMs = Date.now();
+      try {
+        await runAsync('gh', [
+          'pr', 'merge', String(detail.number), '--repo', armState.repoSlug, '--squash', '--delete-branch', '--match-head-commit', detail.headRefOid,
+        ]);
+        recordTelemetry(armState, { event: 'api-timing', operation: 'merge-pr', cycle, pr: detail.number, outcome: 'success', elapsedMs: Math.max(0, Date.now() - startedMs) });
+        return { detail };
+      } catch (error) {
+        recordTelemetry(armState, { event: 'api-timing', operation: 'merge-pr', cycle, pr: detail.number, outcome: 'failure', elapsedMs: Math.max(0, Date.now() - startedMs), error: error.message });
+        throw error;
+      }
+    }));
     for (let index = 0; index < attempts.length; index += 1) {
       const attempt = attempts[index]; const detail = candidates[index];
       if (attempt.status === 'fulfilled') {
         const merged = prDetail(armState.repoSlug, detail.number);
         const mergeSha = merged.mergeCommit?.oid;
         assert(mergeSha, `merged PR ${detail.number} missing merge SHA`);
-        const deployment = createDeployment(armState.repoSlug, mergeSha, contract.deployment_environment);
-        armState.telemetry.push({ cycle, pr: detail.number, event: 'merged-and-deployed', mergeSha, ...deployment });
+        const deployment = timedSyncTelemetry(armState, { event: 'api-timing', operation: 'create-deployment', cycle, pr: detail.number }, () => (
+          createDeployment(armState.repoSlug, mergeSha, contract.deployment_environment)
+        ));
+        recordTelemetry(armState, { cycle, pr: detail.number, event: 'merged-and-deployed', mergeSha, ...deployment });
       } else {
         const classification = classifyGhError(attempt.reason);
-        armState.telemetry.push({ cycle, pr: detail.number, event: 'race', classification, error: attempt.reason.message });
-        armState.telemetry.push({ cycle, pr: detail.number, event: 'intervention', action: 'retry-after-race' });
+        recordTelemetry(armState, { cycle, pr: detail.number, event: 'race', classification, error: attempt.reason.message });
+        recordTelemetry(armState, { cycle, pr: detail.number, event: 'intervention', action: 'retry-after-race' });
       }
     }
     armState.cycle = cycle + 1; checkpoint(state, statePath);
-    await new Promise((resolve) => setTimeout(resolve, args.pollMs));
+    await waitWithTelemetry(armState, args.pollMs, { cycle, stage: 'control-poll' });
   }
   const merged = armState.prs.filter((pr) => prDetail(armState.repoSlug, pr.number).state === 'MERGED').length;
   if (merged !== contract.prs_per_arm) {
@@ -425,12 +521,12 @@ async function runTreatment(state, statePath, armState, args, contract) {
   armState.prs.slice(0, 3).forEach((pr) => writeReady(armState, pr));
   for (let cycle = armState.cycle || 1; cycle <= args.maxCycles; cycle += 1) {
     if (cycle === 3) armState.prs.slice(3).forEach((pr) => writeReady(armState, pr));
-    const result = runStewardCycle(armState, cycle);
-    armState.telemetry.push({ cycle, event: result.outcome.action, item: result.outcome.item || null, reason: result.outcome.reason || null });
+    const result = timedSyncTelemetry(armState, { event: 'stage-timing', operation: 'steward-cycle', cycle }, () => runStewardCycle(armState, cycle));
+    recordTelemetry(armState, { cycle, event: result.outcome.action, item: result.outcome.item || null, reason: result.outcome.reason || null });
     armState.cycle = cycle + 1; checkpoint(state, statePath);
     const landed = result.queue.filter((item) => item.status === 'landed').length;
     if (result.queue.length === contract.prs_per_arm && landed === contract.prs_per_arm) break;
-    await new Promise((resolve) => setTimeout(resolve, args.pollMs));
+    await waitWithTelemetry(armState, args.pollMs, { cycle, stage: 'treatment-poll' });
   }
   const queue = readJson(path.join(armState.workDir, '.agent-steward', 'queue.json'), []);
   const landed = queue.filter((item) => item.status === 'landed').length;
@@ -520,21 +616,66 @@ async function execute(args, plan, contract) {
     assert.equal(state.runId, plan.runId, 'state run ID mismatch');
     assert.equal(state.contractSha256, plan.contractSha256, 'frozen contract changed since this run began');
     assert.equal(state.owner, authenticatedOwner, 'state owner mismatch');
+    bindArmOrder(state, plan, contract);
   } else {
-    state = { schema: 1, runId: plan.runId, owner: authenticatedOwner, contractSha256: plan.contractSha256, status: 'running', createdAt: new Date().toISOString(), arms: {} };
+    state = {
+      schema: 2,
+      runId: plan.runId,
+      owner: authenticatedOwner,
+      contractSha256: plan.contractSha256,
+      armOrderName: plan.armOrderName,
+      armOrder: [...plan.armOrder],
+      timingScope: plan.timingScope,
+      status: 'running',
+      createdAt: new Date().toISOString(),
+      arms: {},
+    };
   }
   beginAttempt(state);
+  beginTiming(state);
   checkpoint(state, plan.statePath);
   try {
-    for (const arm of contract.arms) ensureArm(state, plan.statePath, plan, arm, { ...args, owner: authenticatedOwner }, contract);
-    for (const arm of contract.arms) {
+    for (const arm of plan.armOrder) ensureArm(state, plan.statePath, plan, arm, { ...args, owner: authenticatedOwner }, contract);
+    for (const arm of plan.armOrder) {
       const armState = state.arms[arm];
       for (let number = 1; number <= contract.prs_per_arm; number += 1) ensurePr(state, plan.statePath, armState, number, authenticatedOwner);
-      armState.phase = 'prs-created'; checkpoint(state, plan.statePath);
+      if (armState.phase !== 'arm-complete') armState.phase = 'prs-created';
+      checkpoint(state, plan.statePath);
     }
-    if (state.arms.control.phase !== 'arm-complete') await runControl(state, plan.statePath, state.arms.control, args, contract);
-    if (state.arms.treatment.phase !== 'arm-complete') await runTreatment(state, plan.statePath, state.arms.treatment, args, contract);
-    const result = { schema: 1, runId: plan.runId, contractSha256: plan.contractSha256, generatedAt: new Date().toISOString(), arms: {} };
+    for (const arm of plan.armOrder) {
+      const armState = state.arms[arm];
+      if (armState.phase === 'arm-complete') {
+        if (armState.startedAt && !armState.completedAt) completeTiming(armState);
+        continue;
+      }
+      beginTiming(armState);
+      checkpoint(state, plan.statePath);
+      if (arm === 'control') await runControl(state, plan.statePath, armState, args, contract);
+      else await runTreatment(state, plan.statePath, armState, args, contract);
+      completeTiming(armState);
+      checkpoint(state, plan.statePath);
+    }
+    completeTiming(state);
+    const result = {
+      schema: 2,
+      runId: plan.runId,
+      contractSha256: plan.contractSha256,
+      armOrderName: plan.armOrderName,
+      armOrder: [...plan.armOrder],
+      timingScope: plan.timingScope,
+      generatedAt: new Date().toISOString(),
+      timing: {
+        startedAt: state.startedAt,
+        completedAt: state.completedAt,
+        elapsedMs: state.elapsedMs,
+        arms: Object.fromEntries(contract.arms.map((arm) => [arm, {
+          startedAt: state.arms[arm].startedAt || null,
+          completedAt: state.arms[arm].completedAt || null,
+          elapsedMs: Number.isFinite(state.arms[arm].elapsedMs) ? state.arms[arm].elapsedMs : null,
+        }])),
+      },
+      arms: {},
+    };
     for (const arm of contract.arms) result.arms[arm] = collectArm(state.arms[arm], contract);
     result.validation = validateResult(result, contract);
     writeJsonAtomic(plan.resultPath, result);
@@ -580,5 +721,6 @@ if (require.main === module) main().catch((error) => { console.error(error.stack
 module.exports = {
   parseArgs, validateArgs, loadContract, createPlan, protectionPayload, assertProtection, assertActionsPermissions,
   workflowYaml, deploymentRecorder, safeWorkDir, assertWorkDirMarker, classifyGhError,
-  extractStewardScript, beginAttempt, checksPassed, summarizeArm, validateResult,
+  extractStewardScript, hashContractSource, beginAttempt, bindArmOrder, beginTiming, completeTiming, elapsedMs,
+  recordTelemetry, timedSyncTelemetry, waitWithTelemetry, checksPassed, summarizeArm, validateResult,
 };
