@@ -142,6 +142,16 @@ function checkpoint(state, statePath, patch = {}) {
   writeJsonAtomic(statePath, state);
 }
 
+function beginAttempt(state) {
+  if (state.lastError) {
+    state.errorHistory ||= [];
+    state.errorHistory.push(state.lastError);
+    delete state.lastError;
+  }
+  state.status = 'running';
+  return state;
+}
+
 function protectionPayload(contract = loadContract()) {
   return {
     required_status_checks: { strict: true, contexts: [contract.required_check] },
@@ -478,6 +488,7 @@ function validateResult(result, contract = loadContract()) {
     if (summary.prs !== contract.prs_per_arm) failures.push(`${arm}: expected 15 PRs, saw ${summary.prs}`);
     if (summary.merged !== contract.prs_per_arm) failures.push(`${arm}: expected 15 merges, saw ${summary.merged}`);
     if (!summary.exactlyOnceDeployments) failures.push(`${arm}: deployments were not exactly once per merge SHA`);
+    if (summary.successfulDeployments !== summary.merged) failures.push(`${arm}: successful deployment count did not equal merged PR count`);
     if (!summary.workflowEvidenceComplete) failures.push(`${arm}: required check evidence incomplete`);
     try { assertActionsPermissions(summary.actionsPermissions); } catch (error) { failures.push(`${arm}: ${error.message}`); }
     try { assertProtection(summary.protection, contract); } catch (error) { failures.push(`${arm}: ${error.message}`); }
@@ -511,8 +522,9 @@ async function execute(args, plan, contract) {
     assert.equal(state.owner, authenticatedOwner, 'state owner mismatch');
   } else {
     state = { schema: 1, runId: plan.runId, owner: authenticatedOwner, contractSha256: plan.contractSha256, status: 'running', createdAt: new Date().toISOString(), arms: {} };
-    checkpoint(state, plan.statePath);
   }
+  beginAttempt(state);
+  checkpoint(state, plan.statePath);
   try {
     for (const arm of contract.arms) ensureArm(state, plan.statePath, plan, arm, { ...args, owner: authenticatedOwner }, contract);
     for (const arm of contract.arms) {
@@ -568,5 +580,5 @@ if (require.main === module) main().catch((error) => { console.error(error.stack
 module.exports = {
   parseArgs, validateArgs, loadContract, createPlan, protectionPayload, assertProtection, assertActionsPermissions,
   workflowYaml, deploymentRecorder, safeWorkDir, assertWorkDirMarker, classifyGhError,
-  extractStewardScript, checksPassed, summarizeArm, validateResult,
+  extractStewardScript, beginAttempt, checksPassed, summarizeArm, validateResult,
 };

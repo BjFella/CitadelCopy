@@ -8,6 +8,7 @@ const os = require('os');
 const path = require('path');
 
 const SCRIPT = path.join(__dirname, 'live-github-steward-ab-proof.js');
+const PUBLISHED_RESULT = path.join(__dirname, '..', 'benchmarks', 'citadel-proof-experiments', 'deploy-steward', 'live-github-result.json');
 const proof = require('./live-github-steward-ab-proof');
 const contract = proof.loadContract();
 let passed = 0;
@@ -54,6 +55,20 @@ test('contract freezes two public 15-PR arms and durable evidence', () => {
   assert.equal(contract.success.treatment_race_attempts_less_than_control, true);
 });
 
+test('published live result stays bound to the frozen contract and public claims', () => {
+  const result = JSON.parse(fs.readFileSync(PUBLISHED_RESULT, 'utf8'));
+  const plan = proof.createPlan({ runId: result.run_id }, contract);
+  assert.equal(result.contract_sha256, plan.contractSha256);
+  assert.equal(result.validation_passed, true);
+  assert.deepEqual([result.control.pull_requests, result.control.merged, result.control.successful_deployments], [15, 15, 15]);
+  assert.deepEqual([result.treatment.pull_requests, result.treatment.merged, result.treatment.successful_deployments], [15, 15, 15]);
+  assert.equal(result.control.failed_merge_races, 34);
+  assert.equal(result.control.interventions, 139);
+  assert.equal(result.treatment.failed_merge_races, 0);
+  assert.equal(result.treatment.interventions, 0);
+  assert.match(result.claim_boundary, /not production releases/);
+});
+
 test('default invocation produces a deterministic mutation-free plan', () => {
   const result = cp.spawnSync(process.execPath, [SCRIPT, '--run-id', 'proof-20260804'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
@@ -98,6 +113,14 @@ test('standalone steward extraction accepts the checked-in line endings', () => 
   const source = proof.extractStewardScript();
   assert.match(source, /^#!\/usr\/bin\/env node\r?\n/);
   assert.match(source, /function main\(/);
+});
+
+test('resuming archives a prior failure instead of leaving stale failure state', () => {
+  const lastError = { at: '2026-08-04T23:09:42.058Z', message: 'preflight failed' };
+  const state = proof.beginAttempt({ status: 'failed', lastError });
+  assert.equal(state.status, 'running');
+  assert.equal(state.lastError, undefined);
+  assert.deepEqual(state.errorHistory, [lastError]);
 });
 
 test('deployment recorder is SHA-keyed, idempotent, and durable on GitHub', () => {
@@ -161,6 +184,15 @@ test('final validation fails honestly on missing, unknown, or incomplete evidenc
   assert(failed.failures.some((failure) => failure.includes('required check evidence incomplete')));
   assert.equal(proof.validateResult({ arms: { control } }, contract).passed, false);
 
+  const extraDeploymentEvidence = armEvidence();
+  extraDeploymentEvidence.deployments.push({ id: 99, sha: 'unrelated-sha', statuses: [{ state: 'success' }] });
+  const extraDeployment = proof.validateResult({ arms: {
+    control,
+    treatment: proof.summarizeArm(extraDeploymentEvidence, contract),
+  } }, contract);
+  assert.equal(extraDeployment.passed, false);
+  assert(extraDeployment.failures.some((failure) => failure.includes('deployment count did not equal')));
+
   const noComparativeWin = proof.validateResult({ arms: {
     control: proof.summarizeArm(armEvidence(), contract),
     treatment: proof.summarizeArm(armEvidence(), contract),
@@ -176,4 +208,4 @@ test('final validation fails honestly on missing, unknown, or incomplete evidenc
   assert(interventionRegression.failures.some((failure) => failure.includes('interventions exceeded control')));
 });
 
-if (!process.exitCode) process.stdout.write(`\n${passed}/11 live GitHub steward A/B harness tests passed\n`);
+if (!process.exitCode) process.stdout.write(`\n${passed}/13 live GitHub steward A/B harness tests passed\n`);

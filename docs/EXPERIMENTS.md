@@ -13,7 +13,8 @@ evidence remains unknown or blocked.
 | Journaled recovery | The naive restart control duplicated 3 non-repeatable effects. Treatment duplicated 0, recovered all 6 safe cases, blocked 4 ambiguous non-repeatable outcomes, detected 2/2 journal tamper cases, and leaked no private error text. | The journal and recovery implementation preserves its declared invariants at every deterministic in-process fault boundary in the fixture. | This is not a process-kill, power-loss, or cross-filesystem result. |
 | Safety gates | Across 6 malicious and 6 benign matched cases, treatment had 100% malicious recall, 0% benign false positives, 0 canary effects, and 0 unknown-to-pass conversions. | The tested hooks and governance evaluator discriminate the declared cases and fail closed on missing or malformed evidence. | Dangerous commands were never executed. This is not exploit containment or cross-OS proof. |
 | Deploy steward | Across three matched 15-PR batches per arm, both arms landed 45/45 simulated PRs. Independent loops produced 315 stale-head race attempts and 315 interventions; the leased steward produced 0 of each and exactly one deploy per merge. | The real steward state machine and lease seam serialize the deterministic fake-provider workload. | This is not GitHub, Actions, branch-protection, API-race, or real-deployment evidence. |
-| npm distribution | The installed tarball is more than 5% smaller and ships 77 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only site media, skill benchmarks, and private workspace adapters need not ship in the runtime tarball. The focused experiment tests stay because the strict suite exercises them. | The files remain hash-accounted in source. One Windows and Node environment was measured; no second release artifact or cross-OS claim was tested. |
+| Protected GitHub deploy steward | In two public repositories, both arms merged 15/15 PRs through strict GitHub Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. The independent-loop control produced 34 failed merge races, 105 stale-branch updates, and 139 interventions. The steward produced 0 races, 14 serialized branch updates, 0 interventions, and 0 repairs. | Under this matched live workload, one steward eliminated the control's racing merge attempts and corrective interventions while preserving complete merges and deployment records. | One run, one GitHub account, public repositories, and simulated deployment records. This is not a production deploy, speed, cost, outage-resilience, or general product-utility result. |
+| npm distribution | The installed tarball is more than 5% smaller and ships 73 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only site media, skill benchmarks, and private workspace adapters need not ship in the runtime tarball. The focused experiment tests stay because the strict suite exercises them. | The files remain hash-accounted in source. One Windows and Node environment was measured; no second release artifact or cross-OS claim was tested. |
 
 The package experiment also rejected a tempting invalid optimization. Editing
 `package.json` reduced bytes but broke its frozen public-proof source binding.
@@ -28,7 +29,6 @@ accounted for: 101 files and 836,818 bytes remain in source with stable hashes.
 | Acting-arbiter JudgeEval | On one sealed 8-case, same-family trial, exact accuracy was 0.625 for prose-only validation and 1.0 for the acting arbiter; unknown rate fell from 0.50 to 0.125. Both arms had zero false accepts, so the preregistered false-accept improvement failed. | Human-calibrated labels, pinned different-family judges, at least three trials, latency and cost, and a non-saturated false-accept corpus. |
 | Fleet isolation ablation | Both arms completed two matched tasks with no conflicts. Serial time was 196,834 ms; isolated parallel time was 154,023 ms, 21.75% lower. | Repeated externally selected suites, independent acceptance, representative task sizes, and token and cost telemetry. |
 | Real User Proof v2 | The manifest-bound instrument recorded 0 scored attempts out of 4 assignments, suppressed its share preview, and emitted no utility claim. | Independent repository owners, real counterbalanced attempts, blinded judgments, and elapsed D7 retention. |
-| Public deploy proof | Not run. Local evidence justified building the paired remote harness, not claiming remote behavior. | Explicit approval for two public repositories, Actions, branch protection, and 30 PRs, plus a strict paired control driver. |
 
 ## Run deterministic arms and validate the instruments
 
@@ -40,6 +40,8 @@ node scripts/experiment-safety-gates.js run
 node scripts/experiment-safety-gates.js verify
 node scripts/experiment-deploy-steward.js run
 node scripts/experiment-deploy-steward.js verify
+node scripts/live-github-steward-ab-proof.js --run-id <stable-id>
+node scripts/test-live-github-steward-ab-proof.js
 node scripts/experiment-package-bloat.js verify
 node scripts/experiment-package-bloat.js metric
 node scripts/test-experiment-judge-eval.js
@@ -85,9 +87,8 @@ shows why reliability changes with task duration.
 
 1. Run the externally owned, counterbalanced Real User Proof trial. This is the
    shortest path to a defensible product-utility claim.
-2. Build the paired strict GitHub deploy harness, then request explicit public
-   mutation approval. The existing local result is strong enough to justify the
-   experiment, not to substitute for it.
+2. Repeat the protected GitHub deploy experiment across at least three run IDs,
+   alternate arm order, and record elapsed time plus API and Actions latency.
 3. Expand JudgeEval to at least 40 human-labeled cases, including clean controls
    and enough green-but-wrong failures to measure false-accept improvement.
 4. Repeat Fleet across externally selected tasks stratified by human task time,

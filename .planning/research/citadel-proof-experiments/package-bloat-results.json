@@ -2,7 +2,7 @@
   "schema": 1,
   "kind": "citadel_package_bloat_result",
   "experiment_id": "package-bloat",
-  "measured_at": "2026-08-04T21:44:37.949Z",
+  "measured_at": "2026-08-05T00:21:01.642Z",
   "baseline": {
     "source_commit": "d3aae97446b54696c521710ee8846f2211b276c3",
     "runtime": {
@@ -13,209 +13,15 @@
   },
   "budget": {
     "maximum_iterations": 5,
-    "measured_iterations": 5
+    "measured_iterations": 1
   },
   "iterations": [
     {
       "iteration": 1,
-      "label": "exclude-site-screenshots",
+      "label": "live-github-proof",
       "previous_packed_bytes": 9678793,
-      "packed_bytes": 9131094,
-      "delta_bytes": -547699,
-      "verdict": "DISCARD",
-      "reason": "offline-evidence-replay-failed-signed-package-source-drift",
-      "final_adjudication": {
-        "installed_runtime_smoke": true,
-        "offline_evidence_replay": false,
-        "observed_error": "frozen capstone sources drifted"
-      },
-      "exclusions": [
-        "!docs/images/**"
-      ],
-      "packaging_profile": {
-        "mechanism": "package-files-negation"
-      },
-      "runtime": {
-        "filename": "citadel-1.3.0.tgz",
-        "packed_bytes": 9131094,
-        "unpacked_bytes": 22061607,
-        "file_count": 1969,
-        "sha256": "5b0d1ed11e6915f6c3033446eb62d5dbb37d5b35110a5eeafe368d57f197061b",
-        "sha512_integrity": "sha512-O9HWmmrHVlXEAOFiq8hLtHcu/YzZINgrQTBucKmhpDdFqhAhxBvzlBV2TZASIp7XSZFTexYPBsBZcDggWUHlkg==",
-        "npm_shasum": "336828929211423aeb618c74b9cd2f2c48c2631c",
-        "file_manifest_sha256": "4dd7ce167a39c7a5d1d37d4da6c95284fab352587903dd8d0cf308bbeb362bc1"
-      },
-      "guardrails": {
-        "npm_files_negations_effective": true,
-        "protected_runtime_files_present": true,
-        "installed_runtime_smoke": true,
-        "installed_runtime_surfaces": [
-          "root-help",
-          "version",
-          "pack-list",
-          "config-show",
-          "operation-explain",
-          "control-plane-conformance"
-        ],
-        "installed_control_plane_checks": 21,
-        "offline_evidence_replay": "deferred-to-final-profile",
-        "source_repository_preserved": true
-      }
-    },
-    {
-      "iteration": 2,
-      "label": "exclude-skill-benchmark-fixtures",
-      "previous_packed_bytes": 9131094,
-      "packed_bytes": 9104010,
-      "delta_bytes": -27084,
-      "verdict": "DISCARD",
-      "reason": "offline-evidence-replay-failed-signed-package-source-drift",
-      "final_adjudication": {
-        "installed_runtime_smoke": true,
-        "offline_evidence_replay": false,
-        "observed_error": "frozen capstone sources drifted"
-      },
-      "exclusions": [
-        "!docs/images/**",
-        "!skills/*/__benchmarks__/**"
-      ],
-      "packaging_profile": {
-        "mechanism": "package-files-negation"
-      },
-      "runtime": {
-        "filename": "citadel-1.3.0.tgz",
-        "packed_bytes": 9104010,
-        "unpacked_bytes": 21983602,
-        "file_count": 1889,
-        "sha256": "c8a8a30de9a5334d465427110f5b1887459f7163a565f4905cc036f5bec89054",
-        "sha512_integrity": "sha512-DXjt2+YNWDXsONt8FMbpDlEFmaiZpdsorCdD4L/KCv03H/qKnnzNrvDyz7jWT1MMNwc+jKa7vZN9bmbSwdncDQ==",
-        "npm_shasum": "ac35cbcf3ebbc8d46a47816e528acaa97f91b59a",
-        "file_manifest_sha256": "731e292addf376c7b8bedd632efe655fd0bc0f8add75b8e752510f14395c5ff5"
-      },
-      "guardrails": {
-        "npm_files_negations_effective": true,
-        "protected_runtime_files_present": true,
-        "installed_runtime_smoke": true,
-        "installed_runtime_surfaces": [
-          "root-help",
-          "version",
-          "pack-list",
-          "config-show",
-          "operation-explain",
-          "control-plane-conformance"
-        ],
-        "installed_control_plane_checks": 21,
-        "offline_evidence_replay": "deferred-to-final-profile",
-        "source_repository_preserved": true
-      }
-    },
-    {
-      "iteration": 3,
-      "label": "exclude-private-workspace-packages",
-      "previous_packed_bytes": 9104010,
-      "packed_bytes": 9096379,
-      "delta_bytes": -7631,
-      "verdict": "DISCARD",
-      "reason": "offline-evidence-replay-failed-signed-package-source-drift",
-      "final_adjudication": {
-        "installed_runtime_smoke": true,
-        "offline_evidence_replay": false,
-        "observed_error": "frozen capstone sources drifted"
-      },
-      "exclusions": [
-        "!docs/images/**",
-        "!skills/*/__benchmarks__/**",
-        "!packages/client/**",
-        "!packages/runtime-openai/**",
-        "!packages/runtime-claude-code/**"
-      ],
-      "packaging_profile": {
-        "mechanism": "package-files-negation"
-      },
-      "runtime": {
-        "filename": "citadel-1.3.0.tgz",
-        "packed_bytes": 9096379,
-        "unpacked_bytes": 21958903,
-        "file_count": 1874,
-        "sha256": "6f70f1b071d7222d6b3f6bddeb74355fbb6330f4997f59d15de3fdd3b9a3cd38",
-        "sha512_integrity": "sha512-n5iEzY/G8/Sxyp7pEs353GM5+6jZ6X7sIk344RkY7ywdIJLRVCo+owXcF8Eo+0DtFZ6Lbizpv2tCFZPfAmTmUg==",
-        "npm_shasum": "efcd9aeb96565318aa67ae13e3d6bed13868ad39",
-        "file_manifest_sha256": "c2450d80d5f5433b96d7d2bfb30d4a02ff69ec3554ed43b3deba86205f0b7d35"
-      },
-      "guardrails": {
-        "npm_files_negations_effective": true,
-        "protected_runtime_files_present": true,
-        "installed_runtime_smoke": true,
-        "installed_runtime_surfaces": [
-          "root-help",
-          "version",
-          "pack-list",
-          "config-show",
-          "operation-explain",
-          "control-plane-conformance"
-        ],
-        "installed_control_plane_checks": 21,
-        "offline_evidence_replay": "deferred-to-final-profile",
-        "source_repository_preserved": true
-      }
-    },
-    {
-      "iteration": 4,
-      "label": "exclude-dev-experiment-tests",
-      "previous_packed_bytes": 9096379,
-      "packed_bytes": 9084648,
-      "delta_bytes": -11731,
-      "verdict": "DISCARD",
-      "reason": "offline-evidence-replay-failed-signed-package-source-drift",
-      "final_adjudication": {
-        "installed_runtime_smoke": true,
-        "offline_evidence_replay": false,
-        "observed_error": "frozen capstone sources drifted"
-      },
-      "exclusions": [
-        "!docs/images/**",
-        "!skills/*/__benchmarks__/**",
-        "!packages/client/**",
-        "!packages/runtime-openai/**",
-        "!packages/runtime-claude-code/**",
-        "!scripts/test-experiment-*.js"
-      ],
-      "packaging_profile": {
-        "mechanism": "package-files-negation"
-      },
-      "runtime": {
-        "filename": "citadel-1.3.0.tgz",
-        "packed_bytes": 9084648,
-        "unpacked_bytes": 21918573,
-        "file_count": 1867,
-        "sha256": "4b8a6a9d42ff7d50d7b41b63918cc2ab8656709dc5271dbb0b5f5cae2d5ee2b7",
-        "sha512_integrity": "sha512-pRDmOBiQOGt/wQhrEkewG8Ir+/GNeOXZr50+eGt6GO5PEXkiK7zWFwO7Lbbh3WekXOWdNUX3FMkEkbXUUF2ljQ==",
-        "npm_shasum": "8afd7ee15e45926c0c294ff73a672c9e2e23af18",
-        "file_manifest_sha256": "8bb3f0ff78634d79b910517b087b1300b3467646ade49ad51650b501906370d2"
-      },
-      "guardrails": {
-        "npm_files_negations_effective": true,
-        "protected_runtime_files_present": true,
-        "installed_runtime_smoke": true,
-        "installed_runtime_surfaces": [
-          "root-help",
-          "version",
-          "pack-list",
-          "config-show",
-          "operation-explain",
-          "control-plane-conformance"
-        ],
-        "installed_control_plane_checks": 21,
-        "offline_evidence_replay": "deferred-to-final-profile",
-        "source_repository_preserved": true
-      }
-    },
-    {
-      "iteration": 5,
-      "label": "preserve-signed-manifest-with-scoped-npmignore",
-      "previous_packed_bytes": 9678793,
-      "packed_bytes": 9105033,
-      "delta_bytes": -573760,
+      "packed_bytes": 9113879,
+      "delta_bytes": -564914,
       "verdict": "KEEP",
       "reason": "metric-improved-and-all-guardrails-passed",
       "final_adjudication": {
@@ -269,13 +75,13 @@
       },
       "runtime": {
         "filename": "citadel-1.3.0.tgz",
-        "packed_bytes": 9105033,
-        "unpacked_bytes": 21984485,
-        "file_count": 1877,
-        "sha256": "76dbc544e6f37783d7d49bbb3695afc5d51e09b4c3da874a337baed1515a31db",
-        "sha512_integrity": "sha512-skrFVmaAbGc38PvsEAVIc9WoQT9lHHdKM6r92VVmqMmpPD14ldPNfBTbcOMa/54Pd1uoF1PAS4Zu6UqrJul5/g==",
-        "npm_shasum": "c752e0793e837e401eea11859bace9a67e47e55c",
-        "file_manifest_sha256": "abf5cce0330b006e78fcf760fc2f1dd819a95d541bae6119e176f7bb19a85cae"
+        "packed_bytes": 9113879,
+        "unpacked_bytes": 22031502,
+        "file_count": 1881,
+        "sha256": "85c1e9441d31d00b0f39a503b363e57e4538a6f24de143d351984779a663fb5d",
+        "sha512_integrity": "sha512-i3hs39s00fmV/wDWyCDRT3MoklSw3ZrwIlqkC7vGFQGuWUvfYqNJMQpJlocZbsF0K4812fGjqf5kmp4a/91rrQ==",
+        "npm_shasum": "7b9b39f3399c771df810e65fb09ea2e541b9d1c3",
+        "file_manifest_sha256": "a5ae04778f9cb3b49554b4e602b05a4fd5f5ae00af5d73602e71f49602a60393"
       },
       "guardrails": {
         "npm_files_negations_effective": true,
@@ -296,7 +102,7 @@
     }
   ],
   "final": {
-    "source_head": "aac620bc8ea5f20322b2eab28b8a35ecc2e78356",
+    "source_head": "8270f843380fc4328a2c970ad81ed55f8185ab7d",
     "package_json_sha256": "1b0e0e1d3819ed4764107464b0a89e36bdebfc03c226d0d0481a51e66ac2b370",
     "exclusions": [
       "!docs/images/**",
@@ -344,13 +150,13 @@
     },
     "runtime": {
       "filename": "citadel-1.3.0.tgz",
-      "packed_bytes": 9105033,
-      "unpacked_bytes": 21984485,
-      "file_count": 1877,
-      "sha256": "76dbc544e6f37783d7d49bbb3695afc5d51e09b4c3da874a337baed1515a31db",
-      "sha512_integrity": "sha512-skrFVmaAbGc38PvsEAVIc9WoQT9lHHdKM6r92VVmqMmpPD14ldPNfBTbcOMa/54Pd1uoF1PAS4Zu6UqrJul5/g==",
-      "npm_shasum": "c752e0793e837e401eea11859bace9a67e47e55c",
-      "file_manifest_sha256": "abf5cce0330b006e78fcf760fc2f1dd819a95d541bae6119e176f7bb19a85cae"
+      "packed_bytes": 9113879,
+      "unpacked_bytes": 22031502,
+      "file_count": 1881,
+      "sha256": "85c1e9441d31d00b0f39a503b363e57e4538a6f24de143d351984779a663fb5d",
+      "sha512_integrity": "sha512-i3hs39s00fmV/wDWyCDRT3MoklSw3ZrwIlqkC7vGFQGuWUvfYqNJMQpJlocZbsF0K4812fGjqf5kmp4a/91rrQ==",
+      "npm_shasum": "7b9b39f3399c771df810e65fb09ea2e541b9d1c3",
+      "file_manifest_sha256": "a5ae04778f9cb3b49554b4e602b05a4fd5f5ae00af5d73602e71f49602a60393"
     },
     "source_only": {
       "file_count": 101,
@@ -403,8 +209,8 @@
       "observed_published_artifacts": [
         "npm-runtime-tarball"
       ],
-      "observed_total_published_bytes": 9105033,
-      "total_accounted_unpacked_bytes": 22821303,
+      "observed_total_published_bytes": 9113879,
+      "total_accounted_unpacked_bytes": 22868320,
       "cross_profile_packed_total": null,
       "boundary": "The npm tarball is the only artifact packed by this local experiment. Source-only files remain hash-accounted in GitHub/source, but no GitHub archive is produced; packed runtime bytes are not added to raw source bytes."
     },
@@ -425,25 +231,25 @@
       "source_repository_preserved": true
     },
     "timings_ms": {
-      "npm_pack": 5857,
-      "npm_install": 15325,
-      "installed_smoke": 1078,
-      "evidence_replay": 14377
+      "npm_pack": 6914,
+      "npm_install": 20693,
+      "installed_smoke": 1123,
+      "evidence_replay": 20059
     },
     "evidence_replay": {
       "command": "npm run grant:verify",
       "mode": "source-offline",
       "status": "passed",
-      "duration_ms": 14377,
-      "stdout_sha256": "f2a878b2564f4ce091033b963ea98e3fdd8c2e6c533672c5dbbb3a0c28acc09c",
+      "duration_ms": 20059,
+      "stdout_sha256": "2b47fd5a7ac5fb27110ea71b7d681c7f56aa57ffa1461a9dea8dffddb02b9364",
       "output_tail": "  ] | }"
     }
   },
   "improvement": {
-    "packed_bytes": 573760,
-    "packed_percent": 5.928,
-    "unpacked_bytes": 602026,
-    "files": 77
+    "packed_bytes": 564914,
+    "packed_percent": 5.8366,
+    "unpacked_bytes": 555009,
+    "files": 73
   },
   "gates": {
     "packed_bytes_below_frozen_baseline": true,
@@ -453,7 +259,7 @@
     "source_repository_preserved": true
   },
   "outcome": "passed",
-  "stop_reason": "budget-exhausted",
+  "stop_reason": "candidate-set-exhausted",
   "claim_boundary": "Observed locally on Windows/Node with a single npm runtime tarball. Scoped npm ignore files preserve the signed package.json evidence binding. Excluded files remain in source and are hash-accounted; no second release artifact or cross-OS acquisition claim was measured.",
-  "result_sha256": "9d8a70dc8c0d6e0508c50a903aa4998727df0a888b2aa54f5c027cf73e05dd5a"
+  "result_sha256": "2e724f036fb99a49bb793ae7af30a25d00c93105e078aa19456938c299f8908a"
 }
