@@ -289,7 +289,9 @@ function isNativeMemoryPath(normalizedPath) {
   const home = (process.env.CITADEL_TEST === '1' && process.env.CITADEL_HOME_OVERRIDE)
     ? process.env.CITADEL_HOME_OVERRIDE
     : os.homedir();
-  const projectsRoot = path.normalize(path.resolve(home, '.claude', 'projects'));
+  const projectsRoot = path.normalize(health.canonicalizePath(
+    path.resolve(home, '.claude', 'projects')
+  ));
   const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
   const target = fold(normalizedPath);
   const root = fold(projectsRoot);

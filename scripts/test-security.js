@@ -425,14 +425,18 @@ function main() {
 
   console.log('\n▶ Native Memory Directory Allowlist');
 
-  test('protect-files allows writes under home .claude/projects/<slug>/memory/', () => {
-    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+  test('protect-files allows native memory writes through an equivalent home alias', () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    const tmpHome = path.join(tmpRoot, 'real-home');
+    const homeAlias = path.join(tmpRoot, 'home-alias');
+    fs.mkdirSync(tmpHome);
+    fs.symlinkSync(tmpHome, homeAlias, process.platform === 'win32' ? 'junction' : 'dir');
     const memFile = path.join(tmpHome, '.claude', 'projects', 'some-slug', 'memory', 'notes.md');
     const result = runProtectFiles('Write', memFile, {
       CITADEL_TEST: '1',
-      CITADEL_HOME_OVERRIDE: tmpHome,
+      CITADEL_HOME_OVERRIDE: homeAlias,
     });
-    fs.rmSync(tmpHome, { recursive: true, force: true });
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
     assert(
       result.status === 0,
       `Expected exit code 0 (allow), got ${result.status}: ${result.stdout} ${result.stderr}`
