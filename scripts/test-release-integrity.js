@@ -264,6 +264,15 @@ try {
   const releaseMetadata = JSON.parse(fs.readFileSync(path.join(productRoot, 'citadel-metadata.json'), 'utf8'));
   const shippedSkillCount = [...productPaths].filter((relative) => /^skills\/[^/]+\/SKILL\.md$/.test(relative)).length;
   assert.equal(releaseMetadata.skills.count, shippedSkillCount, 'release metadata skill count must match the archive');
+  let generatedSkillCountMarkers = 0;
+  for (const relative of [...productPaths].filter((item) => /\.(?:html|json|md|svg|txt)$/i.test(item))) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const match of content.matchAll(/<!-- GENERATED: skill-count -->(\d+)<!-- \/GENERATED -->/g)) {
+      generatedSkillCountMarkers += 1;
+      assert.equal(Number(match[1]), shippedSkillCount, `${relative} generated skill count must match the archive`);
+    }
+  }
+  assert(generatedSkillCountMarkers >= 2, 'release must retain and project its public generated skill-count surfaces');
   for (const link of releaseMetadata.proof_links) {
     const target = String(link).split('#')[0];
     assert(productPaths.has(target), `release metadata links omitted archive path: ${link}`);
@@ -309,6 +318,39 @@ try {
   }
   for (const target of Object.values(releasePackage.bin)) {
     assert(fs.existsSync(path.join(productRoot, ...target.split('/'))), `release package bin targets omitted file ${target}`);
+  }
+  const releasePackageScripts = new Set(Object.keys(releasePackage.scripts));
+  const sourceSkillNames = new Set(fs.readdirSync(path.join(ROOT, 'skills'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name));
+  const shippedSkillNames = new Set([...productPaths]
+    .map((relative) => /^skills\/([^/]+)\/SKILL\.md$/.exec(relative)?.[1])
+    .filter(Boolean));
+  const releaseInstructionMarkdown = [...productPaths].filter((item) => (
+    item === 'README.md' || item === 'INSTALL.md' || item.startsWith('docs/')
+      || /^skills\/[^/]+\/SKILL\.md$/.test(item)
+  ) && item.endsWith('.md'));
+  for (const relative of releaseInstructionMarkdown) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const line of content.split(/\r?\n/)) {
+      for (const match of line.matchAll(/\/([a-z][a-z0-9-]*)\b/g)) {
+        const before = match.index === 0 ? '' : line[match.index - 1];
+        if (match.index !== 0 && !/[\s`"'(]/.test(before)) continue;
+        if (!sourceSkillNames.has(match[1])) continue;
+        assert(shippedSkillNames.has(match[1]), `${relative} references omitted release route /${match[1]}`);
+      }
+      for (const match of line.matchAll(/\bnode\s+(?:["']?(?:\$[A-Za-z_:]+|\{[^}]+\})[\\/])?((?:scripts|hooks_src)[\\/][A-Za-z0-9._/-]+)/g)) {
+        const program = match[1].replace(/\\/g, '/');
+        assert(productPaths.has(program), `${relative} invokes omitted release program ${program}`);
+      }
+      for (const match of line.matchAll(/\bnpm\s+(?:run\s+([A-Za-z0-9:_-]+)|test\b)/g)) {
+        const script = match[1] || 'test';
+        assert(releasePackageScripts.has(script), `${relative} invokes omitted release package script ${script}`);
+      }
+    }
+    if (sourceSkillNames.has('daemon') && !shippedSkillNames.has('daemon')) {
+      assert(!/\bdaemon\b/i.test(content), `${relative} retains daemon instructions although /daemon is omitted`);
+    }
   }
   const releaseMcp = JSON.parse(fs.readFileSync(path.join(productRoot, '.mcp.json'), 'utf8'));
   assert.deepEqual(Object.keys(releaseMcp.mcpServers), ['citadel-state']);

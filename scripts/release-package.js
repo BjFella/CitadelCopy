@@ -270,6 +270,87 @@ function sanitizeReleaseMetadata(entries) {
   return entries.map((entry) => (entry.name === metadataName ? { ...entry, data } : entry));
 }
 
+function sanitizeReleaseSkillCounts(entries) {
+  const shippedSkillCount = entries.filter((entry) => /^skills\/[^/]+\/SKILL\.md$/.test(entry.name)).length;
+  const textEntry = /\.(?:html|json|md|svg|txt)$/i;
+  const marker = /(<!-- GENERATED: skill-count -->)\d+(<!-- \/GENERATED -->)/g;
+  return entries.map((entry) => {
+    if (!textEntry.test(entry.name)) return entry;
+    const source = entry.data.toString('utf8');
+    const sanitized = source.replace(marker, (_match, open, close) => `${open}${shippedSkillCount}${close}`);
+    return sanitized === source ? entry : { ...entry, data: Buffer.from(sanitized) };
+  });
+}
+
+function sanitizeReleaseInstructions(entries, knownSkillNames) {
+  const shippedSkillNames = new Set(entries
+    .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
+    .filter(Boolean));
+  const packageScripts = new Set(Object.keys(jsonFromEntries(entries, 'package.json').scripts || {}));
+  const available = new Set(entries.map((entry) => entry.name));
+  const instructionEntry = (name) => name === 'README.md' || name === 'INSTALL.md'
+    || (name.startsWith('docs/') && name.endsWith('.md'))
+    || /^skills\/[^/]+\/SKILL\.md$/.test(name);
+  const nodeProgram = /\bnode\s+(?:["']?(?:\$[A-Za-z_:]+|\{[^}]+\})[\\/])?((?:scripts|hooks_src)[\\/][A-Za-z0-9._/-]+)/g;
+  const npmScript = /\bnpm\s+(?:run\s+([A-Za-z0-9:_-]+)|test\b)/g;
+  const hasOmittedRoute = (line) => [...line.matchAll(/\/([a-z][a-z0-9-]*)\b/g)].some((match) => {
+    const before = match.index === 0 ? '' : line[match.index - 1];
+    const commandBoundary = match.index === 0 || /[\s`"'(]/.test(before);
+    return commandBoundary && knownSkillNames.has(match[1]) && !shippedSkillNames.has(match[1]);
+  });
+
+  return entries.map((entry) => {
+    if (!instructionEntry(entry.name)) return entry;
+    let source = entry.data.toString('utf8');
+    if (entry.name === 'INSTALL.md') {
+      const verifyStart = '## Verify';
+      const updateStart = '## Update, rollback, restore, and leave';
+      if (!source.includes(verifyStart) || !source.includes(updateStart)) {
+        throw new Error('Release INSTALL projection cannot find the verification boundary');
+      }
+      source = source.replace(
+        /## Verify\r?\n[\s\S]*?(?=## Update, rollback, restore, and leave)/,
+        '## Verify\n\nFrom the extracted release root, verify that the packaged CLI loads:\n\n```bash\nnode bin/citadel.js --help\n```\n\nA zero exit code confirms the release front door and its packaged dependencies load.\nThe GitHub Actions release matrix performs the maintainer-only test suite before publication.\n\n'
+      );
+      source = source.replace(
+        /\*\*Daemon won't start \/ "No active campaign" error:\*\*[\s\S]*?(?=## Next Steps)/,
+        ''
+      );
+      source = source.replace(
+        'Campaign logs in `.planning/improvement-logs/` and `.planning/telemetry/` are preserved independently.',
+        'Other campaign records are preserved independently.'
+      );
+    }
+    if (entry.name === 'skills/archon/SKILL.md') {
+      const daemonSection = /### Step 2\.5: DAEMONIZE\?[\s\S]*?(?=### Step 3: EXECUTE PHASES)/;
+      if (!daemonSection.test(source)) throw new Error('Release Archon projection cannot find the daemon section');
+      source = source.replace(
+        daemonSection,
+        '### Step 2.5: CONTINUATION BOUNDARY\n\nFor multi-session work, persist the campaign state and stop at the explicit Needs You / Resume boundary. Do not create a resident background owner.\n\n'
+      );
+    }
+
+    const projected = [];
+    for (let line of source.split(/\r?\n/)) {
+      if (hasOmittedRoute(line)) continue;
+      if (knownSkillNames.has('daemon') && !shippedSkillNames.has('daemon') && /\bdaemon\b/i.test(line)) continue;
+      const missingProgram = [...line.matchAll(nodeProgram)].some((match) => (
+        !available.has(match[1].replace(/\\/g, '/'))
+      ));
+      nodeProgram.lastIndex = 0;
+      if (missingProgram) continue;
+      const unsupportedScripts = [...line.matchAll(npmScript)]
+        .map((match) => match[1] || 'test')
+        .filter((script) => !packageScripts.has(script));
+      npmScript.lastIndex = 0;
+      if (unsupportedScripts.length > 0) continue;
+      projected.push(line);
+    }
+    const data = Buffer.from(projected.join('\n'));
+    return data.equals(entry.data) ? entry : { ...entry, data };
+  });
+}
+
 function assertVersions(entries, ref) {
   const pkg = jsonFromEntries(entries, 'package.json');
   const claude = jsonFromEntries(entries, '.claude-plugin/plugin.json');
@@ -352,9 +433,12 @@ function buildRelease(options = {}) {
   const ref = options.ref || null;
   assertRefMatchesCheckout(sourceDir, ref);
   const sourceEntries = ref ? refEntries(sourceDir, ref) : worktreeEntries(sourceDir);
-  const entries = sanitizeReleaseMetadata(
+  const knownSkillNames = new Set(sourceEntries
+    .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
+    .filter(Boolean));
+  const entries = sanitizeReleaseInstructions(sanitizeReleaseSkillCounts(sanitizeReleaseMetadata(
     sanitizeReleaseRouting(sanitizeReleaseMcp(sanitizeReleasePackage(applyReleasePolicy(sourceEntries))))
-  );
+  )), knownSkillNames);
   const identity = assertVersions(entries, ref);
   const commit = gitValue(['rev-parse', ref ? `${ref}^{commit}` : 'HEAD'], sourceDir, 'unknown');
   const epoch = Number(gitValue(['log', '-1', '--format=%ct', ref || 'HEAD'], sourceDir, '0')) || 0;
