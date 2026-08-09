@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "citadel",
-      "description": "Agent orchestration harness for Claude Code: route any task through the right tool at the right scale",
+      "description": "Route requests, preserve run state, enforce hooks, and surface reviewable evidence in Claude Code",
       "version": "1.3.0",
       "source": "./",
       "author": {

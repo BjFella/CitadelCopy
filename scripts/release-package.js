@@ -11,6 +11,7 @@ const { execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const MANIFEST_NAME = '.citadel-release.json';
+const RELEASE_FILES_NAME = 'release-files.json';
 const MATRIX = { operatingSystems: ['linux', 'macos', 'windows'], node: ['18', '20'], runtimes: ['claude', 'codex'] };
 
 function compareNames(left, right) {
@@ -58,7 +59,14 @@ function worktreeEntries(sourceDir) {
   let names;
   try {
     tracked = new Set(String(runGit(['ls-files', '-c', '-z'], sourceDir)).split('\0').filter(Boolean));
-    names = String(runGit(['ls-files', '-c', '-o', '--exclude-standard', '-z'], sourceDir)).split('\0').filter(Boolean);
+    names = [...tracked];
+    const policyPath = path.join(sourceDir, RELEASE_FILES_NAME);
+    if (fs.existsSync(policyPath)) {
+      const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8').replace(/^\uFEFF/, ''));
+      for (const relative of [RELEASE_FILES_NAME, ...(Array.isArray(policy.includeFiles) ? policy.includeFiles : [])]) {
+        if (!tracked.has(relative) && fs.existsSync(path.join(sourceDir, ...relative.split('/')))) names.push(relative);
+      }
+    }
   } catch {
     names = [];
     const walk = (directory) => {
@@ -72,7 +80,10 @@ function worktreeEntries(sourceDir) {
     };
     walk(sourceDir);
   }
-  return [...new Set(names)].filter((name) => !isExcluded(name, tracked.has(name))).sort().map((name) => {
+  return [...new Set(names)].filter((name) => {
+    const absolute = path.join(sourceDir, ...name.split('/'));
+    return fs.existsSync(absolute) && !isExcluded(name, tracked.has(name));
+  }).sort().map((name) => {
     const absolute = path.join(sourceDir, ...name.split('/'));
     const stat = fs.statSync(absolute);
     return { name, data: fs.readFileSync(absolute), mode: stat.mode & 0o111 ? 0o755 : 0o644 };
@@ -96,6 +107,169 @@ function jsonFromEntries(entries, name) {
   return JSON.parse(entry.data.toString('utf8').replace(/^\uFEFF/, ''));
 }
 
+function releasePolicy(entries) {
+  const policy = jsonFromEntries(entries, RELEASE_FILES_NAME);
+  const fields = [
+    'includeFiles', 'includeDirectories', 'excludeFiles',
+    'excludeDirectories', 'excludePrefixes', 'excludeSegments',
+  ];
+  if (policy.schema !== 1) throw new Error(`Unsupported ${RELEASE_FILES_NAME} schema: ${policy.schema}`);
+  for (const field of fields) {
+    if (!Array.isArray(policy[field]) || policy[field].some((value) => typeof value !== 'string' || !value)) {
+      throw new Error(`${RELEASE_FILES_NAME} field ${field} must be an array of non-empty strings`);
+    }
+    if (new Set(policy[field]).size !== policy[field].length) {
+      throw new Error(`${RELEASE_FILES_NAME} field ${field} contains duplicates`);
+    }
+  }
+  for (const file of [...policy.includeFiles, ...policy.excludeFiles]) {
+    if (file.endsWith('/')) throw new Error(`${RELEASE_FILES_NAME} file rule must not end with /: ${file}`);
+  }
+  for (const directory of [...policy.includeDirectories, ...policy.excludeDirectories]) {
+    if (!directory.endsWith('/')) throw new Error(`${RELEASE_FILES_NAME} directory rule must end with /: ${directory}`);
+  }
+  for (const rule of fields.flatMap((field) => policy[field])) {
+    const normalized = rule.replace(/\\/g, '/');
+    if (normalized !== rule || normalized.startsWith('/') || normalized.split('/').includes('..')) {
+      throw new Error(`Unsafe ${RELEASE_FILES_NAME} rule: ${rule}`);
+    }
+  }
+  return policy;
+}
+
+function applyReleasePolicy(entries) {
+  const policy = releasePolicy(entries);
+  const available = new Set(entries.map((entry) => entry.name));
+  for (const file of policy.includeFiles) {
+    if (!available.has(file)) throw new Error(`${RELEASE_FILES_NAME} includes missing file: ${file}`);
+  }
+  for (const directory of policy.includeDirectories) {
+    if (![...available].some((name) => name.startsWith(directory))) {
+      throw new Error(`${RELEASE_FILES_NAME} includes empty directory: ${directory}`);
+    }
+  }
+  return entries.filter((entry) => {
+    const name = entry.name;
+    const included = policy.includeFiles.includes(name)
+      || policy.includeDirectories.some((directory) => name.startsWith(directory));
+    if (!included) return false;
+    if (policy.excludeFiles.includes(name)) return false;
+    if (policy.excludeDirectories.some((directory) => name.startsWith(directory))) return false;
+    if (policy.excludePrefixes.some((prefix) => name.startsWith(prefix))) return false;
+    if (policy.excludeSegments.some((segment) => name.split('/').includes(segment))) return false;
+    return true;
+  }).sort(compareNames);
+}
+
+function sanitizeReleasePackage(entries) {
+  const pkg = jsonFromEntries(entries, 'package.json');
+  const releasePackage = {
+    name: pkg.name,
+    version: pkg.version,
+    private: true,
+    description: 'Verified Citadel GitHub release artifact and lifecycle CLI',
+    license: pkg.license,
+    bin: pkg.bin,
+    scripts: {
+      'citadel:install': 'node scripts/install.js',
+      'claude:install': 'node scripts/claude-install.js',
+      'codex:install': 'node scripts/codex-install.js',
+      'release:verify': 'node scripts/release-verify.js',
+      update: 'node scripts/update.js',
+    },
+    repository: pkg.repository,
+    engines: pkg.engines,
+    citadelRelease: {
+      channel: 'github-release-trio',
+      lifecycleCommands: ['install', 'doctor', 'update', 'rollback', 'uninstall'],
+    },
+  };
+  const data = Buffer.from(`${JSON.stringify(releasePackage, null, 2)}\n`);
+  return entries.map((entry) => (entry.name === 'package.json' ? { ...entry, data } : entry));
+}
+
+function sanitizeReleaseMcp(entries) {
+  if (!entries.some((entry) => entry.name === '.mcp.json')) return entries;
+  const config = jsonFromEntries(entries, '.mcp.json');
+  const state = config.mcpServers?.['citadel-state'];
+  if (!state) throw new Error('Release MCP config requires citadel-state');
+  const data = Buffer.from(`${JSON.stringify({ mcpServers: { 'citadel-state': state } }, null, 2)}\n`);
+  return entries.map((entry) => (entry.name === '.mcp.json' ? { ...entry, data } : entry));
+}
+
+function sanitizeReleaseRouting(entries) {
+  const tableName = 'core/skills/routing-table.json';
+  const doName = 'skills/do/SKILL.md';
+  const hasTable = entries.some((entry) => entry.name === tableName);
+  const hasDo = entries.some((entry) => entry.name === doName);
+  if (!hasTable && !hasDo) return entries;
+  if (!hasTable || !hasDo) throw new Error('Release routing requires both routing-table.json and skills/do/SKILL.md');
+  const shippedSkills = new Set(entries.map((entry) => {
+    const match = /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name);
+    return match?.[1] || null;
+  }).filter(Boolean));
+  const table = jsonFromEntries(entries, tableName);
+  table.skills = (table.skills || []).filter((skill) => shippedSkills.has(skill.name));
+  const doEntry = entries.find((entry) => entry.name === doName);
+  if (!doEntry) throw new Error(`Release source is missing ${doName}`);
+  const lines = doEntry.data.toString('utf8').split(/\r?\n/);
+  let inRoutingTable = false;
+  const filtered = lines.filter((line) => {
+    if (line === '<!-- BEGIN GENERATED: routing-table -->') inRoutingTable = true;
+    if (line === '<!-- END GENERATED: routing-table -->') inRoutingTable = false;
+    if (!inRoutingTable) return true;
+    const match = /\| `\/([a-z0-9-]+)/.exec(line);
+    return !match || shippedSkills.has(match[1]);
+  });
+  const sanitized = [];
+  for (let index = 0; index < filtered.length; index += 1) {
+    const line = filtered[index];
+    if (line.startsWith('4. **Improve campaigns')) {
+      sanitized.push(
+        '4. **Campaign types without an installed orchestrator:** run',
+        '   `node scripts/continue-action.js --run`; if it cannot resume the type, report',
+        '   it under Needs You instead of inventing a route.',
+      );
+      while (index + 1 < filtered.length && !filtered[index + 1].startsWith('5. ')) index += 1;
+      continue;
+    }
+    if (line.includes('**If `.planning/daemon.json` exists')) {
+      sanitized.push('    - Do not mutate state owned by an orchestrator that is not installed; report it under Needs You.');
+      while (index + 1 < filtered.length && !filtered[index + 1].includes('Output: "[daemon]')) index += 1;
+      if (index + 1 < filtered.length) index += 1;
+      continue;
+    }
+    sanitized.push(line);
+  }
+  const tableData = Buffer.from(`${JSON.stringify(table, null, 2)}\n`);
+  const doData = Buffer.from(sanitized.join('\n'));
+  return entries.map((entry) => {
+    if (entry.name === tableName) return { ...entry, data: tableData };
+    if (entry.name === doName) return { ...entry, data: doData };
+    return entry;
+  });
+}
+
+function sanitizeReleaseMetadata(entries) {
+  const metadataName = 'citadel-metadata.json';
+  if (!entries.some((entry) => entry.name === metadataName)) return entries;
+  const available = new Set(entries.map((entry) => entry.name));
+  const shippedSkills = entries.filter((entry) => /^skills\/[^/]+\/SKILL\.md$/.test(entry.name));
+  const metadata = jsonFromEntries(entries, metadataName);
+  metadata.skills = {
+    ...(metadata.skills || {}),
+    path: 'skills/',
+    count: shippedSkills.length,
+  };
+  metadata.proof_links = (metadata.proof_links || []).filter((link) => {
+    const target = String(link).split('#')[0];
+    return target && available.has(target);
+  });
+  metadata.interoperability = { remote_registry_verification: 'not-claimed' };
+  const data = Buffer.from(`${JSON.stringify(metadata, null, 2)}\n`);
+  return entries.map((entry) => (entry.name === metadataName ? { ...entry, data } : entry));
+}
+
 function assertVersions(entries, ref) {
   const pkg = jsonFromEntries(entries, 'package.json');
   const claude = jsonFromEntries(entries, '.claude-plugin/plugin.json');
@@ -105,10 +279,21 @@ function assertVersions(entries, ref) {
   if (versions.some((version) => version !== pkg.version)) {
     throw new Error(`Release version drift: ${versions.join(', ')}`);
   }
-  if (ref && /^v\d/.test(path.basename(ref)) && path.basename(ref) !== `v${pkg.version}`) {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(pkg.version)) {
+    throw new Error(`Release version is not supported SemVer: ${pkg.version}`);
+  }
+  if (ref && ref !== `v${pkg.version}`) {
     throw new Error(`Tag ${ref} does not match manifest version ${pkg.version}`);
   }
   return { version: pkg.version, nodeRange: pkg.engines?.node || '>=18' };
+}
+
+function assertRefMatchesCheckout(sourceDir, ref) {
+  if (!ref) return;
+  const pkg = JSON.parse(fs.readFileSync(path.join(sourceDir, 'package.json'), 'utf8'));
+  if (ref !== `v${pkg.version}`) {
+    throw new Error(`Tag ${ref} does not match manifest version ${pkg.version}`);
+  }
 }
 
 function writeOctal(buffer, offset, length, value) {
@@ -165,9 +350,13 @@ function makeTar(entries, prefix, mtime) {
 function buildRelease(options = {}) {
   const sourceDir = path.resolve(options.sourceDir || ROOT);
   const ref = options.ref || null;
-  const entries = ref ? refEntries(sourceDir, ref) : worktreeEntries(sourceDir);
+  assertRefMatchesCheckout(sourceDir, ref);
+  const sourceEntries = ref ? refEntries(sourceDir, ref) : worktreeEntries(sourceDir);
+  const entries = sanitizeReleaseMetadata(
+    sanitizeReleaseRouting(sanitizeReleaseMcp(sanitizeReleasePackage(applyReleasePolicy(sourceEntries))))
+  );
   const identity = assertVersions(entries, ref);
-  const commit = gitValue(['rev-parse', ref || 'HEAD'], sourceDir, 'unknown');
+  const commit = gitValue(['rev-parse', ref ? `${ref}^{commit}` : 'HEAD'], sourceDir, 'unknown');
   const epoch = Number(gitValue(['log', '-1', '--format=%ct', ref || 'HEAD'], sourceDir, '0')) || 0;
   const sourceRef = ref || `worktree@${commit}`;
   const prefix = `citadel-${identity.version}`;
@@ -234,5 +423,5 @@ function main() {
   }
 }
 
-module.exports = { MANIFEST_NAME, buildRelease, sha256 };
+module.exports = { MANIFEST_NAME, RELEASE_FILES_NAME, applyReleasePolicy, buildRelease, sha256 };
 if (require.main === module) main();

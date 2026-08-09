@@ -57,6 +57,11 @@ const DEPLOY_STEWARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-deploy-stewa
 const AGENTS_MD_ONLY_STEWARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-agents-md-only-steward.js');
 const COORDINATION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-coordination-core.js');
 const HOOK_INSTALLER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-hook-installers.js');
+const CLAUDE_HOOK_INSTALLER_CONFORMANCE_TEST = path.join(
+  PLUGIN_ROOT,
+  'scripts',
+  'test-claude-hook-installer-conformance.js'
+);
 const CAMPAIGN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-campaign-core.js');
 const DISCOVERY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-discovery-core.js');
 const DISCOVERY_WRITER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-discovery-writer.js');
@@ -222,7 +227,12 @@ const stackPlanPassed = run('Stack Plan Check', STACK_PLAN_TEST);
 const deployStewardPassed = run('Deploy Steward Check', DEPLOY_STEWARD_TEST);
 const agentsMdOnlyStewardPassed = run('AGENTS.md-only Steward Check', AGENTS_MD_ONLY_STEWARD_TEST);
 const coordinationPassed = run('Coordination Core Check', COORDINATION_TEST);
-const hookInstallerPassed = run('Hook Installer Check', HOOK_INSTALLER_TEST);
+const hookInstallerBasePassed = run('Hook Installer Check', HOOK_INSTALLER_TEST);
+const claudeHookInstallerConformancePassed = run(
+  'Claude Hook Installer Conformance Check',
+  CLAUDE_HOOK_INSTALLER_CONFORMANCE_TEST
+);
+const hookInstallerPassed = hookInstallerBasePassed && claudeHookInstallerConformancePassed;
 const campaignPassed = run('Campaign Core Check', CAMPAIGN_TEST);
 const discoveryPassed = run('Discovery Core Check', DISCOVERY_TEST);
 const discoveryWriterPassed = run('Discovery Writer Check', DISCOVERY_WRITER_TEST);

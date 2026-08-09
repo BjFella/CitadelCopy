@@ -15,6 +15,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { DETERMINISTIC_COMMANDS, normalizeRoutingInput } = require('../core/skills/routing');
 
 const HTML_PATH = path.resolve(__dirname, '..', 'docs', 'index.html');
 const html = fs.readFileSync(HTML_PATH, 'utf8');
@@ -31,7 +32,7 @@ function extractBetween(src, startMarker, endMarker) {
 }
 
 // TIER0, TIER2, TIER3, and route() live between these two comment anchors
-const routeBlock = extractBetween(html, '// ─── Routing logic ─', '// ─── Live preview ─');
+const routeBlock = extractBetween(html, '// ─── Routing logic ─', '// ─── Static exact/candidate preview ─');
 if (!routeBlock) {
   console.error('FATAL: Could not locate routing block in docs/index.html');
   process.exit(1);
@@ -60,14 +61,13 @@ try {
   process.exit(1);
 }
 
-// ── Expected tier per generator category ─────────────────────────────────────
+// ── Expected decision boundary per generator category ────────────────────────
 
-// Pool keys map to the tier/color they should all route to
 const POOL_EXPECTATIONS = {
-  instant:  { tier: 0, color: 'var(--green)',  label: 'Tier 0 Direct Edit' },
-  skill:    { tier: 2, color: 'var(--cyan)',    label: 'Tier 2 Skill'       },
-  fleet:    { tier: 3, color: 'var(--purple)',  label: 'Tier 3 /fleet'      },
-  campaign: { tier: 3, color: 'var(--orange)',  label: 'Tier 3 /archon'     },
+  instant:  { final: true, tier: 0, label: 'exact deterministic command' },
+  skill:    { final: false, candidates: true, label: 'skill candidate evidence' },
+  fleet:    { final: false, candidates: true, label: 'parallel candidate evidence' },
+  campaign: { final: false, candidates: true, label: 'persistence candidate evidence' },
 };
 
 // ── How-section examples ──────────────────────────────────────────────────────
@@ -85,26 +85,17 @@ while ((m = HOW_EXAMPLE_RE.exec(html)) !== null) {
 }
 
 // ── Spot-check regressions ────────────────────────────────────────────────────
-// Hard-coded sanity cases: [input, expectedTool, expectedColor, description]
 const SPOT_CHECKS = [
-  // Tier 0 — should be Direct Edit (green)
-  ['typecheck',              'Direct Edit', 'var(--green)',  '"typecheck" → Tier 0'],
-  ['build',                  'Direct Edit', 'var(--green)',  '"build" alone → Tier 0'],
-  ['commit my changes',      'Direct Edit', 'var(--green)',  '"commit" → Tier 0'],
-  ['rename Foo to Bar',      'Direct Edit', 'var(--green)',  '"rename X to Y" → Tier 0'],
-  // Tier 3 Archon (orange) — common create-app shapes
-  ['build me a recipe app',  '/archon',     'var(--orange)', '"build me a recipe app" → Archon'],
-  ['build a recipe app',     '/archon',     'var(--orange)', '"build a recipe app" → Archon'],
-  ['create a real-time chat feature',        '/archon', 'var(--orange)', '"create a real-time chat feature" → Archon'],
-  ['create a real-time notification system', '/archon', 'var(--orange)', '"create a real-time notification system" → Archon'],
-  ['make a todo app',        '/archon',     'var(--orange)', '"make a todo app" → Archon'],
-  ['generate a SaaS tool',   '/archon',     'var(--orange)', '"generate a SaaS tool" → Archon'],
-  // Tier 3 /marshal (purple) — add/implement
-  ['add a dark mode toggle', '/create-app', 'var(--orange)', '"add a dark mode toggle" → create-app (orange)'],
-  // Tier 2 — skill keyword hits (cyan)
-  ['review this code',       '/review',     'var(--cyan)',   '"review" → Tier 2 skill'],
-  ['generate tests',         '/test-gen',   'var(--cyan)',   '"generate tests" → Tier 2 skill'],
-  ['build an llm wiki',       '/wiki',       'var(--cyan)',   '"llm wiki" → Tier 2 /wiki skill'],
+  { input: 'generate tests', final: false, candidate: '/test-gen', label: 'test generation stays semantic' },
+  { input: 'build me a recipe app', final: false, candidate: '/create-app', label: 'feature build stays semantic' },
+  { input: 'test the app', final: false, candidate: '/qa', label: 'browser QA stays semantic' },
+  { input: 'review README.md', final: false, candidate: '/review', label: 'review/readme collision stays semantic' },
+  { input: 'scaffold a new dashboard component', final: false, candidate: '/scaffold', label: 'scaffold/dashboard collision stays semantic' },
+  { input: 'status page feature', final: false, forbiddenTool: '/dashboard', label: 'status inside a task is not Tier 0' },
+  { input: 'continue implementing auth', final: false, forbiddenTool: '/do continue', label: 'continue inside a task is not Tier 0' },
+  { input: 'rename Foo to Bar', final: false, candidate: '/refactor', label: 'rename request needs semantic confirmation' },
+  { input: '@citadel inspect this marker', final: false, candidate: '/watch', label: '@citadel marker matches watch' },
+  { input: 'use multiple agents in parallel', final: false, candidate: '/fleet --quick', label: 'Fleet candidate uses its canonical quick route' },
 ];
 
 // ── Run checks ────────────────────────────────────────────────────────────────
@@ -112,17 +103,37 @@ const SPOT_CHECKS = [
 let pass = 0, fail = 0;
 const failures = [];
 
-function check(cmd, expectedColor, expectedTool, label, source) {
+function check(cmd, expectation, label, source) {
   const result = route(cmd);
-  const colorOk = result.color === expectedColor;
-  const toolOk  = !expectedTool || result.tool === expectedTool;
-  if (colorOk && toolOk) {
+  const errors = [];
+  if (expectation.final !== undefined && result.final !== expectation.final) {
+    errors.push(`final=${result.final}, expected ${expectation.final}`);
+  }
+  if (expectation.tier !== undefined && result.tier !== expectation.tier) {
+    errors.push(`tier=${result.tier}, expected ${expectation.tier}`);
+  }
+  if (expectation.tool && result.tool !== expectation.tool) {
+    errors.push(`tool=${result.tool}, expected ${expectation.tool}`);
+  }
+  if (expectation.forbiddenTool && result.tool === expectation.forbiddenTool) {
+    errors.push(`forbidden tool=${result.tool}`);
+  }
+  if (expectation.candidates === true && (!Array.isArray(result.candidates) || result.candidates.length === 0)) {
+    errors.push('expected candidate evidence');
+  }
+  if (expectation.candidate && (!Array.isArray(result.candidates) || !result.candidates.includes(expectation.candidate))) {
+    errors.push(`missing candidate ${expectation.candidate}`);
+  }
+  if (result.final === false) {
+    if (result.command !== null) errors.push(`non-final command must be null, got ${result.command}`);
+    if (result.canRunNow !== false) errors.push(`non-final canRunNow must be false, got ${result.canRunNow}`);
+    if (result.boundary !== 'semantic-classification-required') errors.push(`non-final boundary=${result.boundary}`);
+  }
+  if (errors.length === 0) {
     pass++;
   } else {
     fail++;
-    const got = `${result.tool} ${result.color}`;
-    const want = `${expectedTool || '?'} ${expectedColor}`;
-    failures.push(`  ✗ [${source}] "${cmd}"\n    got:  ${got}\n    want: ${want}\n    → ${label}`);
+    failures.push(`  ✗ [${source}] "${cmd}"\n    ${errors.join('; ')}\n    → ${label}`);
   }
 }
 
@@ -131,18 +142,36 @@ for (const [pool, exp] of Object.entries(POOL_EXPECTATIONS)) {
   const items = POOLS[pool];
   if (!items) { console.warn(`WARN: POOLS.${pool} not found — skipping`); continue; }
   for (const cmd of items) {
-    check(cmd, exp.color, null, exp.label, `pool:${pool}`);
+    check(cmd, exp, exp.label, `pool:${pool}`);
   }
 }
 
 // How-section example checks
-for (const { cmd, expectedColor } of howExamples) {
-  check(cmd, expectedColor, null, `how-section expects ${expectedColor}`, 'how-section');
+const exactPhrases = new Set(DETERMINISTIC_COMMANDS.flatMap((entry) => entry.phrases.map(normalizeRoutingInput)));
+for (const { cmd } of howExamples) {
+  const normalized = normalizeRoutingInput(cmd);
+  const exactEntry = DETERMINISTIC_COMMANDS.find((entry) => entry.phrases.includes(normalized));
+  const final = Boolean(exactEntry && !exactEntry.projectScript);
+  check(cmd, { final, ...(exactPhrases.has(normalized) ? { tier: 0 } : {}) }, final ? 'exact command example' : 'non-executable preview example', 'how-section');
 }
 
 // Spot-check regressions
-for (const [cmd, tool, color, desc] of SPOT_CHECKS) {
-  check(cmd, color, tool, desc, 'spot-check');
+for (const item of SPOT_CHECKS) {
+  check(item.input, item, item.label, 'spot-check');
+}
+
+// Target package commands remain non-final because the browser has no target
+// project context; all other generated exact commands remain final.
+const targetProjectCommands = new Set(['test', 'build', 'typecheck']);
+for (const entry of DETERMINISTIC_COMMANDS) {
+  for (const phrase of entry.phrases) {
+    if (targetProjectCommands.has(entry.id)) {
+      check(phrase, { final: false, tier: 0 }, `target capability required for ${entry.id}`, 'exact-contract');
+    } else {
+      const expectedTool = entry.selected === 'direct-command' ? entry.command : entry.selected;
+      check(phrase, { final: true, tier: 0, tool: expectedTool }, `shared exact command ${entry.id}`, 'exact-contract');
+    }
+  }
 }
 
 // ── Report ────────────────────────────────────────────────────────────────────

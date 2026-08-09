@@ -3,11 +3,13 @@
 Documents what each runtime adapter supports. Used by the runtime registry
 and compatibility tests to verify behavior.
 
-Last updated: 2026-06-01
+Last updated: 2026-08-09
 
 ## Capability IDs
 
-Defined in `core/contracts/capabilities.js`. Support levels: `full`, `partial`, `none`.
+Defined in `core/contracts/capabilities.js`. Support levels: `full`, `partial`,
+`none`. `Full` describes adapter support for the capability, not activation of
+every optional lifecycle event or coverage of every runtime tool path.
 
 ## Adapter Levels
 
@@ -36,7 +38,7 @@ Defined in `core/contracts/runtime.js` and printable with
 | `guidance` | Full | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
 | `skills` | Full | Full | Partial | Codex supports repo/user/admin/system/plugin skills; OpenAI uses Responses API reusable skills |
 | `agents` | Full | Full | Partial | Codex supports `.codex/agents/*.toml` and native subagents; OpenAI uses Responses API agent loop |
-| `hooks` | Full | Partial | Partial | Codex supports native lifecycle hooks, but Citadel still needs an adapter for hook contract parity |
+| `hooks` | Full | Partial | Partial | Claude has 29 defined handler names but installs a detected compatible subset (safe fallback: eight). Codex translates a supported subset and has specialized tool exceptions. Hooks are guardrails, not a universal sandbox. |
 | `workspace` | Full | Full | Full | OpenAI Responses API provides shell tool + hosted container |
 | `worktrees` | Full | Partial | None | Codex app supports native Git worktrees and handoff; CLI flows still rely on Citadel-managed worktrees |
 | `approvals` | Full | Partial | Partial | Both Codex and OpenAI need adapter-level policy handling |
@@ -47,7 +49,12 @@ Defined in `core/contracts/runtime.js` and printable with
 
 ## Hook Event Coverage
 
-Claude Code supports the full Citadel event template. Codex supports a growing native subset. OpenAI Responses API supports agent-loop events natively (adapter extends coverage):
+Citadel defines a full 29-name Claude Code event template. The Claude installer
+activates the subset compatible with the detected runtime profile, with eight
+events in the safe fallback. Codex translates a supported native subset.
+OpenAI Responses API supports agent-loop events natively through its adapter.
+The table below describes defined mappings, not guaranteed activation in every
+installation:
 
 | Citadel Event | Claude Code | Codex | OpenAI |
 |---|---|---|---|
@@ -74,9 +81,14 @@ Claude Code supports the full Citadel event template. Codex supports a growing n
 When installing hooks for Codex, the translation layer:
 1. Maps supported events using `EVENT_MAP` in `runtimes/codex/generators/install-hooks.js`
 2. Routes all hooks through `codex-adapter.js` which normalizes input format
-3. Maps current Codex-native events including permission, compaction, and subagent hooks
-4. Skips unsupported task/worktree-only events with warnings (logged in translation metadata)
-5. Merges with existing user hooks (preserving non-Citadel entries)
+3. Projects covered `apply_patch` targets into the Edit/Write path shape used by `protect-files.js`
+4. Maps current Codex-native events including permission, compaction, and subagent hooks
+5. Skips unsupported task/worktree-only events with warnings (logged in translation metadata)
+6. Merges with existing user hooks (preserving non-Citadel entries)
+
+This projection makes P-006 deterministic for covered `apply_patch` calls. It
+does not turn local hooks into a complete security boundary: Codex documents
+specialized tool paths that may not invoke the local function-hook path.
 
 The fixture at `scripts/fixtures/codex-translation-meta.json` tracks the exact
 installed/skipped breakdown. Any change to hook coverage will be caught by

@@ -88,6 +88,30 @@ const suite = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-adoption-'));
 const sourceRoot = source(path.join(suite, 'source'));
 
 try {
+  test('CLI rejects an in-target saved plan and the documented outside-target plan applies cleanly', () => {
+    const root = target(path.join(suite, 'external-plan-path'));
+    const script = path.resolve(__dirname, 'adopt.js');
+    const inside = path.join(root, 'citadel-adoption.plan.json');
+    const rejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', inside, '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(rejected.status, 1);
+    assert.match(rejected.stderr, /Saved plan must be outside target/);
+    assert(!fs.existsSync(inside));
+
+    const outside = path.join(suite, 'citadel-adoption.plan.json');
+    const planned = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', outside, '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(planned.status, 0, planned.stderr);
+    assert(fs.existsSync(outside));
+    assert.strictEqual(git(root, ['status', '--porcelain']), '');
+    const applied = spawnSync(process.execPath, [
+      script, 'apply', outside, '--control-root', path.join(suite, 'external-plan-control'), '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(applied.status, 0, applied.stderr);
+  });
+
   test('fresh plan is no-write, apply is receipted, doctor is healthy, and exact leave exits', () => {
     const root = target(path.join(suite, 'fresh'));
     const before = treeDigest(root);

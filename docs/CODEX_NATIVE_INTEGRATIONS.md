@@ -1,8 +1,11 @@
 # Codex Native Integration Matrix
 
-Date: 2026-06-01
+Date: 2026-08-09
 
-This matrix tracks the 12 Codex-native upgrades Citadel now supports or prototypes. Sources are current official OpenAI Codex documentation:
+This matrix tracks 12 Codex-native integrations as implemented surfaces or
+bounded prototypes. A generated artifact or hook registration proves that the
+surface exists; it does not prove universal tool coverage or sandbox isolation.
+Sources are current official OpenAI Codex documentation:
 
 - Plugins and skills: https://developers.openai.com/codex/plugins and https://developers.openai.com/codex/skills
 - Hooks: https://developers.openai.com/codex/hooks
@@ -15,11 +18,23 @@ Citadel emits `.codex-plugin/plugin.json` with Codex-native wording, actual skil
 
 Improvement: Codex can load Citadel as a plugin surface instead of depending only on per-project compatibility artifacts.
 
+Distribution boundary: stable users should register the local marketplace from
+an extracted, verified GitHub Release trio. Adding `SethGammon/Citadel` as a
+repository marketplace source follows source-main development and is not a
+stable-release acquisition path.
+
 ## 2. Modern hooks
 
 Codex hook projection now enables `[features].hooks = true`, maps `PermissionRequest`, `PreCompact`, `PostCompact`, `SubagentStart`, and `SubagentStop`, and emits plugin-bundled `runtimes/codex/hooks.json` using `PLUGIN_ROOT` on POSIX and Windows.
 
-Improvement: Citadel safety, telemetry, compaction, and subagent handoff hooks run through native Codex lifecycle events where available.
+The adapter also projects Codex `apply_patch` targets into the Edit/Write path
+shape used by `protect-files.js`, so P-006 applies to covered patch calls.
+
+Improvement: Citadel blocking guardrails, telemetry, compaction, and subagent
+handoff hooks run through supported native Codex lifecycle events where
+available. Codex hooks remain guardrails: specialized tool paths may not invoke
+the local function-hook path, so runtime permissions, review, and repository
+protections remain required.
 
 ## 3. Correct capability assumptions
 
@@ -115,4 +130,6 @@ The first 12 entries make Codex-native surfaces available. The operational layer
 - `scripts/codex-app-server-capture.js` captures a real local app-server handshake and idle thread start into `.planning/app-server/`, verifies it, and writes a browsable dashboard. Add `--turn "prompt"` or `--turn-file prompt.txt` only when you intentionally want to run a model turn. Approval handling defaults to `--approval-decision decline`; use `--expect-approval` with `--turn-sandbox readOnly` or `--turn-approval-policy on-request` for controlled approval probes, and use `accept`, `acceptForSession`, or `cancel` only for intentional live protocol tests.
 - `scripts/codex-app-server-dashboard.js --file app-server.jsonl` writes a browsable local dashboard plus JSON summary for app-server thread, turn, approval, command-output, and file-change counts.
 
-These checks close the gap between "Citadel generated Codex artifacts" and "Citadel can prove this project is ready to use Codex safely."
+These checks close the gap between "Citadel generated Codex artifacts" and
+"Citadel verified that this project can load the configured Codex surfaces."
+They do not establish a universal security or sandbox boundary.

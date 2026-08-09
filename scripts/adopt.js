@@ -34,9 +34,30 @@ function print(value, json, summary) {
   else process.stdout.write(`${summary}\n`);
 }
 
+function planPathInsideTarget(filePath, plan) {
+  const targetRoot = plan?.target?.root;
+  if (!targetRoot) return false;
+  const relative = path.relative(path.resolve(targetRoot), path.resolve(filePath));
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function assertExternalPlanPath(filePath, plan) {
+  if (planPathInsideTarget(filePath, plan)) {
+    throw new Error(`Saved plan must be outside target ${plan.target.root}; use --out ../citadel-${plan.operation}.plan.json`);
+  }
+}
+
+function loadExternalPlan(filePath) {
+  const resolved = path.resolve(filePath);
+  const plan = loadPlan(resolved);
+  assertExternalPlanPath(resolved, plan);
+  return plan;
+}
+
 function printPlan(plan, flags) {
   if (flags.out) {
     const target = path.resolve(flags.out);
+    assertExternalPlanPath(target, plan);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, `${JSON.stringify(plan, null, 2)}\n`, 'utf8');
   }
@@ -105,7 +126,7 @@ function main(argv) {
   }
   if (command === 'apply') {
     if (!subcommand) throw new Error('apply requires a saved plan path');
-    const result = applyPlan(loadPlan(path.resolve(subcommand)), applyOptions(flags));
+    const result = applyPlan(loadExternalPlan(subcommand), applyOptions(flags));
     print(result, Boolean(flags.json), `Citadel adoption ${result.operation} completed (${result.operation_id})`);
     return 0;
   }
@@ -122,7 +143,7 @@ function main(argv) {
   if (command === 'leave' && subcommand === 'apply') {
     const file = positional[2];
     if (!file) throw new Error('leave apply requires a saved plan path');
-    const plan = loadPlan(path.resolve(file));
+    const plan = loadExternalPlan(file);
     if (plan.operation !== 'leave') throw new Error('leave apply requires a leave plan');
     const result = applyPlan(plan, applyOptions(flags));
     print(result, Boolean(flags.json), `Citadel leave completed (${result.operation_id})`);
@@ -166,7 +187,7 @@ function main(argv) {
   if (['update', 'rollback', 'restore', 'import'].includes(command) && subcommand === 'apply') {
     const file = positional[2];
     if (!file) throw new Error(`${command} apply requires a saved plan path`);
-    const plan = loadPlan(path.resolve(file));
+    const plan = loadExternalPlan(file);
     if (plan.operation !== command) throw new Error(`${command} apply requires a ${command} plan`);
     const result = applyPlan(plan, applyOptions(flags));
     print(result, Boolean(flags.json), `Citadel ${command} completed (${result.operation_id})`);

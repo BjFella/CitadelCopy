@@ -4,6 +4,19 @@ All notable Citadel changes are recorded here. Citadel follows semantic versioni
 
 ## 1.3.0 - Unreleased
 
+### Distribution
+
+- GitHub Releases are the sole supported release channel. Each release contains
+  a deterministic archive, external manifest, and SHA-256 sidecar, with
+  GitHub-native SLSA provenance covering all three files.
+- Release contents now come from a committed allowlist that excludes benchmark
+  corpora, research and grant material, site media, screenshots, test programs,
+  and maintainer-only instrumentation.
+- The root package is private and the unowned public npm publication workflow
+  has been removed. `npm pack` remains a local packaging smoke test only.
+- Tagged release manifests identify the peeled source commit for annotated tags
+  and accept only an exact `v<package.version>` release ref.
+
 ### Added
 
 - Operation Control v2 adds an installable `citadel operation` runtime for
@@ -47,7 +60,10 @@ All notable Citadel changes are recorded here. Citadel follows semantic versioni
 This version is prepared in the repository. No package publication, tag, or hosted
 service is created by the Operation Fork campaign.
 
-## 1.2.0 - 2026-07-13
+## 1.2.0 - 2026-07-13 (source milestone; not published)
+
+This version was prepared in source but did not receive a Git tag, GitHub
+Release, or supported package publication.
 
 ### Added
 

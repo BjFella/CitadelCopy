@@ -6,9 +6,12 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const zlib = require('zlib');
 const { execFileSync } = require('child_process');
 const { buildRelease, sha256 } = require('./release-package');
-const { verifyRelease } = require('./release-verify');
+const { parseTar, verifyRelease } = require('./release-verify');
+
+const ROOT = path.resolve(__dirname, '..');
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -22,6 +25,44 @@ function makeSource(root, version = '1.1.0') {
   writeJson(path.join(root, '.codex-plugin', 'plugin.json'), { name: 'citadel', version });
   fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
   fs.writeFileSync(path.join(root, 'scripts', 'hello.js'), "console.log('citadel');\n");
+  writeJson(path.join(root, 'release-files.json'), {
+    schema: 1,
+    includeFiles: ['package.json', 'release-files.json'],
+    includeDirectories: ['.claude-plugin/', '.codex-plugin/', 'scripts/', '.planning/_templates/'],
+    excludeFiles: [],
+    excludeDirectories: [],
+    excludePrefixes: [],
+    excludeSegments: [],
+  });
+}
+
+function writeOwnershipManifest(root, version, options = {}) {
+  const omitted = new Set(options.omit || []);
+  const files = [];
+  const visit = (directory, prefix = '') => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (relative === '.citadel-release.json' || relative === '.citadel-backup.json' || relative.startsWith('.git/')) continue;
+      const absolute = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(absolute, relative);
+      else if (entry.isFile() && !omitted.has(relative)) {
+        const data = fs.readFileSync(absolute);
+        files.push({ path: relative, bytes: data.length, sha256: sha256(data), mode: 0o644 });
+      }
+    }
+  };
+  visit(root);
+  writeJson(path.join(root, '.citadel-release.json'), {
+    schema: 1,
+    version,
+    ref: `v${version}`,
+    commit: options.commit || '1'.repeat(40),
+    createdAt: '2026-01-01T00:00:00.000Z',
+    nodeRange: '>=18',
+    runtimeMatrix: { operatingSystems: ['linux', 'macos', 'windows'], node: ['18', '20', '22'] },
+    files: files.sort((left, right) => left.path.localeCompare(right.path)),
+    rollbackCommand: 'node scripts/update.js --rollback <backup-path> --target <installation> --apply',
+  });
 }
 
 function expectFailure(fn, pattern) {
@@ -45,7 +86,11 @@ try {
     stdio: 'pipe',
     env: { ...process.env, GIT_AUTHOR_DATE: '2026-01-01T00:00:00Z', GIT_COMMITTER_DATE: '2026-01-01T00:00:00Z' },
   });
-  execFileSync('git', ['tag', 'v1.1.0'], { cwd: source, stdio: 'pipe' });
+  execFileSync('git', ['tag', '-a', 'v1.1.0', '-m', 'Citadel v1.1.0'], {
+    cwd: source,
+    stdio: 'pipe',
+    env: { ...process.env, GIT_COMMITTER_DATE: '2026-01-01T00:00:00Z' },
+  });
   const first = buildRelease({ sourceDir: source, outputDir: path.join(temp, 'one') });
   const second = buildRelease({ sourceDir: source, outputDir: path.join(temp, 'two') });
   assert.equal(first.sha256, second.sha256, 'same source must produce identical archives');
@@ -58,6 +103,14 @@ try {
   assert(!first.manifest.files.some((file) => file.path === '.planning/campaigns/private.md'));
   const tagged = buildRelease({ sourceDir: source, ref: 'v1.1.0', outputDir: path.join(temp, 'tagged') });
   assert.equal(verifyRelease(tagged.archivePath, { version: '1.1.0', ref: 'v1.1.0' }).ref, 'v1.1.0');
+  const tagObject = execFileSync('git', ['rev-parse', 'v1.1.0'], { cwd: source, encoding: 'utf8' }).trim();
+  const sourceCommit = execFileSync('git', ['rev-parse', 'v1.1.0^{commit}'], { cwd: source, encoding: 'utf8' }).trim();
+  assert.notEqual(tagObject, sourceCommit, 'fixture must use an annotated tag');
+  assert.equal(tagged.manifest.commit, sourceCommit, 'release manifest must identify the peeled source commit');
+  execFileSync('git', ['branch', 'v1.1.0'], { cwd: source, stdio: 'pipe' });
+  expectFailure(() => buildRelease({ sourceDir: source, ref: 'refs/heads/v1.1.0', outputDir: path.join(temp, 'bad-ref') }), /does not match manifest version/);
+  execFileSync('git', ['tag', 'vnext'], { cwd: source, stdio: 'pipe' });
+  expectFailure(() => buildRelease({ sourceDir: source, ref: 'vnext', outputDir: path.join(temp, 'bad-label') }), /does not match manifest version/);
   execFileSync('git', ['tag', 'v9.9.9'], { cwd: source, stdio: 'pipe' });
   expectFailure(() => buildRelease({ sourceDir: source, ref: 'v9.9.9', outputDir: path.join(temp, 'bad-tag') }), /does not match manifest version/);
   expectFailure(() => verifyRelease(first.archivePath, { version: '9.9.9' }), /Expected version/);
@@ -84,6 +137,9 @@ try {
   const target = path.join(temp, 'installed-citadel');
   makeSource(target, '1.0.0');
   fs.writeFileSync(path.join(target, 'old-only.txt'), 'old\n');
+  writeOwnershipManifest(target, '1.0.0');
+  fs.writeFileSync(path.join(target, '.env'), 'CITADEL_USER_SECRET=preserve\n');
+  fs.writeFileSync(path.join(target, 'operator-notes.txt'), 'user-owned notes\n');
   const updateScript = path.resolve(__dirname, 'update.js');
   const plan = JSON.parse(execFileSync(process.execPath, [updateScript, '--archive', updateRelease.archivePath, '--target', target], { encoding: 'utf8' }));
   assert.equal(plan.applied, false);
@@ -94,14 +150,219 @@ try {
   assert.equal(applied.applied, true);
   assert.equal(readVersion(target), '1.1.0');
   assert(!fs.existsSync(path.join(target, 'old-only.txt')), 'apply should replace stale release files');
+  assert.equal(fs.readFileSync(path.join(target, '.env'), 'utf8'), 'CITADEL_USER_SECRET=preserve\n');
+  assert.equal(fs.readFileSync(path.join(target, 'operator-notes.txt'), 'utf8'), 'user-owned notes\n');
+  assert(fs.existsSync(path.join(target, '.citadel-release.json')), 'update must retain embedded ownership metadata');
   assert(fs.existsSync(applied.backupPath));
+  assert(fs.existsSync(path.join(applied.backupPath, '.citadel-backup.json')), 'backup must carry a bound integrity receipt');
+
+  const conflictTarget = path.join(temp, 'conflict-citadel');
+  makeSource(conflictTarget, '1.0.0');
+  writeOwnershipManifest(conflictTarget, '1.0.0', { omit: ['scripts/hello.js'] });
+  fs.writeFileSync(path.join(conflictTarget, 'scripts', 'hello.js'), 'user-owned conflict\n');
+  expectFailure(() => execFileSync(process.execPath, [
+    updateScript, '--archive', updateRelease.archivePath, '--target', conflictTarget, '--apply',
+  ], { encoding: 'utf8', stdio: 'pipe' }), /unowned path conflict/i);
+  assert.equal(fs.readFileSync(path.join(conflictTarget, 'scripts', 'hello.js'), 'utf8'), 'user-owned conflict\n');
+
+  const wrongTarget = path.join(temp, 'wrong-citadel');
+  makeSource(wrongTarget, '1.1.0');
+  writeOwnershipManifest(wrongTarget, '1.1.0');
+  expectFailure(() => execFileSync(process.execPath, [
+    updateScript, '--rollback', applied.backupPath, '--target', wrongTarget,
+  ], { encoding: 'utf8', stdio: 'pipe' }), /target binding/i);
+
+  const backupPackage = path.join(applied.backupPath, 'package.json');
+  const pristineBackupPackage = fs.readFileSync(backupPackage);
+  fs.appendFileSync(backupPackage, '\n');
+  expectFailure(() => execFileSync(process.execPath, [
+    updateScript, '--rollback', applied.backupPath, '--target', target,
+  ], { encoding: 'utf8', stdio: 'pipe' }), /backup content digest/i);
+  fs.writeFileSync(backupPackage, pristineBackupPackage);
 
   const rollbackPlan = JSON.parse(execFileSync(process.execPath, [updateScript, '--rollback', applied.backupPath, '--target', target], { encoding: 'utf8' }));
   assert.equal(rollbackPlan.applied, false);
   assert.equal(readVersion(target), '1.1.0');
+  fs.writeFileSync(path.join(target, 'after-update-note.txt'), 'created after update\n');
   execFileSync(process.execPath, [updateScript, '--rollback', applied.backupPath, '--target', target, '--apply'], { stdio: 'pipe' });
   assert.equal(readVersion(target), '1.0.0');
   assert(fs.existsSync(path.join(target, 'old-only.txt')), 'rollback should restore prior release files');
+  assert.equal(fs.readFileSync(path.join(target, '.env'), 'utf8'), 'CITADEL_USER_SECRET=preserve\n');
+  assert.equal(fs.readFileSync(path.join(target, 'operator-notes.txt'), 'utf8'), 'user-owned notes\n');
+  assert.equal(fs.readFileSync(path.join(target, 'after-update-note.txt'), 'utf8'), 'created after update\n');
+
+  const product = buildRelease({ sourceDir: ROOT, outputDir: path.join(temp, 'product') });
+  const productPaths = new Set(product.manifest.files.map((file) => file.path));
+  for (const required of [
+    'release-files.json', 'package.json', 'bin/citadel.js',
+    'scripts/install.js', 'scripts/adopt.js', 'scripts/update.js', 'scripts/unharness.js',
+    'core/cli/package-cli.js', 'runtimes/codex/hooks.json', 'runtimes/claude-code/runtime.js',
+    'core/skills/routing.js', 'core/skills/routing-table.json', 'scripts/route-preview.js',
+    'skills/do/SKILL.md', 'hooks_src/init-project.js', 'docs/CLI.md', 'docs/RELEASES.md',
+  ]) assert(productPaths.has(required), `release allowlist omitted runtime path: ${required}`);
+  for (const forbidden of productPaths) {
+    assert(!forbidden.startsWith('benchmarks/'), `release leaked benchmark content: ${forbidden}`);
+    assert(!forbidden.startsWith('.planning/research/'), `release leaked research content: ${forbidden}`);
+    assert(!forbidden.startsWith('docs/grants/'), `release leaked grant content: ${forbidden}`);
+    assert(!forbidden.startsWith('packages/'), `release leaked quarantined package: ${forbidden}`);
+    assert(!forbidden.startsWith('packs/'), `release leaked experimental pack: ${forbidden}`);
+    assert(!forbidden.startsWith('workflows/'), `release leaked internal workflow: ${forbidden}`);
+    assert(!forbidden.startsWith('mcp-servers/codebase-memory/'), `release leaked non-runtime MCP server: ${forbidden}`);
+    assert(!forbidden.startsWith('scripts/test-'), `release leaked test program: ${forbidden}`);
+    assert(!forbidden.includes('/__benchmarks__/'), `release leaked skill benchmark: ${forbidden}`);
+    assert(!forbidden.split('/').includes('fixtures'), `release leaked fixture content: ${forbidden}`);
+  }
+  for (const forbidden of [
+    'assets/social-preview.png', 'docs/index.html', 'hooks_src/smoke-test.js',
+    'docs/DAEMON.md', 'docs/FLEET.md', 'docs/GOVERNED_LIFECYCLE.md', 'docs/OPERATION_CONTROL.md',
+    'mcp-servers/codebase-memory/smoke-test.js', 'core/team/pilot.js',
+    'core/telemetry/activation-cohort.js', 'core/telemetry/github-traffic.js',
+    'scripts/check-sentient-grant-form.js', 'scripts/github-traffic-snapshot.js',
+    'scripts/render-sentient-grant-packet.py', 'scripts/capture-application-media.js',
+  ]) assert(!productPaths.has(forbidden), `release leaked lab or maintainer-only content: ${forbidden}`);
+  assert.equal(verifyRelease(product.archivePath, { version: '1.3.0', ref: product.manifest.ref }).files, productPaths.size);
+
+  const extracted = path.join(temp, 'product-extracted');
+  const archiveFiles = parseTar(zlib.gunzipSync(fs.readFileSync(product.archivePath)));
+  for (const [name, data] of archiveFiles) {
+    const destination = path.join(extracted, ...name.split('/'));
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.writeFileSync(destination, data);
+  }
+  const productRoot = path.join(extracted, `citadel-${product.manifest.version}`);
+  const productBin = path.join(productRoot, 'bin', 'citadel.js');
+  const cliHelp = execFileSync(process.execPath, [productBin, '--help'], { cwd: productRoot, encoding: 'utf8' });
+  const cliCommands = new Set([...cliHelp.matchAll(/^  ([a-z][a-z-]+)\s+/gm)].map((match) => match[1]));
+  for (const relative of ['README.md', 'INSTALL.md', 'docs/CLI.md']) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const match of content.matchAll(/\bcitadel\s+([a-z][a-z-]*)\b/g)) {
+      assert(cliCommands.has(match[1]), `${relative} advertises unsupported packaged CLI command: citadel ${match[1]}`);
+    }
+  }
+  for (const relative of [...productPaths].filter((item) => /^skills\/[^/]+\/SKILL\.md$/.test(item))) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const match of content.matchAll(/\bnode\s+(?:\{[^}]+\}\/)?((?:scripts|hooks_src)\/[A-Za-z0-9._/-]+)/g)) {
+      assert(productPaths.has(match[1]), `${relative} invokes omitted runtime target: ${match[1]}`);
+    }
+    for (const match of content.matchAll(/\bcitadel\s+([a-z][a-z-]*)\b/g)) {
+      assert(cliCommands.has(match[1]), `${relative} advertises unsupported packaged CLI command: citadel ${match[1]}`);
+    }
+  }
+  const releaseRouting = JSON.parse(fs.readFileSync(path.join(productRoot, 'core', 'skills', 'routing-table.json'), 'utf8'));
+  for (const skill of releaseRouting.skills) {
+    assert(productPaths.has(`skills/${skill.name}/SKILL.md`), `release routing suggests omitted skill /${skill.name}`);
+  }
+  const releaseDo = fs.readFileSync(path.join(productRoot, 'skills', 'do', 'SKILL.md'), 'utf8');
+  for (const match of releaseDo.matchAll(/\| `\/([a-z0-9-]+)/g)) {
+    assert(productPaths.has(`skills/${match[1]}/SKILL.md`), `release /do table suggests omitted skill /${match[1]}`);
+  }
+  for (const match of releaseDo.matchAll(/`\/([a-z][a-z0-9-]*)(?=[\s`{])/g)) {
+    if (['name', 'skill'].includes(match[1])) continue;
+    assert(productPaths.has(`skills/${match[1]}/SKILL.md`), `release /do routes to omitted skill /${match[1]}`);
+  }
+
+  const releaseMetadata = JSON.parse(fs.readFileSync(path.join(productRoot, 'citadel-metadata.json'), 'utf8'));
+  const shippedSkillCount = [...productPaths].filter((relative) => /^skills\/[^/]+\/SKILL\.md$/.test(relative)).length;
+  assert.equal(releaseMetadata.skills.count, shippedSkillCount, 'release metadata skill count must match the archive');
+  for (const link of releaseMetadata.proof_links) {
+    const target = String(link).split('#')[0];
+    assert(productPaths.has(target), `release metadata links omitted archive path: ${link}`);
+  }
+  assert.deepEqual(releaseMetadata.interoperability, { remote_registry_verification: 'not-claimed' });
+  const releaseCodexManifest = JSON.parse(fs.readFileSync(path.join(productRoot, '.codex-plugin', 'plugin.json'), 'utf8'));
+  assert(!/\b49 skills\b|PR triage/i.test(JSON.stringify(releaseCodexManifest)), 'release Codex metadata overstates excluded surfaces');
+
+  const publicMarkdown = [...productPaths].filter((relative) => (
+    relative === 'README.md' || relative === 'INSTALL.md' || relative === 'CHANGELOG.md'
+      || relative === 'PRIVACY.md' || relative === 'SECURITY.md' || /^docs\/[^/]+\.md$/.test(relative)
+  ));
+  for (const relative of publicMarkdown) {
+    const absolute = path.join(productRoot, ...relative.split('/'));
+    const content = fs.readFileSync(absolute, 'utf8');
+    const rawTargets = [
+      ...[...content.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]),
+      ...[...content.matchAll(/<(?:img|a)\b[^>]*(?:src|href)=["']([^"']+)["'][^>]*>/gi)].map((match) => match[1]),
+    ];
+    for (let raw of rawTargets) {
+      raw = raw.trim();
+      if (raw.startsWith('<')) raw = raw.slice(1, raw.indexOf('>'));
+      else raw = raw.split(/\s+["']/)[0];
+      if (!raw || /^(?:https?:|mailto:|#)/i.test(raw)) continue;
+      const local = decodeURIComponent(raw.split('#')[0].split('?')[0]);
+      if (!local) continue;
+      const resolved = path.resolve(path.dirname(absolute), ...local.replace(/\\/g, '/').split('/'));
+      assert(fs.existsSync(resolved), `${relative} links omitted archive-local path: ${raw}`);
+    }
+  }
+
+  const releasePackage = JSON.parse(fs.readFileSync(path.join(productRoot, 'package.json'), 'utf8'));
+  assert.equal(releasePackage.private, true);
+  assert(!releasePackage.files && !releasePackage.maintainerFiles && !releasePackage.maintainerScripts);
+  assert.deepEqual(Object.keys(releasePackage.scripts).sort(), [
+    'citadel:install', 'claude:install', 'codex:install', 'release:verify', 'update',
+  ]);
+  assert.deepEqual(releasePackage.citadelRelease.lifecycleCommands, ['install', 'doctor', 'update', 'rollback', 'uninstall']);
+  for (const [name, command] of Object.entries(releasePackage.scripts)) {
+    const match = /^node\s+([^\s]+\.js)(?:\s|$)/.exec(command);
+    assert(match, `release package script ${name} is not a single Node target`);
+    assert(fs.existsSync(path.join(productRoot, ...match[1].split('/'))), `release package script ${name} targets omitted file ${match[1]}`);
+  }
+  for (const target of Object.values(releasePackage.bin)) {
+    assert(fs.existsSync(path.join(productRoot, ...target.split('/'))), `release package bin targets omitted file ${target}`);
+  }
+  const releaseMcp = JSON.parse(fs.readFileSync(path.join(productRoot, '.mcp.json'), 'utf8'));
+  assert.deepEqual(Object.keys(releaseMcp.mcpServers), ['citadel-state']);
+  for (const [name, server] of Object.entries(releaseMcp.mcpServers)) {
+    assert.equal(server.command, 'node', `release MCP ${name} must use the packaged Node runtime target`);
+    const target = server.args?.[0];
+    assert(target && fs.existsSync(path.join(productRoot, ...target.split('/'))), `release MCP ${name} targets omitted file ${target}`);
+  }
+
+  for (const relative of productPaths) {
+    if (!/\.(?:c?js)$/.test(relative)) continue;
+    const absolute = path.join(productRoot, ...relative.split('/'));
+    const sourceText = fs.readFileSync(absolute, 'utf8');
+    const executableText = sourceText.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+    const imports = [...executableText.matchAll(/^[ \t]*(?:[^\"'`\r\n]*=\s*|return\s+)?require\(\s*(['"])(\.[^'"]+)\1\s*\)/gm)].map((match) => match[2]);
+    for (const request of imports) {
+      const base = path.resolve(path.dirname(absolute), request);
+      const candidates = [base, `${base}.js`, `${base}.cjs`, `${base}.json`, path.join(base, 'index.js')];
+      assert(candidates.some((candidate) => fs.existsSync(candidate)), `${relative} requires omitted module ${request}`);
+    }
+  }
+
+  const codexManifest = JSON.parse(fs.readFileSync(path.join(productRoot, '.codex-plugin', 'plugin.json'), 'utf8'));
+  for (const asset of [codexManifest.interface?.composerIcon, codexManifest.interface?.logo].filter(Boolean)) {
+    const relative = asset.replace(/^\.\//, '');
+    assert(fs.existsSync(path.join(productRoot, ...relative.split('/'))), `Codex plugin references omitted asset ${asset}`);
+  }
+  assert(!JSON.stringify(codexManifest).includes('social-preview'), 'Codex plugin must not reference excluded site media');
+
+  const routeScript = path.join(productRoot, 'scripts', 'route-preview.js');
+  const exactRoute = JSON.parse(execFileSync(process.execPath, [
+    routeScript, '--json', '--', 'what should I do next',
+  ], { cwd: productRoot, encoding: 'utf8' }));
+  assert.equal(exactRoute.selected, '/do next');
+  assert.equal(exactRoute.command, 'node scripts/operator-console.js --run');
+  const semanticRoute = JSON.parse(execFileSync(process.execPath, [
+    routeScript, '--json', '--', 'review auth module',
+  ], { cwd: productRoot, encoding: 'utf8' }));
+  assert.equal(semanticRoute.selected, null);
+  assert.equal(semanticRoute.suggestedRoute, '/review');
+  assert.equal(semanticRoute.boundary, 'semantic-classification-required');
+
+  for (const command of ['install', 'update', 'rollback', 'uninstall']) {
+    const help = execFileSync(process.execPath, [productBin, command, '--help'], { cwd: productRoot, encoding: 'utf8' });
+    assert.match(help, /Usage:/, `release artifact ${command} help is not runnable`);
+  }
+  const dryRunTarget = path.join(temp, 'release-install-target');
+  fs.mkdirSync(dryRunTarget, { recursive: true });
+  const install = JSON.parse(execFileSync(process.execPath, [
+    productBin, 'install', '--runtime', 'codex', '--project-root', dryRunTarget,
+    '--plugin-only', '--dry-run', '--json',
+  ], { cwd: productRoot, encoding: 'utf8' }));
+  assert.equal(install.mode, 'plugin-only');
+  assert(install.steps.every((step) => step.skipped), 'release artifact install dry-run must not execute steps');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }

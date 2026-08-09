@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -46,8 +48,20 @@ jobs:
         run: node scripts/release-package.js --ref "${{ github.ref_name }}" --output-dir dist/release --verify-reproducible
       - name: Verify tagged artifact
         run: node scripts/release-verify.js "dist/release/citadel-${{ github.ref_name }}.tar.gz" --ref "${{ github.ref_name }}"
+      - name: Generate SLSA build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            dist/release/citadel-${{ github.ref_name }}.tar.gz
+            dist/release/citadel-${{ github.ref_name }}.tar.gz.manifest.json
+            dist/release/citadel-${{ github.ref_name }}.tar.gz.sha256
       - name: Publish verified GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" dist/release/* --verify-tag --generate-notes --title "Citadel $TAG"
+        run: >-
+          gh release create "$TAG"
+          "dist/release/citadel-$TAG.tar.gz"
+          "dist/release/citadel-$TAG.tar.gz.manifest.json"
+          "dist/release/citadel-$TAG.tar.gz.sha256"
+          --verify-tag --generate-notes --title "Citadel $TAG"

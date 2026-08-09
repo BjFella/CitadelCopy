@@ -1,7 +1,8 @@
 {
   "name": "@citadel/contracts",
   "version": "0.1.0",
-  "description": "Dependency-free public contracts for Citadel operations, apps, and the Governance Port alpha.",
+  "private": true,
+  "description": "Private, quarantined contract prototypes for Citadel maintainers.",
   "license": "MIT",
   "main": "./index.js",
   "files": [
@@ -17,9 +18,6 @@
     "./app": "./app/index.js",
     "./control-plane": "./control-plane/index.js",
     "./schemas/*": "./schemas/*"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "engines": {
     "node": ">=18"
