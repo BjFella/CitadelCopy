@@ -19,11 +19,22 @@ const HELP = `Citadel ${VERSION}
 Usage: citadel <command> [options]
 
 Commands:
-  install      Install the Citadel runtime package for Claude Code or Codex
+  install      Legacy runtime-package installer; prefer adopt plan/apply
   doctor       Check package integrity and runtime availability
   update       Plan/apply a receipt-owned update
   rollback     Plan/apply a receipt-owned rollback
-  uninstall    Plan/apply receipt-owned removal
+  uninstall    Compatibility alias for receipt-owned adopt leave
+  pack         Inspect, verify, certify, install, or remove outcome Packs
+  journey      Start or complete a receipt-backed Pack journey
+  receipt      Verify an operation receipt offline
+  fork         Run one operation through comparable isolated runtimes
+  adopt        Plan, apply, inspect, evolve, or leave a governed adoption
+  config       Inspect or change the versioned operating profile and bundles
+  governance   Record or authorize a fail-honest governance decision
+  control-plane Run the Governance Port alpha or its conformance suite
+  trial        Operate the local-only Real User Proof v2 instrument
+  memory       Preserve durable Citadel knowledge across disposable clones
+  operation    Plan, run, explain, or verify a constrained execution path
   help         Show this help
 
 Run citadel <command> --help for command-specific help.
@@ -34,11 +45,24 @@ const COMMAND_HELP = Object.freeze({
 
 Runtime is selected from --runtime, CITADEL_RUNTIME, project markers, or an
 installed Claude Code or Codex command. Ambiguous detection fails closed.
+This is the one-major legacy runtime-package adapter. New project adoption uses
+citadel adopt plan|apply so every mutation and later leave is receipt-owned.
 `,
   doctor: 'Usage: citadel doctor [--project-root PATH] [--runtime claude|codex] [--json]\n',
   update: 'Usage: citadel update <plan SOURCE --migration FILE | apply PLAN> [options]\n',
   rollback: 'Usage: citadel rollback <plan | apply PLAN> [options]\n',
   uninstall: 'Usage: citadel uninstall [PROJECT] [--project-root PATH] [--dry-run] [--json]\n       citadel uninstall --apply --plan PLAN [--confirm TOKEN] [--json]\n',
+  pack: 'Usage: citadel pack <list|inspect|verify|certify|install|installed|uninstall> [options]\n',
+  journey: 'Usage: citadel journey <start|complete> --run-id ID [--pack NAME --runtime RUNTIME | --evidence FILE]\n',
+  receipt: 'Usage: citadel receipt verify --input FILE [--public-key FILE]\n',
+  fork: 'Usage: citadel fork <start|resume|status|compare|select|land|replay> [options]\n',
+  adopt: 'Usage: citadel adopt <plan|apply|doctor|update|rollback|restore|import|leave> [options]\n',
+  config: 'Usage: citadel config <show|check|reconcile|initialize|plan|migrate|set-profile|enable|disable> [options]\n',
+  governance: 'Usage: citadel governance <evaluate|authorize|check> [options]\n',
+  'control-plane': 'Usage: citadel control-plane <stdio|conformance> [options]\n',
+  trial: 'Usage: citadel trial <validate|plan|start|record|report|share-preview|purge> [options]\n',
+  memory: 'Usage: citadel memory <status|enable|sync|restore|versions|restore-version|disable|purge> [options]\n',
+  operation: 'Usage: citadel operation <init|catalog|plan|explain|run|verify|doctor> [options]\n',
 });
 
 function has(args, flag) {
@@ -265,6 +289,34 @@ function uninstall(args, context) {
   return child('adopt.js', forwarded, { ...context, json: json || dryRun });
 }
 
+function controlPlane(args, context) {
+  const command = args[0];
+  if (command === 'conformance') {
+    return child('control-plane-conformance.js', args.slice(1), {
+      ...context,
+      json: has(args, '--json'),
+    });
+  }
+  if (command === 'stdio') {
+    return child('control-plane-stdio.js', args.slice(1), { ...context, json: false });
+  }
+  const error = new Error('control-plane requires stdio or conformance');
+  error.code = CODE.COMMAND_FAILED;
+  error.exitCode = EXIT.USAGE;
+  return reportError(context.io, has(args, '--json'), error, 'control-plane');
+}
+
+function unavailable(command, args, context) {
+  if (has(args, '--help') || has(args, '-h')) {
+    context.io.stdout.write(COMMAND_HELP[command]);
+    return EXIT.OK;
+  }
+  const error = new Error(`${command} support is not available in Citadel ${VERSION}`);
+  error.code = CODE.FEATURE_UNAVAILABLE;
+  error.exitCode = EXIT.UNAVAILABLE;
+  return reportError(context.io, has(args, '--json'), error, command);
+}
+
 function main(argv = process.argv.slice(2), options = {}) {
   const context = {
     io: options.io || { stdout: process.stdout, stderr: process.stderr },
@@ -305,6 +357,17 @@ function main(argv = process.argv.slice(2), options = {}) {
     return reportError(context.io, has(args, '--json'), error, command);
   }
   if (command === 'uninstall') return uninstall(args, context);
+  if (command === 'pack') return child('packs.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'journey') return child('start-journey.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'receipt') return child('receipt.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'fork') return child('operation-fork.js', args, { ...context, json: true });
+  if (command === 'adopt') return child('adopt.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'config') return child('citadel-config.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'governance') return child('governance-gate.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'control-plane') return controlPlane(args, context);
+  if (command === 'trial') return child('product-proof-trial.js', args, { ...context, json: true });
+  if (command === 'memory') return child('repository-memory.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'operation') return child('operation.js', args, { ...context, json: has(args, '--json') });
   const error = new Error(`unknown command: ${command}`);
   error.code = CODE.COMMAND_FAILED;
   error.exitCode = EXIT.USAGE;

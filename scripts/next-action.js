@@ -43,7 +43,7 @@ function localRepairFor(action) {
   const command = String(action?.command || '').trim();
   if (!command) return null;
 
-  if (command === '/learn --doc-sync') {
+  if (command === 'node hooks_src/doc-sync.js --project-root .') {
     return {
       kind: 'local-repair',
       command,
@@ -179,7 +179,7 @@ function verificationPlanFor(action) {
     return [
       'Run `node scripts/dashboard.js --json` and confirm `.planning/` exists.',
       'Confirm generated project guidance paths point at the current project root.',
-      'Run `node scripts/test-all.js` if setup changed harness files.',
+      "Run the target project's declared verification command if setup changed project files.",
     ];
   }
   if (command === '/telemetry') {

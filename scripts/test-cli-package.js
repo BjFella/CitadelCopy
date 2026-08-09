@@ -86,8 +86,8 @@ for (const command of ['install', 'doctor', 'update', 'rollback', 'uninstall']) 
   assert(help.stdout.includes(command), `root help missing ${command}`);
 }
 for (const command of ['pack', 'journey', 'receipt', 'fork', 'adopt', 'config', 'governance', 'control-plane', 'trial', 'memory', 'operation']) {
-  assert(!new RegExp(`\\n  ${command}\\s`).test(help.stdout), `root help leaked unsupported command ${command}`);
-  assert.notEqual(invoke([command, '--help']).status, 0, `unsupported command ${command} must fail closed`);
+  assert(new RegExp(`\\n  ${command}\\s`).test(help.stdout), `source help lost maintainer command ${command}`);
+  assert.equal(invoke([command, '--help']).status, 0, `source command help failed for ${command}`);
 }
 
 const installRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-install & literal-'));
@@ -131,8 +131,8 @@ const doctor = cli.doctorReport(['--runtime', 'codex'], { env: {}, probe: () => 
 assert(doctor.checks.some((check) => check.name === 'runtime-selection' && check.pass && check.runtime === 'codex'));
 assert(doctor.checks.some((check) => check.name === 'runtime-command' && !check.pass));
 assert.equal(doctor.pass, false);
-assert.equal(cli.main(['pack', '--help'], { io: doctorCapture.io, cwd: ROOT }), cli.EXIT.USAGE);
-assert.match(doctorCapture.output.stderr, /unknown command/);
+assert.equal(cli.main(['pack', '--help'], { io: doctorCapture.io, cwd: ROOT }), cli.EXIT.OK);
+assert.match(doctorCapture.output.stdout, /Usage: citadel pack/);
 
 const packRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-npm-pack-'));
 const npmCli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');

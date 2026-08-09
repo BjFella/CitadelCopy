@@ -29,7 +29,7 @@ function withTempProject(run) {
   }
 }
 
-assert.equal(localRepairFor({ command: '/learn --doc-sync' }).args[0].endsWith(path.join('hooks_src', 'doc-sync.js')), true);
+assert.equal(localRepairFor({ command: 'node hooks_src/doc-sync.js --project-root .' }).args[0].endsWith(path.join('hooks_src', 'doc-sync.js')), true);
 assert.equal(localRepairFor({ command: '/merge-review' }), null);
 
 withTempProject((projectRoot) => {
@@ -40,7 +40,7 @@ withTempProject((projectRoot) => {
   const inspected = resolveNext(projectRoot, { run: false });
   assert.equal(inspected.mode, 'inspect');
   assert.equal(inspected.outcome, 'repair-available');
-  assert.equal(inspected.initial.nextAction.command, '/learn --doc-sync');
+  assert.equal(inspected.initial.nextAction.command, 'node hooks_src/doc-sync.js --project-root .');
   assert.equal(inspected.steps.length, 0);
 
   const repaired = resolveNext(projectRoot, { run: true, maxSteps: 2 });
@@ -49,7 +49,7 @@ withTempProject((projectRoot) => {
   assert.equal(repaired.steps.length, 1);
   assert.equal(repaired.steps[0].result.status, 0);
   assert.equal(repaired.final.pending.docSync, 0);
-  assert.equal(repaired.final.nextAction.command, 'npm run dashboard');
+  assert.equal(repaired.final.nextAction.command, 'node scripts/dashboard.js');
   assert(fs.existsSync(path.join(projectRoot, '.planning', 'doc-sync', 'latest.md')));
 });
 

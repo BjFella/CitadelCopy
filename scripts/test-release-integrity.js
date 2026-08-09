@@ -214,12 +214,14 @@ try {
   }
   for (const forbidden of [
     'assets/social-preview.png', 'docs/index.html', 'hooks_src/smoke-test.js',
+    'agents/knowledge-extractor.md', 'mcp-servers/citadel-state/README.md',
     'docs/DAEMON.md', 'docs/FLEET.md', 'docs/GOVERNED_LIFECYCLE.md', 'docs/OPERATION_CONTROL.md',
     'mcp-servers/codebase-memory/smoke-test.js', 'core/team/pilot.js',
     'core/telemetry/activation-cohort.js', 'core/telemetry/github-traffic.js',
     'scripts/check-sentient-grant-form.js', 'scripts/github-traffic-snapshot.js',
     'scripts/render-sentient-grant-packet.py', 'scripts/capture-application-media.js',
   ]) assert(!productPaths.has(forbidden), `release leaked lab or maintainer-only content: ${forbidden}`);
+  assert(![...productPaths].some((relative) => relative.startsWith('.planning/rubrics/')), 'release leaked maintainer-only rubrics');
   assert.equal(verifyRelease(product.archivePath, { version: '1.3.0', ref: product.manifest.ref }).files, productPaths.size);
 
   const extracted = path.join(temp, 'product-extracted');
@@ -305,6 +307,9 @@ try {
   }
 
   const releasePackage = JSON.parse(fs.readFileSync(path.join(productRoot, 'package.json'), 'utf8'));
+  const releaseChangelog = fs.readFileSync(path.join(productRoot, 'CHANGELOG.md'), 'utf8');
+  assert(releaseChangelog.includes(`## ${releasePackage.version}`));
+  assert(!releaseChangelog.includes(`## ${releasePackage.version} - Unreleased`));
   assert.equal(releasePackage.private, true);
   assert(!releasePackage.files && !releasePackage.maintainerFiles && !releasePackage.maintainerScripts);
   assert.deepEqual(Object.keys(releasePackage.scripts).sort(), [
@@ -326,10 +331,17 @@ try {
   const shippedSkillNames = new Set([...productPaths]
     .map((relative) => /^skills\/([^/]+)\/SKILL\.md$/.exec(relative)?.[1])
     .filter(Boolean));
-  const releaseInstructionMarkdown = [...productPaths].filter((item) => (
-    item === 'README.md' || item === 'INSTALL.md' || item.startsWith('docs/')
-      || /^skills\/[^/]+\/SKILL\.md$/.test(item)
-  ) && item.endsWith('.md'));
+  const targetProjectNpmCommands = new Map([
+    ['.planning/_templates/campaign.md', new Set(['test'])],
+    ['.planning/_templates/deploy/static.md', new Set(['start'])],
+    ['docs/ARCHITECTURE.md', new Set(['test'])],
+    ['skills/do/SKILL.md', new Set(['test', 'build', 'typecheck'])],
+    ['skills/experiment/SKILL.md', new Set(['test', 'build'])],
+    ['skills/map/SKILL.md', new Set(['test', 'typecheck'])],
+    ['skills/refactor/SKILL.md', new Set(['typecheck'])],
+    ['skills/setup/SKILL.md', new Set(['test'])],
+  ]);
+  const releaseInstructionMarkdown = [...productPaths].filter((item) => item.endsWith('.md'));
   for (const relative of releaseInstructionMarkdown) {
     const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
     for (const line of content.split(/\r?\n/)) {
@@ -345,13 +357,93 @@ try {
       }
       for (const match of line.matchAll(/\bnpm\s+(?:run\s+([A-Za-z0-9:_-]+)|test\b)/g)) {
         const script = match[1] || 'test';
+        if (targetProjectNpmCommands.get(relative)?.has(script)) continue;
         assert(releasePackageScripts.has(script), `${relative} invokes omitted release package script ${script}`);
+      }
+      for (const match of line.matchAll(/\.citadel[\\/]scripts[\\/]([A-Za-z0-9._-]+\.(?:c?js))/g)) {
+        const delegate = `scripts/${match[1]}`;
+        assert(productPaths.has(delegate), `${relative} delegates to omitted packaged program ${delegate}`);
+      }
+      for (const match of line.matchAll(/\bcitadel\s+([a-z][a-z-]*)\b/g)) {
+        assert(cliCommands.has(match[1]), `${relative} advertises unsupported packaged CLI command: citadel ${match[1]}`);
       }
     }
     if (sourceSkillNames.has('daemon') && !shippedSkillNames.has('daemon')) {
       assert(!/\bdaemon\b/i.test(content), `${relative} retains daemon instructions although /daemon is omitted`);
     }
   }
+
+  const runtimeInstructionFiles = [
+    'core/codex/native-integrations.js',
+    'core/project/render-codex-guidance.js',
+    'core/verification/profiles.js',
+    'hooks_src/init-project.js',
+    'hooks_src/intake-scanner.js',
+    'hooks_src/issue-monitor.js',
+    'mcp-servers/citadel-state/index.js',
+    'scripts/dashboard.js',
+    'scripts/next-action.js',
+    'scripts/operator-console.js',
+    'scripts/repository-memory.js',
+    'scripts/stack-plan.js',
+  ];
+  const targetProjectRuntimeNpmCommands = new Map([
+    ['core/verification/profiles.js', new Set(['test'])],
+    ['scripts/stack-plan.js', new Set(['test'])],
+  ]);
+  for (const relative of runtimeInstructionFiles) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const line of content.split(/\r?\n/)) {
+      for (const match of line.matchAll(/\/([a-z][a-z0-9-]*)\b/g)) {
+        const before = match.index === 0 ? '' : line[match.index - 1];
+        if (match.index !== 0 && !/[\s`"'(]/.test(before)) continue;
+        if (!sourceSkillNames.has(match[1])) continue;
+        assert(shippedSkillNames.has(match[1]), `${relative} can emit omitted release route /${match[1]}`);
+      }
+      for (const match of line.matchAll(/\bnpm\s+(?:run\s+([A-Za-z0-9:_-]+)|test\b)/g)) {
+        const script = match[1] || 'test';
+        if (targetProjectRuntimeNpmCommands.get(relative)?.has(script)) continue;
+        assert(releasePackageScripts.has(script), `${relative} can emit omitted release package script ${script}`);
+      }
+      for (const match of line.matchAll(/\bnode\s+((?:scripts|hooks_src)[\\/][A-Za-z0-9._/-]+)/g)) {
+        const program = match[1].replace(/\\/g, '/');
+        assert(productPaths.has(program), `${relative} can emit omitted release program ${program}`);
+      }
+      for (const match of line.matchAll(/\bcitadel\s+([a-z][a-z-]*)\b/g)) {
+        assert(cliCommands.has(match[1]), `${relative} can emit unsupported packaged CLI command: citadel ${match[1]}`);
+      }
+      for (const match of line.matchAll(/\.citadel[\\/]scripts[\\/]([A-Za-z0-9._-]+\.(?:c?js))/g)) {
+        const delegate = `scripts/${match[1]}`;
+        assert(productPaths.has(delegate), `${relative} can emit a delegate for omitted packaged program ${delegate}`);
+      }
+    }
+  }
+
+  const releaseStackPlan = require(path.join(productRoot, 'scripts', 'stack-plan.js'));
+  const stackRunbook = releaseStackPlan.buildPostApprovalRunbook('approval-needed', [{ pr: 'https://example.invalid/pr/1', status: 'ready' }]);
+  assert.match(JSON.stringify(stackRunbook), /node scripts\/stack-plan\.js/);
+  assert.doesNotMatch(JSON.stringify(stackRunbook), /npm run stack:plan/);
+  const releaseOperator = require(path.join(productRoot, 'scripts', 'operator-console.js'));
+  const stackBoundary = releaseOperator.boundaryForStack({ status: 'blocked' });
+  assert.match(JSON.stringify(stackBoundary), /node scripts\/stack-plan\.js/);
+  assert.doesNotMatch(JSON.stringify(stackBoundary), /npm run stack:plan/);
+  const releaseProfiles = require(path.join(productRoot, 'core', 'verification', 'profiles.js'));
+  assert.equal(releaseProfiles.profileForFiles(['src/example.js'], {}).primaryCommand, 'git diff --check');
+  assert.equal(releaseProfiles.profileForFiles(['src/example.js'], { test: 'vitest' }).primaryCommand, 'npm run test');
+
+  const mcpProbe = [
+    JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'release-test', version: '1' } } }),
+    JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+    '',
+  ].join('\n');
+  const mcpOutput = execFileSync(process.execPath, [path.join(productRoot, 'mcp-servers', 'citadel-state', 'index.js')], {
+    cwd: productRoot,
+    encoding: 'utf8',
+    input: mcpProbe,
+  }).trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  const workflowTool = mcpOutput.find((response) => response.id === 2).result.tools
+    .find((tool) => tool.name === 'citadel_workflow_prompt');
+  assert.deepEqual(new Set(workflowTool.inputSchema.properties.workflow.enum), shippedSkillNames);
   const releaseMcp = JSON.parse(fs.readFileSync(path.join(productRoot, '.mcp.json'), 'utf8'));
   assert.deepEqual(Object.keys(releaseMcp.mcpServers), ['citadel-state']);
   for (const [name, server] of Object.entries(releaseMcp.mcpServers)) {
@@ -370,6 +462,10 @@ try {
       const base = path.resolve(path.dirname(absolute), request);
       const candidates = [base, `${base}.js`, `${base}.cjs`, `${base}.json`, path.join(base, 'index.js')];
       assert(candidates.some((candidate) => fs.existsSync(candidate)), `${relative} requires omitted module ${request}`);
+    }
+    for (const match of executableText.matchAll(/path\.(?:join|resolve)\(\s*__dirname\s*,\s*['"]([^'"]+\.(?:c?js))['"]\s*\)/g)) {
+      const sibling = path.posix.normalize(path.posix.join(path.posix.dirname(relative), match[1].replace(/\\/g, '/')));
+      assert(productPaths.has(sibling), `${relative} resolves omitted executable sibling ${sibling}`);
     }
   }
 

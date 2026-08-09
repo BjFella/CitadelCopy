@@ -188,6 +188,67 @@ function sanitizeReleasePackage(entries) {
   return entries.map((entry) => (entry.name === 'package.json' ? { ...entry, data } : entry));
 }
 
+function sanitizeReleaseCli(entries) {
+  const cliName = 'core/cli/package-cli.js';
+  const cliEntry = entries.find((entry) => entry.name === cliName);
+  if (!cliEntry) return entries;
+  let source = cliEntry.data.toString('utf8');
+  const releaseHelp = [
+    'const HELP = `Citadel ${VERSION}',
+    '',
+    'Usage: citadel <command> [options]',
+    '',
+    'Commands:',
+    '  install      Install the Citadel runtime package for Claude Code or Codex',
+    '  doctor       Check package integrity and runtime availability',
+    '  update       Plan/apply a receipt-owned update',
+    '  rollback     Plan/apply a receipt-owned rollback',
+    '  uninstall    Plan/apply receipt-owned removal',
+    '  help         Show this help',
+    '',
+    'Run citadel <command> --help for command-specific help.',
+    '`;',
+  ].join('\n');
+  const releaseCommandHelp = [
+    'const COMMAND_HELP = Object.freeze({',
+    '  install: `Usage: citadel install [--runtime claude|codex] [--project-root PATH] [--dry-run] [--json]',
+    '',
+    'Runtime is selected from --runtime, CITADEL_RUNTIME, project markers, or an',
+    'installed Claude Code or Codex command. Ambiguous detection fails closed.',
+    '`,',
+    "  doctor: 'Usage: citadel doctor [--project-root PATH] [--runtime claude|codex] [--json]\\n',",
+    "  update: 'Usage: citadel update <plan SOURCE --migration FILE | apply PLAN> [options]\\n',",
+    "  rollback: 'Usage: citadel rollback <plan | apply PLAN> [options]\\n',",
+    "  uninstall: 'Usage: citadel uninstall [PROJECT] [--project-root PATH] [--dry-run] [--json]\\n       citadel uninstall --apply --plan PLAN [--confirm TOKEN] [--json]\\n',",
+    '});',
+  ].join('\n');
+  const withHelp = source.replace(/const HELP = `Citadel \$\{VERSION\}[\s\S]*?`;\r?\n/, `${releaseHelp}\n`);
+  if (withHelp === source) throw new Error('Release CLI projection could not replace root help');
+  source = withHelp;
+  const withCommandHelp = source.replace(/const COMMAND_HELP = Object\.freeze\(\{[\s\S]*?^\}\);/m, releaseCommandHelp);
+  if (withCommandHelp === source) throw new Error('Release CLI projection could not replace command help');
+  source = withCommandHelp;
+  const withoutControlPlane = source.replace(/\r?\nfunction controlPlane\([\s\S]*?(?=\r?\nfunction main\()/, '\n');
+  if (withoutControlPlane === source) throw new Error('Release CLI projection could not remove advanced helpers');
+  source = withoutControlPlane;
+  const advanced = new Set([
+    'pack', 'journey', 'receipt', 'fork', 'adopt', 'config', 'governance',
+    'control-plane', 'trial', 'memory', 'operation',
+  ]);
+  let removed = 0;
+  source = source.split(/\r?\n/).filter((line) => {
+    const match = /^\s*if \(command === '([^']+)'\)/.exec(line);
+    if (!match || !advanced.has(match[1])) return true;
+    removed += 1;
+    return false;
+  }).join('\n');
+  if (removed !== advanced.size) {
+    throw new Error(`Release CLI projection removed ${removed} of ${advanced.size} advanced dispatches`);
+  }
+  const data = Buffer.from(source);
+  return entries.map((entry) => (entry.name === cliName ? { ...entry, data } : entry));
+}
+
 function sanitizeReleaseMcp(entries) {
   if (!entries.some((entry) => entry.name === '.mcp.json')) return entries;
   const config = jsonFromEntries(entries, '.mcp.json');
@@ -283,16 +344,14 @@ function sanitizeReleaseSkillCounts(entries) {
 }
 
 function sanitizeReleaseInstructions(entries, knownSkillNames) {
+  const releaseVersion = jsonFromEntries(entries, 'package.json').version;
   const shippedSkillNames = new Set(entries
     .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
     .filter(Boolean));
-  const packageScripts = new Set(Object.keys(jsonFromEntries(entries, 'package.json').scripts || {}));
-  const available = new Set(entries.map((entry) => entry.name));
-  const instructionEntry = (name) => name === 'README.md' || name === 'INSTALL.md'
+  const rootInstructionDocs = new Set(['CHANGELOG.md', 'README.md', 'INSTALL.md', 'PRIVACY.md', 'SECURITY.md']);
+  const instructionEntry = (name) => rootInstructionDocs.has(name)
     || (name.startsWith('docs/') && name.endsWith('.md'))
     || /^skills\/[^/]+\/SKILL\.md$/.test(name);
-  const nodeProgram = /\bnode\s+(?:["']?(?:\$[A-Za-z_:]+|\{[^}]+\})[\\/])?((?:scripts|hooks_src)[\\/][A-Za-z0-9._/-]+)/g;
-  const npmScript = /\bnpm\s+(?:run\s+([A-Za-z0-9:_-]+)|test\b)/g;
   const hasOmittedRoute = (line) => [...line.matchAll(/\/([a-z][a-z0-9-]*)\b/g)].some((match) => {
     const before = match.index === 0 ? '' : line[match.index - 1];
     const commandBoundary = match.index === 0 || /[\s`"'(]/.test(before);
@@ -321,6 +380,48 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
         'Other campaign records are preserved independently.'
       );
     }
+    if (entry.name === 'SECURITY.md') {
+      const directChecks = /Run the security checks directly, or the full suite:\r?\n\r?\n```bash\r?\nnode scripts\/test-security\.js\r?\nnpm test\r?\n```/;
+      if (!directChecks.test(source)) throw new Error('Release SECURITY projection cannot find maintainer checks');
+      source = source.replace(
+        directChecks,
+        'The extracted release omits maintainer-only test programs. Contributors validate security changes in a full source checkout; release consumers verify the signed release trio as described in `docs/RELEASES.md`.'
+      );
+      source = source.replace(
+        '- [ ] Run `npm test`.',
+        '- [ ] Validate the change in a full source checkout; the release artifact does not contain the maintainer test suite.'
+      );
+    }
+    if (entry.name === 'CHANGELOG.md') {
+      const currentHeading = `## ${releaseVersion} - Unreleased`;
+      if (!source.includes(currentHeading)) throw new Error('Release changelog projection cannot find the current version heading');
+      source = source.replace(currentHeading, `## ${releaseVersion}`);
+      const addedSection = /### Added\r?\n[\s\S]*?(?=### Verification)/;
+      if (!addedSection.test(source)) throw new Error('Release changelog projection cannot find the current Added section');
+      source = source.replace(
+        addedSection,
+        [
+          '### Included consumer surface',
+          '',
+          '- The slim GitHub Release artifact ships `/do`, durable continuation, coordinated work,',
+          '  the five-command lifecycle CLI, and local evidence/state adapters.',
+          '- Hook policy enforcement and Codex/Claude projection fixes are included in the',
+          '  extracted runtime.',
+          '- Update and rollback preserve unowned files and verify target-bound backup receipts.',
+          '- Broad Operation Control, Fork, Mission Control, scheduling, and lab command',
+          '  surfaces remain source-only; a dependency subset ships only to support installed workflows.',
+          '',
+        ].join('\n')
+      );
+    }
+    if (entry.name === 'docs/RELEASES.md') {
+      const maintainerSection = /## Maintainer build and verification\r?\n[\s\S]*?(?=## Consumer verification)/;
+      if (!maintainerSection.test(source)) throw new Error('Release documentation projection cannot find maintainer section');
+      source = source.replace(
+        maintainerSection,
+        '## Maintainer build and verification\n\nRelease creation runs only from a clean, tagged source checkout through the protected GitHub workflow. The extracted artifact is a consumer package, not a release-authoring checkout.\n\n'
+      );
+    }
     if (entry.name === 'skills/archon/SKILL.md') {
       const daemonSection = /### Step 2\.5: DAEMONIZE\?[\s\S]*?(?=### Step 3: EXECUTE PHASES)/;
       if (!daemonSection.test(source)) throw new Error('Release Archon projection cannot find the daemon section');
@@ -328,27 +429,121 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
         daemonSection,
         '### Step 2.5: CONTINUATION BOUNDARY\n\nFor multi-session work, persist the campaign state and stop at the explicit Needs You / Resume boundary. Do not create a resident background owner.\n\n'
       );
+      source = source.replace(
+        /^3\.5\. \*\*Propagate knowledge\*\*:.*$/m,
+        '3.5. Record reusable knowledge in the campaign file for later review.'
+      );
+    }
+    if (entry.name === 'skills/fleet/SKILL.md') {
+      source = source.replace(
+        /^7\.5\. \*\*Propagate knowledge\*\*:.*$/m,
+        '7.5. Record reusable knowledge in the fleet session file for later review.'
+      );
+    }
+    if (entry.name === 'skills/dashboard/SKILL.md') {
+      const packageDashboard = /If the package scripts are available, this equivalent command is also valid:\r?\n\r?\n```bash\r?\nnpm run dashboard\r?\n```\r?\n\r?\n/;
+      if (!packageDashboard.test(source)) throw new Error('Release dashboard projection cannot find package-only launch command');
+      source = source.replace(packageDashboard, '');
     }
 
     const projected = [];
     for (let line of source.split(/\r?\n/)) {
       if (hasOmittedRoute(line)) continue;
       if (knownSkillNames.has('daemon') && !shippedSkillNames.has('daemon') && /\bdaemon\b/i.test(line)) continue;
-      const missingProgram = [...line.matchAll(nodeProgram)].some((match) => (
-        !available.has(match[1].replace(/\\/g, '/'))
-      ));
-      nodeProgram.lastIndex = 0;
-      if (missingProgram) continue;
-      const unsupportedScripts = [...line.matchAll(npmScript)]
-        .map((match) => match[1] || 'test')
-        .filter((script) => !packageScripts.has(script));
-      npmScript.lastIndex = 0;
-      if (unsupportedScripts.length > 0) continue;
       projected.push(line);
     }
     const data = Buffer.from(projected.join('\n'));
     return data.equals(entry.data) ? entry : { ...entry, data };
   });
+}
+
+function sanitizeReleaseRuntimeInstructions(entries) {
+  const shippedSkills = new Set(entries
+    .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
+    .filter(Boolean));
+  const project = (name, transform) => {
+    const entry = entries.find((candidate) => candidate.name === name);
+    if (!entry) return;
+    const source = entry.data.toString('utf8');
+    const projected = transform(source);
+    if (projected === source) throw new Error(`Release runtime projection did not change ${name}`);
+    entry.data = Buffer.from(projected);
+  };
+
+  project('core/verification/profiles.js', (source) => source.replace(
+    /function profileForFiles\(changedFiles, scripts = \{\}\) \{[\s\S]*?\r?\n\}\r?\n\r?\nfunction selectVerificationProfile/,
+    [
+      'function profileForFiles(changedFiles, scripts = {}) {',
+      '  const files = changedFiles.map(normalizePath);',
+      '  const broad = defaultCommand(scripts);',
+      '  return {',
+      "    id: 'baseline',",
+      "    label: 'Target-project verification',",
+      "    reason: 'The slim release uses only verification commands declared by the target project.',",
+      '    changedFiles: files,',
+      '    primaryCommand: broad,',
+      '    commands: [broad],',
+      '    notes: [],',
+      '  };',
+      '}',
+      '',
+      'function selectVerificationProfile',
+    ].join('\n')
+  ));
+
+  if (!shippedSkills.has('telemetry')) {
+    project('scripts/dashboard.js', (source) => source
+      .replace(
+        /  if \(actionableProblems > 0\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  return repairs;/,
+        [
+          '  if (actionableProblems > 0) {',
+          '    repairs.push(action({',
+          "      label: 'Inspect recent hook problems',",
+          "      command: 'node scripts/dashboard.js --json',",
+          "      why: `${actionableProblems} actionable hook problem(s) are recorded. Inspect the categorized local evidence before deciding what to change.`,",
+          "      confidence: 'medium',",
+          '      repairAvailable: false,',
+          '      runbook: null,',
+          '    }));',
+          '  }',
+          '',
+          '  return repairs;',
+        ].join('\n')
+      )
+      .replace(/  lines\.push\('  \/telemetry        - cost and hook breakdown'\);\r?\n/, "  lines.push('  node scripts/dashboard.js --json - inspect categorized hook evidence');\n"));
+    project('scripts/next-action.js', (source) => source
+      .replace(/  if \(command === '\/telemetry'\) return 'telemetry-review';\r?\n/, '')
+      .replace(/  if \(command === '\/telemetry'\) return 'low';\r?\n/, '')
+      .replace(/  if \(command === '\/telemetry'\) \{[\s\S]*?\r?\n  \}\r?\n/, ''));
+  }
+  if (!shippedSkills.has('pr-watch')) {
+    project('scripts/dashboard.js', (source) => source.replace(/  lines\.push\('  \/pr-watch         - watch PR CI'\);\r?\n/, ''));
+  }
+  if (!shippedSkills.has('learn')) {
+    project('scripts/dashboard.js', (source) => source.replace(/  lines\.push\('  \/learn            - extract patterns from completed campaigns'\);\r?\n/, ''));
+    project('hooks_src/intake-scanner.js', (source) => source.replace(
+      '    lines.push(`    → Run /learn --compile to integrate into .planning/wiki/`);',
+      '    lines.push(`    → Review staged findings in .planning/wiki/_staging/; compilation requires a full source checkout.`);'
+    ));
+  }
+  if (!shippedSkills.has('triage')) {
+    project('hooks_src/issue-monitor.js', (source) => source.replace(
+      "      lines.push('Run /triage to investigate.');",
+      "      lines.push('Review the new or untriaged issues directly before changing code.');"
+    ));
+    project('core/codex/native-integrations.js', (source) => source.replace(
+      "    command: decision === 'local-review' ? `/triage pr ${prNumber}` : '@codex review',",
+      "    command: '@codex review',"
+    ));
+  }
+  if (!shippedSkills.has('daemon')) {
+    project('hooks_src/init-project.js', (source) => source.replace(
+      '        `  Run /do continue to resume, or /daemon stop to cancel.\\n`',
+      '        `  Run /do continue to resume; the slim release has no resident daemon control.\\n`'
+    ));
+  }
+
+  return entries;
 }
 
 function assertVersions(entries, ref) {
@@ -436,9 +631,9 @@ function buildRelease(options = {}) {
   const knownSkillNames = new Set(sourceEntries
     .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
     .filter(Boolean));
-  const entries = sanitizeReleaseInstructions(sanitizeReleaseSkillCounts(sanitizeReleaseMetadata(
-    sanitizeReleaseRouting(sanitizeReleaseMcp(sanitizeReleasePackage(applyReleasePolicy(sourceEntries))))
-  )), knownSkillNames);
+  const entries = sanitizeReleaseRuntimeInstructions(sanitizeReleaseInstructions(sanitizeReleaseSkillCounts(sanitizeReleaseMetadata(
+    sanitizeReleaseRouting(sanitizeReleaseMcp(sanitizeReleaseCli(sanitizeReleasePackage(applyReleasePolicy(sourceEntries)))))
+  )), knownSkillNames));
   const identity = assertVersions(entries, ref);
   const commit = gitValue(['rev-parse', ref ? `${ref}^{commit}` : 'HEAD'], sourceDir, 'unknown');
   const epoch = Number(gitValue(['log', '-1', '--format=%ct', ref || 'HEAD'], sourceDir, '0')) || 0;
