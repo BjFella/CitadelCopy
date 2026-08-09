@@ -343,6 +343,254 @@ function sanitizeReleaseSkillCounts(entries) {
   });
 }
 
+const RELEASE_INSTRUCTION_RULES = new Map([
+  ['INSTALL.md', [
+    {
+      id: 'omit-source-only-improvement-example',
+      whenOmitted: ['improve'],
+      from: '/improve citadel --n=5              # Autonomous quality loops',
+      to: '',
+    },
+  ]],
+  ['skills/archon/SKILL.md', [
+    {
+      id: 'preserve-visual-verification-condition',
+      whenOmitted: ['live-preview'],
+      from: '   - `visual_verify`: invoke /live-preview on the specified route',
+      to: '   - `visual_verify`: run the target project\'s declared visual verifier; if none is available, record `blocked/HUMAN_INPUT_REQUIRED`',
+      preserves: [/visual_verify/, /blocked\/HUMAN_INPUT_REQUIRED/],
+    },
+    {
+      id: 'preserve-rendered-view-spot-check',
+      whenOmitted: ['live-preview'],
+      from: '3. If view files (.tsx, .jsx, .vue, .svelte, .html) were modified: invoke /live-preview',
+      to: '3. If view files (.tsx, .jsx, .vue, .svelte, .html) were modified: run the target project\'s declared visual verifier and attach evidence; if none is available, record `blocked/HUMAN_INPUT_REQUIRED`',
+      preserves: [/view files/, /visual verifier/, /blocked\/HUMAN_INPUT_REQUIRED/],
+    },
+    {
+      id: 'omit-unavailable-local-pr-watcher',
+      whenOmitted: ['pr-watch'],
+      from: '     Local  →  /pr-watch <N>          fixes failures in this terminal',
+      to: '',
+    },
+    {
+      id: 'preserve-continuation-trust-gate',
+      whenOmitted: ['daemon'],
+      from: 'Step 2.5 trust gating: **Novice** — skip Step 2.5 entirely, do not offer daemon. **Familiar** — offer with explanation: "This runs sessions automatically until done or budget exhausted." **Trusted** — offer with cost only: "Run continuously? (~${cost}) [y/n]"',
+      to: 'Step 2.5 continuation gating: **Novice**: explain the resume boundary. **Familiar** and **Trusted**: persist state and stop at the explicit Needs You / Resume boundary.',
+      preserves: [/Novice/, /Familiar/, /Trusted/, /Needs You \/ Resume/],
+    },
+  ]],
+  ['skills/create-app/SKILL.md', [
+    {
+      id: 'preserve-prd-verification-contract',
+      whenOmitted: ['live-preview'],
+      from: 'Check each PRD end condition (run commands, check files, invoke /live-preview for visual checks). Report PASS / PARTIAL / FAIL with specifics.',
+      to: 'Check each PRD end condition (run commands, check files, and inspect rendered output for visual checks). Report PASS / PARTIAL / FAIL with specifics.',
+      preserves: [/each PRD end condition/i, /visual checks/i, /PASS \/ PARTIAL \/ FAIL/],
+    },
+  ]],
+  ['skills/dashboard/SKILL.md', [
+    {
+      id: 'remove-source-only-local-runner-names',
+      whenOmitted: ['daemon'],
+      from: '  (`local-watch.js`, `local-daemon.js`, `local-schedule.js`) never consume quota',
+      to: '  provided by the active runtime do not consume routine quota',
+    },
+    {
+      id: 'preserve-actionable-repair-policy',
+      whenOmitted: ['telemetry'],
+      from: '- The `/telemetry` repair action should appear only when actionable entries are',
+      to: '- The `node scripts/dashboard.js --json` repair action should appear only when actionable entries are',
+      preserves: [/repair action/, /only when actionable entries are/],
+    },
+    {
+      id: 'omit-telemetry-quick-command',
+      whenOmitted: ['telemetry'],
+      from: '  /telemetry      — cost breakdown, hook activity, telemetry settings',
+      to: '',
+    },
+    {
+      id: 'omit-triage-quick-command',
+      whenOmitted: ['triage'],
+      from: '  /triage prs     — review open PRs',
+      to: '',
+    },
+    {
+      id: 'omit-pr-watch-quick-command',
+      whenOmitted: ['pr-watch'],
+      from: '  /pr-watch       — watch PR CI',
+      to: '',
+    },
+    {
+      id: 'omit-learn-quick-command',
+      whenOmitted: ['learn'],
+      from: '  /learn          — extract patterns from last completed campaign',
+      to: '',
+    },
+    {
+      id: 'preserve-doc-sync-backlog',
+      whenOmitted: ['learn'],
+      from: '**Doc-sync backlog:** Surface `/learn --doc-sync` as a repair action with `skills/learn/SKILL.md` as runbook.',
+      to: '**Doc-sync backlog:** Surface `node hooks_src/doc-sync.js --project-root .` as the repair action with `hooks_src/doc-sync.js` as the runbook.',
+      preserves: [/Doc-sync backlog/, /node hooks_src\/doc-sync\.js --project-root \./, /hooks_src\/doc-sync\.js/],
+    },
+    {
+      id: 'preserve-safety-only-action-policy',
+      whenOmitted: ['telemetry'],
+      from: '**Only safety blocks recorded:** Show them in PROBLEMS and HOOKS VALUE, but do not surface `/telemetry` as NEXT ACTION.',
+      to: '**Only safety blocks recorded:** Show them in PROBLEMS and HOOKS VALUE, but do not surface `node scripts/dashboard.js --json` as NEXT ACTION.',
+    },
+    {
+      id: 'preserve-actionable-hook-problem-policy',
+      whenOmitted: ['telemetry'],
+      from: '**Actionable hook problem recorded:** Surface `/telemetry` as repair action with `skills/telemetry/SKILL.md` as runbook.',
+      to: '**Actionable hook problem recorded:** Surface `node scripts/dashboard.js --json` as a review action and include the affected record paths.',
+    },
+  ]],
+  ['skills/do/SKILL.md', [
+    {
+      id: 'omit-unavailable-daemon-downgrade',
+      whenOmitted: ['daemon'],
+      from: '| Routed to Daemon AND user is Novice trust level | Block. Output: "Daemon mode requires familiarity with the harness. Complete a few sessions first." |',
+      to: '',
+    },
+    {
+      id: 'replace-unattended-upgrade-suggestion',
+      whenOmitted: ['daemon'],
+      from: '| Input mentions "overnight" or "continuous" AND routed to Archon | Suggest daemon. "This sounds like continuous work. Want to run it as a daemon?" (skip if Novice) |',
+      to: '| Input mentions "overnight" or "continuous" AND routed to Archon | Confirm a bounded multi-session campaign and an explicit Needs You / Resume boundary; do not imply unattended execution. |',
+      preserves: [/overnight/, /continuous/, /Needs You \/ Resume/, /unattended/],
+    },
+  ]],
+  ['skills/experiment/SKILL.md', [
+    {
+      id: 'preserve-manual-review-trust-gate',
+      whenOmitted: ['improve'],
+      from: '- Familiar (5+ sessions): iterates and commits autonomously; novices should use /improve with manual review between steps.',
+      to: '- Familiar (5+ sessions): iterates and commits autonomously; novices must stop for manual review between every step and must not run unattended iterations.',
+      preserves: [/Familiar \(5\+ sessions\)/, /iterates and commits autonomously/, /novices.*manual review/i],
+    },
+  ]],
+  ['skills/houseclean/SKILL.md', [
+    {
+      id: 'preserve-monthly-check-guidance',
+      whenOmitted: ['schedule'],
+      from: '4. Suggest: "/houseclean runs well as a monthly check — use /schedule to add it"',
+      to: '4. Suggest: "/houseclean works well as a monthly manual check; this release does not install scheduled runs."',
+      preserves: [/monthly/, /manual check/],
+    },
+  ]],
+  ['skills/merge-review/SKILL.md', [
+    {
+      id: 'preserve-merge-review-orientation',
+      whenOmitted: ['pr-watch'],
+      from: "**Don't use when:** reviewing general code quality (use /review); checking CI status before merging (use /pr-watch).",
+      to: "**Don't use when:** reviewing general code quality (use /review) or merely checking CI status; this skill arbitrates completed fleet worktree merges.",
+      preserves: [/general code quality/, /\/review/, /CI status/],
+    },
+  ]],
+  ['skills/postmortem/SKILL.md', [
+    {
+      id: 'preserve-postmortem-orientation',
+      whenOmitted: ['learn', 'improve'],
+      from: "**Don't use when:** You want to preserve session context for the next conversation (use `/session-handoff`), extract reusable patterns from findings into the knowledge base (use `/learn`), or score and improve quality iteratively (use `/improve`).",
+      to: "**Don't use when:** You want to preserve session context for the next conversation (use `/session-handoff`), curate reusable patterns into the knowledge base, or run an iterative quality experiment.",
+      preserves: [/session context/, /\/session-handoff/, /reusable patterns/, /iterative quality/],
+    },
+    {
+      id: 'preserve-postmortem-handoff-step',
+      whenOmitted: ['learn'],
+      from: 'Output the HANDOFF block from the Exit Protocol, then suggest: `Run /learn {campaign-slug} to extract patterns into the knowledge base.`',
+      to: 'Output the HANDOFF block from the Exit Protocol, then note that reusable patterns may be curated into the project knowledge base when requested.',
+      preserves: [/HANDOFF block/, /reusable patterns/, /knowledge base/],
+    },
+    {
+      id: 'remove-duplicate-source-only-learn-suggestion',
+      whenOmitted: ['learn'],
+      from: 'After displaying the HANDOFF block, suggest: `Run /learn {campaign-slug} to extract patterns into the knowledge base.`',
+      to: '',
+    },
+  ]],
+  ['skills/review/SKILL.md', [
+    {
+      id: 'preserve-review-orientation',
+      whenOmitted: ['improve'],
+      from: "**Don't use when:** generating tests (use /test-gen); security audit (use /security-review); skill file review (use /improve skill-md).",
+      to: "**Don't use when:** generating tests (use /test-gen); conducting a dedicated security audit; or a skill file review without an explicit rubric (use /marshal).",
+      preserves: [/generating tests/, /\/test-gen/, /security audit/, /skill file review/],
+    },
+  ]],
+  ['skills/session-handoff/SKILL.md', [
+    {
+      id: 'preserve-session-handoff-orientation',
+      whenOmitted: ['learn'],
+      from: "**Don't use when:** You want to extract reusable patterns from a completed campaign (use `/learn`), write a structured postmortem for a failed campaign (use `/postmortem`), or produce documentation rather than a context transfer.",
+      to: "**Don't use when:** You want to curate reusable patterns from a completed campaign, write a structured postmortem for a failed campaign (use `/postmortem`), or produce documentation rather than a context transfer.",
+      preserves: [/reusable patterns/, /\/postmortem/, /documentation/, /context transfer/],
+    },
+  ]],
+  ['skills/setup/SKILL.md', [
+    {
+      id: 'preserve-setup-orientation',
+      whenOmitted: ['verify'],
+      from: "**Don't use when:** harness is already configured and you want to verify it (use /verify); adding a single skill to an existing project (copy SKILL.md manually).",
+      to: "**Don't use when:** the harness is already configured and you only want to inspect its readiness; or when adding a single skill to an existing project (copy SKILL.md manually).",
+      preserves: [/already configured/, /readiness/, /adding a single skill/, /copy SKILL\.md manually/],
+    },
+    {
+      id: 'preserve-observability-tour-item',
+      whenOmitted: ['learn'],
+      from: '5. **Observability** (1 min): `/do next`, `/dashboard`, `/cost`, `/learn`',
+      to: '5. **Observability** (1 min): `/do next`, `/dashboard`, `/cost`',
+      preserves: [/5\. \*\*Observability\*\*/, /\/do next/, /\/dashboard/, /\/cost/],
+    },
+    {
+      id: 'preserve-setup-next-steps',
+      whenOmitted: ['improve'],
+      from: '- NEXT STEPS: add conventions to CLAUDE.md, `/do --list`, `/create-skill`, `/improve [target]`',
+      to: '- NEXT STEPS: add conventions to CLAUDE.md, `/do --list`, `/create-skill`',
+      preserves: [/NEXT STEPS/, /CLAUDE\.md/, /\/do --list/, /\/create-skill/],
+    },
+  ]],
+  ['skills/test-gen/SKILL.md', [
+    {
+      id: 'preserve-test-gen-orientation',
+      whenOmitted: ['improve'],
+      from: "**Don't use when:** tests already exist and need updating (use /review or /improve); writing integration tests across services (use /marshal with an explicit test plan).",
+      to: "**Don't use when:** tests already exist and need updating (use /review); writing integration tests across services (use /marshal with an explicit test plan).",
+      preserves: [/tests already exist/, /\/review/, /integration tests across services/, /\/marshal/],
+    },
+  ]],
+  ['skills/wiki/SKILL.md', [
+    {
+      id: 'preserve-wiki-orientation',
+      whenOmitted: ['learn'],
+      from: "**Don't use when:** capturing session learnings into the evolve pipeline (use /learn); generating structured code documentation (use /doc-gen).",
+      to: "**Don't use when:** preserving transient session learnings (use /session-handoff); generating structured code documentation (use /doc-gen).",
+      preserves: [/session learnings/, /structured code documentation/, /\/doc-gen/],
+    },
+  ]],
+]);
+
+function replaceRequiredInstruction(source, entryName, rule) {
+  const expected = rule.expected || 1;
+  let count = 0;
+  let offset = 0;
+  while ((offset = source.indexOf(rule.from, offset)) !== -1) {
+    count += 1;
+    offset += rule.from.length;
+  }
+  if (count !== expected) {
+    throw new Error(`${entryName}: release projection ${rule.id} expected ${expected} source match(es), found ${count}`);
+  }
+  const projected = source.split(rule.from).join(rule.to);
+  for (const pattern of rule.preserves || []) {
+    if (!pattern.test(projected)) throw new Error(`${entryName}: release projection ${rule.id} lost required semantics: ${pattern}`);
+  }
+  return projected;
+}
+
 function sanitizeReleaseInstructions(entries, knownSkillNames) {
   const releaseVersion = jsonFromEntries(entries, 'package.json').version;
   const shippedSkillNames = new Set(entries
@@ -352,11 +600,14 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
   const instructionEntry = (name) => rootInstructionDocs.has(name)
     || (name.startsWith('docs/') && name.endsWith('.md'))
     || /^skills\/[^/]+\/SKILL\.md$/.test(name);
-  const hasOmittedRoute = (line) => [...line.matchAll(/\/([a-z][a-z0-9-]*)\b/g)].some((match) => {
-    const before = match.index === 0 ? '' : line[match.index - 1];
-    const commandBoundary = match.index === 0 || /[\s`"'(]/.test(before);
-    return commandBoundary && knownSkillNames.has(match[1]) && !shippedSkillNames.has(match[1]);
-  });
+  const omittedRoutes = (line) => [...line.matchAll(/\/([a-z][a-z0-9-]*)\b/g)]
+    .filter((match) => {
+      const before = match.index === 0 ? '' : line[match.index - 1];
+      const commandBoundary = match.index === 0 || /[\s`"'(]/.test(before);
+      return commandBoundary && knownSkillNames.has(match[1]) && !shippedSkillNames.has(match[1]);
+    })
+    .map((match) => match[1]);
+  const omittedSkill = (name) => knownSkillNames.has(name) && !shippedSkillNames.has(name);
 
   return entries.map((entry) => {
     if (!instructionEntry(entry.name)) return entry;
@@ -446,13 +697,23 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
       source = source.replace(packageDashboard, '');
     }
 
-    const projected = [];
-    for (let line of source.split(/\r?\n/)) {
-      if (hasOmittedRoute(line)) continue;
-      if (knownSkillNames.has('daemon') && !shippedSkillNames.has('daemon') && /\bdaemon\b/i.test(line)) continue;
-      projected.push(line);
+    for (const rule of RELEASE_INSTRUCTION_RULES.get(entry.name) || []) {
+      if (!rule.whenOmitted.every(omittedSkill)) continue;
+      source = replaceRequiredInstruction(source, entry.name, rule);
     }
-    const data = Buffer.from(projected.join('\n'));
+
+    const violations = [];
+    source.split(/\r?\n/).forEach((line, index) => {
+      for (const route of omittedRoutes(line)) violations.push(`${entry.name}:${index + 1} /${route}: ${line}`);
+      if (omittedSkill('daemon') && /\bdaemon\b/i.test(line)) {
+        violations.push(`${entry.name}:${index + 1} daemon: ${line}`);
+      }
+    });
+    if (violations.length) {
+      throw new Error(`Unhandled release instruction references:\n${violations.join('\n')}`);
+    }
+
+    const data = Buffer.from(source);
     return data.equals(entry.data) ? entry : { ...entry, data };
   });
 }
@@ -702,5 +963,12 @@ function main() {
   }
 }
 
-module.exports = { MANIFEST_NAME, RELEASE_FILES_NAME, applyReleasePolicy, buildRelease, sha256 };
+module.exports = {
+  MANIFEST_NAME,
+  RELEASE_FILES_NAME,
+  applyReleasePolicy,
+  buildRelease,
+  sanitizeReleaseInstructions,
+  sha256,
+};
 if (require.main === module) main();

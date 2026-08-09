@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
 const { execFileSync } = require('child_process');
-const { buildRelease, sha256 } = require('./release-package');
+const { buildRelease, sanitizeReleaseInstructions, sha256 } = require('./release-package');
 const { parseTar, verifyRelease } = require('./release-verify');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -69,8 +69,31 @@ function expectFailure(fn, pattern) {
   assert.throws(fn, pattern);
 }
 
+function sectionBody(content, startPattern, endPattern, label) {
+  const start = content.search(startPattern);
+  assert(start >= 0, `${label} is missing its start marker`);
+  const afterStart = content.slice(start).replace(startPattern, '');
+  const end = afterStart.search(endPattern);
+  assert(end >= 0, `${label} is missing its end marker`);
+  const body = afterStart.slice(0, end).trim();
+  assert(body, `${label} must not be empty`);
+  return body;
+}
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-release-integrity-'));
 try {
+  assert.throws(
+    () => sanitizeReleaseInstructions([
+      { name: 'package.json', data: Buffer.from('{"version":"1.3.0"}') },
+      {
+        name: 'skills/kept/SKILL.md',
+        data: Buffer.from('Preserve this required contract while using /omitted for an optional follow-up.\n'),
+      },
+    ], new Set(['kept', 'omitted'])),
+    /Unhandled release instruction references:\s+skills\/kept\/SKILL\.md:1 \/omitted/,
+    'release instruction projection must fail closed instead of deleting an unhandled mixed-purpose line',
+  );
+
   const source = path.join(temp, 'source');
   makeSource(source);
   fs.mkdirSync(path.join(source, '.planning', '_templates'), { recursive: true });
@@ -262,6 +285,130 @@ try {
     if (['name', 'skill'].includes(match[1])) continue;
     assert(productPaths.has(`skills/${match[1]}/SKILL.md`), `release /do routes to omitted skill /${match[1]}`);
   }
+
+  const createAppSkill = fs.readFileSync(path.join(productRoot, 'skills', 'create-app', 'SKILL.md'), 'utf8');
+  const createAppVerify = sectionBody(
+    createAppSkill,
+    /### Step 3: VERIFY \(All Tiers except 1\)\r?\n/,
+    /### Step 4: DELIVER/,
+    'release create-app Step 3 VERIFY contract',
+  );
+  assert.match(createAppVerify, /each PRD end condition/i, 'release create-app must preserve PRD end-condition verification');
+  assert.match(createAppVerify, /PASS \/ PARTIAL \/ FAIL/, 'release create-app must preserve explicit verification outcomes');
+  assert.match(createAppVerify, /visual/i, 'release create-app must preserve visual-check semantics');
+
+  const experimentSkill = fs.readFileSync(path.join(productRoot, 'skills', 'experiment', 'SKILL.md'), 'utf8');
+  const experimentTrust = sectionBody(
+    experimentSkill,
+    /\*\*Trust gates:\*\*\r?\n/,
+    /## Quality Gates/,
+    'release experiment Trust gates contract',
+  );
+  assert.match(experimentTrust, /novice/i, 'release experiment must preserve novice trust guidance');
+  assert.match(experimentTrust, /manual review/i, 'release experiment must preserve its manual-review boundary');
+  assert.match(experimentTrust, /Familiar \(5\+ sessions\)/, 'release experiment must preserve its familiar-user threshold');
+  assert.match(experimentTrust, /iterates and commits autonomously/i, 'release experiment must preserve its autonomous-commit disclosure');
+
+  for (const relative of [...productPaths].filter((item) => /^skills\/[^/]+\/SKILL\.md$/.test(item))) {
+    const sourceContent = fs.readFileSync(path.join(ROOT, ...relative.split('/')), 'utf8');
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const sourceMarker of sourceContent.matchAll(/^\*\*Trust gates:\*\*[ \t]*$/gm)) {
+      assert(sourceMarker, `${relative} source trust marker could not be read`);
+      const marker = /^\*\*Trust gates:\*\*[ \t]*$/m.exec(content);
+      assert(marker, `${relative} omitted its Trust gates marker`);
+      const tail = content.slice(marker.index + marker[0].length).replace(/^\r?\n/, '');
+      const boundary = tail.search(/^#{1,6}\s/m);
+      const body = (boundary >= 0 ? tail.slice(0, boundary) : tail).trim();
+      assert(body, `${relative} has an empty Trust gates section`);
+    }
+  }
+
+  const postmortemSkill = fs.readFileSync(path.join(productRoot, 'skills', 'postmortem', 'SKILL.md'), 'utf8');
+  const postmortemHandoff = sectionBody(
+    postmortemSkill,
+    /### Step 4: HANDOFF\r?\n/,
+    /## What \/postmortem Does NOT Do/,
+    'release postmortem Step 4 HANDOFF contract',
+  );
+  assert.match(postmortemHandoff, /HANDOFF block/i, 'release postmortem must preserve its HANDOFF action');
+
+  const archonSkill = fs.readFileSync(path.join(productRoot, 'skills', 'archon', 'SKILL.md'), 'utf8');
+  const archonExecution = sectionBody(
+    archonSkill,
+    /### Step 3: EXECUTE PHASES\r?\n/,
+    /### Step 4: SELF-CORRECTION/,
+    'release Archon execution contract',
+  );
+  assert.match(archonExecution, /visual_verify/, 'release Archon must retain visual_verify execution');
+  assert.match(archonExecution, /visual verifier|visual evidence/i, 'release Archon must retain executable visual-evidence semantics');
+  assert.match(archonExecution, /blocked\/HUMAN_INPUT_REQUIRED/, 'release Archon must block when visual verification is unavailable');
+  const archonSpotCheck = sectionBody(
+    archonSkill,
+    /#### Quality Spot-Check \(every phase\)\r?\n/,
+    /#### Regression Guard/,
+    'release Archon quality spot-check contract',
+  );
+  for (const pattern of [/view files/i, /visual verifier|visual evidence/i, /below bar/i]) {
+    assert.match(archonSpotCheck, pattern, `release Archon spot-check lost required semantics: ${pattern}`);
+  }
+
+  const dashboardSkill = fs.readFileSync(path.join(productRoot, 'skills', 'dashboard', 'SKILL.md'), 'utf8');
+  const dashboardHookPolicy = sectionBody(
+    dashboardSkill,
+    /\*\*Hook Problem Taxonomy:\*\*\r?\n/,
+    /\*\*Health:\*\*/,
+    'release dashboard hook-problem policy',
+  );
+  assert.match(dashboardHookPolicy, /repair action should appear only when actionable entries are\s+present/i);
+  assert.match(dashboardHookPolicy, /Safety blocks remain visible/i);
+  const dashboardFringe = sectionBody(
+    dashboardSkill,
+    /### Step 4: FRINGE CASE HANDLING\r?\n/,
+    /## Contextual Gates/,
+    'release dashboard fringe-case policy',
+  );
+  assert.match(dashboardFringe, /Only safety blocks recorded/i);
+  assert.match(dashboardFringe, /Actionable hook problem recorded/i);
+  assert.match(dashboardFringe, /node scripts\/dashboard\.js --json/);
+  assert.match(dashboardFringe, /node hooks_src\/doc-sync\.js --project-root \./, 'release dashboard must retain its shipped doc-sync repair command');
+
+  const setupSkill = fs.readFileSync(path.join(productRoot, 'skills', 'setup', 'SKILL.md'), 'utf8');
+  const setupWalkthrough = sectionBody(
+    setupSkill,
+    /### Step 7: FULL TOUR WALKTHROUGH \(Full Tour only\)\r?\n/,
+    /### Step 8: REFERENCE CARD/,
+    'release setup walkthrough contract',
+  );
+  for (const pattern of [/5\. \*\*Observability\*\*/, /\/do next/, /\/dashboard/, /\/cost/]) {
+    assert.match(setupWalkthrough, pattern, `release setup walkthrough lost required semantics: ${pattern}`);
+  }
+  const setupReferenceCard = sectionBody(
+    setupSkill,
+    /### Step 8: REFERENCE CARD \(all modes\)\r?\n/,
+    /### Step 9: CLOSING LINE/,
+    'release setup reference-card contract',
+  );
+  for (const pattern of [/NEXT STEPS/, /CLAUDE\.md/, /\/do --list/, /\/create-skill/]) {
+    assert.match(setupReferenceCard, pattern, `release setup reference card lost required semantics: ${pattern}`);
+  }
+
+  const orientationContracts = new Map([
+    ['skills/merge-review/SKILL.md', [/general code quality/i, /\/review/, /CI status/i]],
+    ['skills/postmortem/SKILL.md', [/session context/i, /\/session-handoff/, /reusable patterns/i, /iterative quality/i]],
+    ['skills/review/SKILL.md', [/generating tests/i, /\/test-gen/, /security audit/i, /skill file review/i]],
+    ['skills/session-handoff/SKILL.md', [/reusable patterns/i, /\/postmortem/, /documentation/i]],
+    ['skills/setup/SKILL.md', [/already configured/i, /adding a single skill/i, /copy SKILL\.md manually/i]],
+    ['skills/test-gen/SKILL.md', [/tests already exist/i, /\/review/, /integration tests across services/i, /\/marshal/]],
+    ['skills/wiki/SKILL.md', [/session learnings/i, /structured code documentation/i, /\/doc-gen/]],
+  ]);
+  for (const [relative, patterns] of orientationContracts) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    const orientation = /^\*\*Don't use when:\*\*.*$/m.exec(content);
+    assert(orientation, `${relative} omitted its Don't use when orientation`);
+    for (const pattern of patterns) assert.match(orientation[0], pattern, `${relative} orientation lost required semantics: ${pattern}`);
+  }
+  const housecleanSkill = fs.readFileSync(path.join(productRoot, 'skills', 'houseclean', 'SKILL.md'), 'utf8');
+  assert.match(housecleanSkill, /monthly manual check/i, 'release houseclean must retain monthly-check guidance');
 
   const releaseMetadata = JSON.parse(fs.readFileSync(path.join(productRoot, 'citadel-metadata.json'), 'utf8'));
   const shippedSkillCount = [...productPaths].filter((relative) => /^skills\/[^/]+\/SKILL\.md$/.test(relative)).length;
