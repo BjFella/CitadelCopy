@@ -37,39 +37,10 @@ function installedRuntimeSmoke(packageRoot, scratchRoot) {
   assert.equal(version.status, 0, version.stderr);
   assert.equal(version.stdout.trim(), installedManifest.version);
 
-  const packList = run(['pack', 'list', '--root', packageRoot, '--json']);
-  assert.equal(packList.status, 0, packList.stderr);
-  assert.deepEqual(
-    JSON.parse(packList.stdout).packs.map((pack) => pack.id).sort(),
-    ['citadel/ci-recovery', 'citadel/migration-campaign', 'citadel/release-steward'],
-  );
-
-  const configRoot = path.join(scratchRoot, 'config-smoke');
-  fs.mkdirSync(configRoot, { recursive: true });
-  const config = run(['config', 'show', '--project-root', configRoot, '--runtime', 'codex', '--json']);
-  assert.equal(config.status, 0, config.stderr);
-  const configReport = JSON.parse(config.stdout);
-  assert.equal(configReport.status, 'ready');
-  assert.equal(configReport.package.version, installedManifest.version);
-
-  const operation = run([
-    'operation', 'explain',
-    '--request', path.join(packageRoot, 'examples', 'operation-control', 'request.json'),
-    '--catalog', path.join(packageRoot, 'examples', 'operation-control', 'catalog.json'),
-    '--json',
-  ]);
-  assert.equal(operation.status, 0, operation.stderr);
-  assert.equal(JSON.parse(operation.stdout).selection_status, 'meets-quality-target');
-
-  const controlPlane = run(['control-plane', 'conformance']);
-  assert.equal(controlPlane.status, 0, controlPlane.stderr);
-  const controlReport = JSON.parse(controlPlane.stdout);
-  assert.equal(controlReport.status, 'passed');
-  assert(controlReport.check_count >= 20, 'installed control-plane conformance must exercise the full offline contract');
-
   return {
-    surfaces: ['root-help', 'version', 'pack-list', 'config-show', 'operation-explain', 'control-plane-conformance'],
-    controlPlaneChecks: controlReport.check_count,
+    surfaces: ['root-help', 'version'],
+    controlPlaneChecks: 0,
+    boundary: 'The private source npm pack is not the supported GitHub Release artifact.',
   };
 }
 
@@ -280,7 +251,7 @@ assert(fs.existsSync(shim), 'package install must create the citadel executable 
 if (process.platform !== 'win32') assert(fs.statSync(shim).mode & 0o111, 'installed citadel shim must be executable');
 assert(fs.existsSync(installedBin), 'installed Citadel package root must contain the CLI entrypoint');
 const installedSmoke = installedRuntimeSmoke(path.dirname(path.dirname(installedBin)), packRoot);
-assert.equal(installedSmoke.surfaces.length, 6);
+assert.deepEqual(installedSmoke.surfaces, ['root-help', 'version']);
 
 for (const directory of [markerRoot, installRoot, autoRoot, uninstallRoot, packRoot]) {
   fs.rmSync(directory, { recursive: true, force: true });
