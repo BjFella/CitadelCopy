@@ -2,10 +2,10 @@
 'use strict';
 
 /**
- * generate-routing.js: single source of truth for /do routing keywords.
+ * generate-routing.js: shared projections for /do routing data.
  *
  * Reads trigger_keywords frontmatter from every skills/STAR/SKILL.md and
- * regenerates three surfaces:
+ * regenerates three files:
  *   1. core/skills/routing-table.json          (canonical machine-readable table)
  *   2. skills/do/SKILL.md                       (Tier 2 markdown table, between markers)
  *   3. docs/index.html                          (demo TIER2 routing data, between markers)
@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { buildSkillCatalog } = require('../core/skills/catalog');
+const { DETERMINISTIC_COMMANDS } = require('../core/skills/routing');
 
 // The router cannot route to itself.
 // research-fleet: deprecated alias stub, no keywords (merged into /research --parallel).
@@ -27,9 +28,9 @@ const EXCLUDED_SKILLS = ['do', 'research-fleet'];
 // Route labels that differ from a plain /{name} invocation.
 const ROUTE_LABELS = { fleet: '/fleet --quick' };
 
-// The demo page renders these via its hard-coded Tier 3 intent classifier,
-// so they are kept out of the generated Tier 2 keyword data there.
-const DEMO_TIER3_SKILLS = ['archon', 'create-app', 'fleet', 'marshal'];
+// The public demo visualizes candidate evidence rather than making a final
+// semantic decision, so every routable skill belongs in its candidate table.
+const DEMO_TIER3_SKILLS = [];
 
 const DEMO_ICONS = {
   architect: '🏗',
@@ -52,6 +53,10 @@ const GENERATED_NOTE =
   'Derived from trigger_keywords frontmatter in skills/*/SKILL.md. Do not edit by hand; run node scripts/generate-routing.js.';
 
 const MARKERS = {
+  exactCommandTable: {
+    begin: '<!-- BEGIN GENERATED: exact-command-table -->',
+    end: '<!-- END GENERATED: exact-command-table -->',
+  },
   skillTable: {
     begin: '<!-- BEGIN GENERATED: routing-table -->',
     end: '<!-- END GENERATED: routing-table -->',
@@ -59,6 +64,10 @@ const MARKERS = {
   demoData: {
     begin: '// <!-- BEGIN GENERATED: routing-data -->',
     end: '// <!-- END GENERATED: routing-data -->',
+  },
+  demoExactData: {
+    begin: '// <!-- BEGIN GENERATED: exact-command-data -->',
+    end: '// <!-- END GENERATED: exact-command-data -->',
   },
 };
 
@@ -107,6 +116,18 @@ function renderSkillTable(table) {
   return lines;
 }
 
+function renderExactCommandTable() {
+  const lines = ['| Exact normalized input | Action |', '|---|---|'];
+  for (const entry of DETERMINISTIC_COMMANDS) {
+    const phrases = entry.phrases.map((phrase) => `"${phrase}"`).join(', ');
+    const action = entry.projectScript
+      ? `\`npm run ${entry.projectScript}\` only when \`package.json#scripts.${entry.projectScript}\` exists; otherwise non-final`
+      : `\`${entry.command}\``;
+    lines.push(`| ${phrases} | ${action} |`);
+  }
+  return lines;
+}
+
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 }
@@ -115,11 +136,21 @@ function renderDemoData(table) {
   const lines = ['const TIER2 = ['];
   for (const skill of table.skills) {
     if (DEMO_TIER3_SKILLS.includes(skill.name)) continue;
-    const pattern = `/\\b(${skill.keywords.map(escapeRegExp).join('|')})\\b/i`;
+    const pattern = `/(?:^|[^\\w])(${skill.keywords.map(escapeRegExp).join('|')})(?=$|[^\\w])/i`;
     const icon = DEMO_ICONS[skill.name] || DEMO_DEFAULT_ICON;
-    lines.push(`  { re: ${pattern}, skill: '/${skill.name}', bundle: '${skill.productBundle}',`);
+    lines.push(`  { re: ${pattern}, skill: ${JSON.stringify(routeFor(skill.name))}, bundle: '${skill.productBundle}',`);
     const publicDescription = skill.description.replace(/\u2014/g, ' - ');
     lines.push(`    desc: ${JSON.stringify(publicDescription)}, icon: '${icon}' },`);
+  }
+  lines.push('];');
+  return lines;
+}
+
+function renderDemoExactData() {
+  const lines = ['const TIER0 = ['];
+  for (const entry of DETERMINISTIC_COMMANDS) {
+    lines.push(`  { id: ${JSON.stringify(entry.id)}, phrases: ${JSON.stringify(entry.phrases)},`);
+    lines.push(`    selected: ${JSON.stringify(entry.selected)}, command: ${JSON.stringify(entry.command)}, projectScript: ${JSON.stringify(entry.projectScript || null)}, reason: ${JSON.stringify(entry.reason)} },`);
   }
   lines.push('];');
   return lines;
@@ -161,8 +192,20 @@ function expectedSurfaces(projectRoot) {
   const table = buildRoutingTable(projectRoot);
   const paths = surfacePaths(projectRoot);
   const skillContent = fs.readFileSync(paths.skillTable, 'utf8');
-  const demoContent = fs.readFileSync(paths.demoData, 'utf8');
+  const demoContent = fs.existsSync(paths.demoData) ? fs.readFileSync(paths.demoData, 'utf8') : null;
   const jsonContent = fs.existsSync(paths.json) ? fs.readFileSync(paths.json, 'utf8') : null;
+  const expectedSkillContent = replaceBlock(
+    replaceBlock(skillContent, MARKERS.exactCommandTable, renderExactCommandTable(), 'skills/do/SKILL.md'),
+    MARKERS.skillTable,
+    renderSkillTable(table),
+    'skills/do/SKILL.md',
+  );
+  const expectedDemoContent = demoContent === null ? null : replaceBlock(
+    replaceBlock(demoContent, MARKERS.demoExactData, renderDemoExactData(), 'docs/index.html'),
+    MARKERS.demoData,
+    renderDemoData(table),
+    'docs/index.html',
+  );
 
   return {
     table,
@@ -179,14 +222,14 @@ function expectedSurfaces(projectRoot) {
         name: 'skills/do/SKILL.md',
         filePath: paths.skillTable,
         actual: skillContent,
-        expected: replaceBlock(skillContent, MARKERS.skillTable, renderSkillTable(table), 'skills/do/SKILL.md'),
+        expected: expectedSkillContent,
       },
-      {
+      ...(demoContent === null ? [] : [{
         name: 'docs/index.html',
         filePath: paths.demoData,
         actual: demoContent,
-        expected: replaceBlock(demoContent, MARKERS.demoData, renderDemoData(table), 'docs/index.html'),
-      },
+        expected: expectedDemoContent,
+      }]),
     ],
   };
 }
@@ -242,7 +285,7 @@ function main() {
   if (checkMode) {
     const drift = checkProject(projectRoot);
     if (drift.length === 0) {
-      console.log('routing surfaces in sync (routing-table.json, skills/do/SKILL.md, docs/index.html)');
+      console.log('routing surfaces in sync');
       return;
     }
     console.error('routing surfaces out of sync:');
@@ -275,6 +318,8 @@ module.exports = {
   checkProject,
   diffTexts,
   renderDemoData,
+  renderDemoExactData,
+  renderExactCommandTable,
   renderJson,
   renderSkillTable,
   replaceBlock,

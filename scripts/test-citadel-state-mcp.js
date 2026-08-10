@@ -201,6 +201,8 @@ async function run() {
       'citadel_operation_pause', 'citadel_operation_resume', 'citadel_operation_stop', 'citadel_operation_retry',
     ]) assert(tools.some((tool) => tool.name === name), `missing ${name}`);
     assert(tools.every((tool) => tool.inputSchema.additionalProperties === false));
+    const workflowTool = tools.find((tool) => tool.name === 'citadel_workflow_prompt');
+    assert(workflowTool.inputSchema.properties.workflow.enum.includes('qa'));
 
     const listed = payload(responses.get(3));
     assert.equal(listed.outcome, 'accepted');
@@ -217,7 +219,7 @@ async function run() {
     for (const id of [12, 13, 14, 16]) assert.equal(payload(responses.get(id)).outcome, 'rejected');
     assert.equal(responses.get(15).error.code, -32602);
     assert.equal(typeof payload(responses.get(17)).campaigns, 'number');
-    assert(responses.get(18).result.content[0].text.includes('Citadel QA'));
+    assert(responses.get(18).result.content[0].text.includes('installed Citadel /qa'));
 
     const pendingDir = path.join(root, '.planning', 'intents', 'pending');
     const pendingFiles = fs.readdirSync(pendingDir).filter((name) => name.endsWith('.json'));

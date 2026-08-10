@@ -16,6 +16,11 @@ const {
 const configControl = require('../../core/config');
 
 const PROJECT_ROOT = fixedProjectRoot(process.env.CITADEL_PROJECT_ROOT || process.cwd());
+const CITADEL_ROOT = path.resolve(__dirname, '..', '..');
+const INSTALLED_WORKFLOWS = Object.freeze(fs.readdirSync(path.join(CITADEL_ROOT, 'skills'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(CITADEL_ROOT, 'skills', entry.name, 'SKILL.md')))
+  .map((entry) => entry.name)
+  .sort());
 const MUTATION_BASE_PROPERTIES = Object.freeze({
   project_root: { type: 'string' },
   operation_id: { type: 'string' },
@@ -52,7 +57,7 @@ const TOOL_DEFS = Object.freeze([
   {
     name: 'citadel_workflow_prompt',
     description: 'Return a ready-to-run prompt for a bounded Citadel workflow.',
-    inputSchema: objectSchema({ workflow: { type: 'string' }, target: { type: 'string' } }, ['workflow']),
+    inputSchema: objectSchema({ workflow: { type: 'string', enum: INSTALLED_WORKFLOWS }, target: { type: 'string' } }, ['workflow']),
   },
   {
     name: 'citadel_operation_list',
@@ -138,14 +143,7 @@ function status(includeFiles = false) {
 
 function workflowPrompt(workflow, target) {
   const suffix = target ? ` Target: ${target}.` : '';
-  const prompts = {
-    triage: `Use Citadel triage on this GitHub item. Investigate code and PR context, decide what belongs, make safe edits when needed, and draft an appreciative direct response.${suffix}`,
-    'pr-watch': `Use Citadel pr-watch for this PR. Read CI logs, fix only verified failures, rerun focused checks, and record progress in .planning/.${suffix}`,
-    daemon: `Continue the active Citadel daemon. Read .planning/daemon.json, enforce budget/status gates, continue the campaign, and append a run summary.${suffix}`,
-    schedule: `Create or inspect a Citadel schedule. Prefer Codex app automations for durable recurring work and record the plan in .planning/codex-automations/.${suffix}`,
-    qa: `Run Citadel QA. Use the in-app browser or Playwright, save screenshots and reports, and record artifact paths with scripts/codex-app-artifacts.js.${suffix}`,
-  };
-  return prompts[workflow] || `Use Citadel /${workflow} with durable .planning state and verification evidence.${suffix}`;
+  return `Use installed Citadel /${workflow}. Read skills/${workflow}/SKILL.md, preserve durable .planning state, and record verification evidence.${suffix}`;
 }
 
 function validateReadOutput(name, value) {

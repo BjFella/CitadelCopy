@@ -34,6 +34,7 @@ assert.equal(profileForFiles(['scripts/deploy-steward.js'], { test: 'node test.j
 assert(profileForFiles(['scripts/deploy-steward.js'], { test: 'node test.js' }).commands.includes('node scripts/test-deploy-steward.js'));
 assert.equal(profileForFiles(['core/campaigns/update-campaign.js'], { test: 'node test.js' }).id, 'campaign-delivery');
 assert.equal(profileForFiles(['docs/CAMPAIGNS.md'], { test: 'node test.js' }).id, 'documentation');
+assert.equal(profileForFiles(['src/example.js'], {}).primaryCommand, 'git diff --check');
 
 withTempProject((projectRoot) => {
   fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify({

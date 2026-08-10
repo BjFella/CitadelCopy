@@ -87,6 +87,9 @@ function testSuccessPaths() {
   for (const runtime of ['claude', 'codex']) {
     const result = run(runtime);
     assertSuccess(result, runtime, before);
+    const route = result.steps.find((step) => step.id === 'route');
+    assert(route.evidence.includes('route=direct-command'));
+    assert(route.evidence.includes('command=npm run test'));
     assert.equal(digestDirectory(FIXTURE_ROOT), before);
   }
 }

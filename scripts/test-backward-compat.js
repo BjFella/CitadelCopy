@@ -13,6 +13,7 @@
 'use strict';
 
 const assert = require('assert');
+const path = require('path');
 
 const { parseCampaignContent, parseFrontmatter } = require('../core/campaigns/parse-campaign');
 const { validateAgentRunEvent, validateSessionCostEvent, validateHookTimingEvent } = require('../core/telemetry/schema');
@@ -20,6 +21,12 @@ const { readExternalActionPolicy, detectExternalAction } = require('../core/poli
 const { parseProjectSpec, validateProjectSpec } = require('../core/project/load-project-spec');
 const { createEnvelope, normalizeToolName, normalizePathFields } = require('../core/hooks/normalize-event');
 const { escapeRegExp } = require('../core/policy/external-actions');
+const {
+  dispatchHook,
+  extractApplyPatchTargets,
+  parseApplyPatchOperations,
+  projectCodexOutput,
+} = require('../hooks_src/codex-adapter');
 
 let passed = 0;
 let failed = 0;
@@ -314,12 +321,185 @@ check('createEnvelope produces correct structure for Claude events', () => {
 
 check('createEnvelope produces correct structure for Codex events', () => {
   const envelope = createEnvelope('codex', 'PreToolUse', {
-    tool_type: 'shell',
-    toolInput: { command: 'ls' },
+    cwd: 'C:/repo',
+    tool_name: 'Bash',
+    tool_input: { command: 'git status' },
   });
   assert.equal(envelope.event_id, 'pre_tool');
   assert.equal(envelope.runtime, 'codex');
   assert.equal(envelope.tool_name, 'Bash');
+  assert.equal(envelope.cwd, 'C:/repo');
+  assert.equal(envelope.tool_input.command, 'git status');
+});
+
+check('Codex lifecycle events normalize to their exact shared event IDs', () => {
+  assert.equal(createEnvelope('codex', 'UserPromptSubmit', {}).event_id, 'user_prompt_submit');
+  assert.equal(createEnvelope('codex', 'SessionEnd', {}).event_id, 'session_end');
+});
+
+check('Codex shell_command remains a normalization-only compatibility alias for Bash', () => {
+  assert.equal(normalizeToolName('shell_command'), 'Bash');
+});
+
+check('Codex Stop output translates Claude context without changing valid block decisions', () => {
+  const context = projectCodexOutput({
+    nativeEventName: 'Stop',
+    stdout: JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'Stop',
+        additionalContext: 'Fix the reported issue.',
+      },
+    }),
+    stderr: '',
+  });
+  assert.deepStrictEqual(JSON.parse(context.stdout), {
+    systemMessage: 'Fix the reported issue.',
+  });
+  assert.equal(context.stderr, '');
+
+  const block = projectCodexOutput({
+    nativeEventName: 'Stop',
+    stdout: JSON.stringify({ decision: 'block', reason: 'Fix it.' }),
+    stderr: '',
+  });
+  assert.deepStrictEqual(JSON.parse(block.stdout), { decision: 'block', reason: 'Fix it.' });
+});
+
+check('Codex Stop output routes non-JSON observer text away from stdout', () => {
+  const projected = projectCodexOutput({
+    nativeEventName: 'Stop',
+    stdout: 'human-readable observer output\n',
+    stderr: 'existing warning\n',
+  });
+  assert.equal(projected.stdout, '');
+  assert.equal(projected.stderr, 'human-readable observer output\nexisting warning\n');
+});
+
+check('Codex Stop output rejects malformed block decisions but leaves other events untouched', () => {
+  const malformedBlock = projectCodexOutput({
+    nativeEventName: 'Stop',
+    stdout: JSON.stringify({ decision: 'block' }),
+    stderr: '',
+  });
+  assert.equal(malformedBlock.stdout, '');
+  assert.match(malformedBlock.stderr, /"decision":"block"/);
+
+  const nonStop = JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'PostToolUse',
+      additionalContext: 'observer context',
+    },
+  });
+  assert.equal(projectCodexOutput({
+    nativeEventName: 'PostToolUse',
+    stdout: nonStop,
+    stderr: '',
+  }).stdout, nonStop);
+});
+
+check('Codex apply_patch target extraction covers add, update, delete, and move paths', () => {
+  const command = [
+    '*** Begin Patch',
+    '*** Add File: src/add.js',
+    '+add',
+    '*** Update File: src/old.js',
+    '*** Move to: src/new.js',
+    '@@',
+    '-old',
+    '+new',
+    '*** Delete File: src/delete.js',
+    '*** End Patch',
+  ].join('\n');
+  const targets = extractApplyPatchTargets(command);
+  assert.deepStrictEqual(targets, [
+    'src/add.js',
+    'src/old.js',
+    'src/new.js',
+    'src/delete.js',
+  ]);
+  assert.deepStrictEqual(parseApplyPatchOperations(command), [
+    { filePath: 'src/add.js', toolName: 'Write' },
+    { filePath: 'src/old.js', toolName: 'Edit' },
+    { filePath: 'src/new.js', toolName: 'Write' },
+    { filePath: 'src/delete.js', toolName: 'Edit' },
+  ]);
+});
+
+check('Codex adapter fails closed when a security hook is missing', () => {
+  const result = dispatchHook('protect-files', '{}', {
+    hooksDir: path.join(__dirname, 'fixtures', 'missing-hooks'),
+  });
+  assert.equal(result.status, 2);
+});
+
+check('Codex adapter leaves missing observer hooks fail-open', () => {
+  const result = dispatchHook('governance', '{}', {
+    hooksDir: path.join(__dirname, 'fixtures', 'missing-hooks'),
+  });
+  assert.equal(result.status, 0);
+});
+
+check('Codex adapter fails closed on malformed security-hook input', () => {
+  const result = dispatchHook('external-action-gate', '{');
+  assert.equal(result.status, 2);
+});
+
+check('Codex adapter fails closed on schema-invalid security-hook input', () => {
+  const result = dispatchHook('protect-files', '{}');
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /input projection failed/);
+});
+
+check('Codex adapter fails closed on targetless apply_patch input', () => {
+  const result = dispatchHook('protect-files', JSON.stringify({
+    hook_event_name: 'PreToolUse',
+    cwd: process.cwd(),
+    tool_name: 'apply_patch',
+    tool_input: { command: '*** Begin Patch\n*** End Patch' },
+  }));
+  assert.equal(result.status, 2);
+});
+
+check('Codex adapter leaves malformed observer-hook input fail-open', () => {
+  const result = dispatchHook('governance', '{');
+  assert.equal(result.status, 0);
+});
+
+check('Codex adapter fails closed when a security-hook process cannot spawn', () => {
+  const result = dispatchHook('protect-files', JSON.stringify({
+    hook_event_name: 'PreToolUse',
+    cwd: process.cwd(),
+    tool_name: 'Edit',
+    tool_input: { file_path: 'src/app.js' },
+  }), {
+    spawnSync: () => ({ status: null, error: new Error('synthetic spawn failure') }),
+  });
+  assert.equal(result.status, 2);
+});
+
+check('Codex adapter maps abnormal security-hook child exit to block status 2', () => {
+  const result = dispatchHook('protect-files', JSON.stringify({
+    hook_event_name: 'PreToolUse',
+    cwd: process.cwd(),
+    tool_name: 'Edit',
+    tool_input: { file_path: 'src/app.js' },
+  }), {
+    spawnSync: () => ({ status: 1, stdout: '', stderr: 'synthetic child failure\n' }),
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /exited abnormally/);
+});
+
+check('Codex adapter leaves observer-hook spawn failures fail-open', () => {
+  const result = dispatchHook('governance', JSON.stringify({
+    hook_event_name: 'PreToolUse',
+    cwd: process.cwd(),
+    tool_name: 'Edit',
+    tool_input: { file_path: 'src/app.js' },
+  }), {
+    spawnSync: () => ({ status: null, error: new Error('synthetic spawn failure') }),
+  });
+  assert.equal(result.status, 0);
 });
 
 // ============================================================

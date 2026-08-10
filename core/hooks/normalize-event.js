@@ -8,6 +8,9 @@ const { CIT_EVENT_IDS } = require(path.join(__dirname, '..', 'contracts', 'event
 const TOOL_MAP = Object.freeze({
   shell: 'Bash',
   bash: 'Bash',
+  // Compatibility for pre-canonical/synthetic payloads. Current Codex hook
+  // telemetry uses the authoritative Bash tool name.
+  shell_command: 'Bash',
   edit: 'Edit',
   write: 'Write',
   read: 'Read',
@@ -23,10 +26,11 @@ const CODEX_EVENT_MAP = Object.freeze({
   PostToolUse: CIT_EVENT_IDS.POST_TOOL,
   PreCompact: CIT_EVENT_IDS.PRE_COMPACT,
   PostCompact: CIT_EVENT_IDS.POST_COMPACT,
-  UserPromptSubmit: CIT_EVENT_IDS.USER_PROMPT,
+  UserPromptSubmit: CIT_EVENT_IDS.USER_PROMPT_SUBMIT,
   SubagentStart: CIT_EVENT_IDS.SUBAGENT_START,
   SubagentStop: CIT_EVENT_IDS.SUBAGENT_STOP,
   Stop: CIT_EVENT_IDS.STOP,
+  SessionEnd: CIT_EVENT_IDS.SESSION_END,
 });
 
 const CLAUDE_EVENT_MAP = Object.freeze({

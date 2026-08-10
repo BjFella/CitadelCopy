@@ -23,7 +23,8 @@ You keep the runtime and your repository. Citadel adds the operating contract ar
 
 - one natural-language entry point through `/do`
 - project state that survives a context reset or fresh session
-- hooks that protect files, verify work, and record evidence
+- hooks that block enumerated actions on covered runtime tool paths, report
+  quality signals, and record evidence
 - campaigns and handoffs written into the repository
 - coordinated agents working in isolated git worktrees
 - local telemetry for cost, routing, and activation
@@ -31,13 +32,21 @@ You keep the runtime and your repository. Citadel adds the operating contract ar
 
 The repository remains the source of truth. There is no hosted control plane required for the core workflow.
 
+For stable installation, use the archive, external manifest, and SHA-256
+sidecar from one GitHub Release and verify them together. A direct clone, pull,
+or GitHub repository marketplace source follows source-main development and is
+not the stable release channel.
+
 ## Where other tools are better
 
 Choose CrewAI, LangChain, or LangGraph when you need to ship an agent as part of your own product, define its runtime in application code, connect it to business systems, or operate it as a production service.
 
 Choose Superpowers when your main problem is development discipline and you want an opinionated workflow centered on design, planning, TDD, review, and finishing branches. Citadel and Superpowers are complementary: one supplies operating infrastructure, the other supplies methodology.
 
-Citadel also does not replace code review, sandbox an untrusted host, or prove that an agent's output is correct. It makes the work more persistent, inspectable, and enforceable.
+Citadel also does not replace code review, sandbox an untrusted host, or prove
+that an agent's output is correct. It makes work more persistent and
+inspectable, and makes selected covered actions enforceable. Quality signals
+are advisory by default; a configured Stop gate may block a covered session.
 
 Operation Control is not a claim that Citadel has a better model. It is the
 runtime-neutral layer that chooses the least complex declared path likely to

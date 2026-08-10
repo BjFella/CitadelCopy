@@ -156,13 +156,28 @@ function checkOrient(dashboard) {
 
 function checkRoute(projectRoot, routeRequest) {
   const preview = buildPreview(routeRequest, { projectRoot });
-  const usefulRoute = Boolean(preview.selected && preview.command && preview.verification);
+  const hasFinalRoute = preview.final === true
+    && preview.requiresSemanticClassification === false
+    && Boolean(preview.selected && preview.command && preview.verification);
+  const hasBoundedSemanticRoute = preview.final === false
+    && preview.selected === null
+    && preview.command === null
+    && preview.requiresSemanticClassification === true
+    && preview.canRunNow === false
+    && preview.boundary === 'semantic-classification-required'
+    && Boolean(preview.suggestedRoute && preview.verification);
+  const usefulRoute = hasFinalRoute || hasBoundedSemanticRoute;
+  const route = hasFinalRoute ? preview.selected : preview.suggestedRoute;
   return {
     id: 'route',
     status: usefulRoute ? 'pass' : 'fail',
-    detail: `${preview.input} -> ${preview.selected}`,
+    detail: hasBoundedSemanticRoute
+      ? `${preview.input} -> ${route} candidate; runtime semantic classification required`
+      : `${preview.input} -> ${route || '(no route)'}`,
     evidence: [
       `tier=${preview.tier}`,
+      `route=${route || '(none)'}`,
+      `final=${preview.final === true}`,
       `boundary=${preview.boundary}`,
       `verify=${preview.verification}`,
     ],

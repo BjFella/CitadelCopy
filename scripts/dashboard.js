@@ -1159,11 +1159,11 @@ function buildRepairItems(snapshot) {
   if (snapshot.pending.docSync > 0) {
     repairs.push(action({
       label: 'Drain doc-sync queue',
-      command: '/learn --doc-sync',
+      command: 'node hooks_src/doc-sync.js --project-root .',
       why: `${snapshot.pending.docSync} doc-sync item(s) are queued; project guidance may be stale.`,
       confidence: snapshot.pending.docSync > 50 ? 'high' : 'medium',
       repairAvailable: true,
-      runbook: 'skills/learn/SKILL.md',
+      runbook: 'hooks_src/doc-sync.js',
     }));
   }
 
@@ -1208,7 +1208,7 @@ function chooseNextAction(snapshot) {
   if (!snapshot.repairs || snapshot.repairs.length === 0) {
     return action({
       label: 'No urgent Citadel action detected',
-      command: 'npm run dashboard',
+      command: 'node scripts/dashboard.js',
       why: 'Campaigns, queues, worktree status, and recent hook state do not show an immediate repair.',
       confidence: 'medium',
       repairAvailable: false,
@@ -1244,7 +1244,7 @@ function renderDashboard(snapshot) {
   lines.push('OPERATOR ARTIFACTS');
   const operatorArtifacts = snapshot.operatorArtifacts || {};
   if (!operatorArtifacts.nextActionReport && !operatorArtifacts.approvalCapsule) {
-    lines.push('  (none recorded yet - run npm run next)');
+    lines.push('  (none recorded yet - run node scripts/next-action.js)');
   } else {
     if (operatorArtifacts.nextActionReport) {
       const report = operatorArtifacts.nextActionReport;
@@ -1457,7 +1457,7 @@ function renderDashboard(snapshot) {
 
   lines.push('');
   lines.push('QUICK COMMANDS');
-  lines.push('  npm run dashboard - show this control plane');
+  lines.push('  node scripts/dashboard.js - show this control plane');
   lines.push('  /do continue      - resume active campaign');
   lines.push('  /merge-review     - review completed fleet work');
   lines.push('  /telemetry        - cost and hook breakdown');

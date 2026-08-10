@@ -53,6 +53,18 @@ function writeFile(filePath, content) {
   fs.writeFileSync(filePath, content, 'utf8');
 }
 
+function copyFile(sourcePath, targetPath) {
+  if (!fs.existsSync(sourcePath)) {
+    throw new Error(`Required Codex plugin asset is missing: ${sourcePath}`);
+  }
+  if (DRY_RUN) {
+    console.log(`  [dry-run] Would copy: ${sourcePath} -> ${targetPath}`);
+    return;
+  }
+  ensureDir(path.dirname(targetPath));
+  fs.copyFileSync(sourcePath, targetPath);
+}
+
 function generateDelegate(scriptName) {
   return (
     "#!/usr/bin/env node\n" +
@@ -348,6 +360,7 @@ function generatePluginManifest() {
   const repositoryUrl = repoUrl.replace(/^git\+/, '').replace(/\.git$/, '');
   const skillCount = countSkills();
   const pluginInCitadelRoot = path.resolve(PROJECT_ROOT) === CITADEL_ROOT;
+  const rootIconPath = pluginInCitadelRoot ? './assets/icon.svg' : './.agents/assets/icon.svg';
 
   const manifest = {
     name: pkg.name || 'citadel',
@@ -366,12 +379,11 @@ function generatePluginManifest() {
     hooks: CODEX_PLUGIN_HOOKS_PATH,
     interface: {
       displayName: 'Citadel Harness',
-      composerIcon: './assets/icon.svg',
-      logo: './assets/icon.svg',
+      composerIcon: rootIconPath,
+      logo: rootIconPath,
       websiteURL: 'https://sethgammon.github.io/Citadel/',
       privacyPolicyURL: 'https://github.com/SethGammon/Citadel/blob/main/PRIVACY.md',
       termsOfServiceURL: 'https://github.com/SethGammon/Citadel/blob/main/LICENSE',
-      screenshots: ['./assets/social-preview.png'],
       shortDescription: `Codex-native orchestration: ${skillCount} skills, campaigns, fleet coordination, quality gates`,
       longDescription: 'Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.',
       developerName: 'Citadel',
@@ -400,6 +412,11 @@ function generatePluginManifest() {
   const projectedManifest = {
     ...manifest,
     skills: './skills/',
+    interface: {
+      ...manifest.interface,
+      composerIcon: './assets/icon.svg',
+      logo: './assets/icon.svg',
+    },
   };
   delete projectedManifest.hooks;
   delete projectedManifest.mcpServers;
@@ -407,6 +424,14 @@ function generatePluginManifest() {
   writeFile(
     path.join(PROJECT_ROOT, '.agents', '.codex-plugin', 'plugin.json'),
     JSON.stringify(projectedManifest, null, 2) + '\n'
+  );
+}
+
+function syncPluginAssets() {
+  console.log('Syncing Codex plugin assets to .agents/assets/...');
+  copyFile(
+    path.join(CITADEL_ROOT, 'assets', 'icon.svg'),
+    path.join(PROJECT_ROOT, '.agents', 'assets', 'icon.svg')
   );
 }
 
@@ -734,6 +759,7 @@ function main() {
 
   generateConfigToml();
   generatePluginMcpConfig();
+  syncPluginAssets();
   generatePluginManifest();
   generatePluginHooks();
   translateAgents();

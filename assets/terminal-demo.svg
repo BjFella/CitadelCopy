@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="648" viewBox="0 0 1200 648" role="img" aria-labelledby="td-title-a">
-  <title id="td-title-a">Illustrative Citadel session: /do routes an audit request through the router tiers to marshal, which reviews, fixes, tests, verifies, and writes a handoff.</title>
+  <title id="td-title-a">Illustrative live Citadel runtime session, not a static routing preview: /do receives a review-and-fix request, the runtime agent classifies it, Marshal runs the work, evidence is recorded, and the next session can resume.</title>
   <defs>
     <linearGradient id="td-accent" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#00d2ff"/>
@@ -30,21 +30,21 @@
       }
       .td-scene { animation: td-reset 28s linear infinite; }
 
-      /* Command types in: 56 chars, 9px each = 504px */
+      /* Command types in: 57 chars, 9px each = 513px */
       @keyframes td-type {
         0%  { width: 0; animation-timing-function: linear; }
-        2%  { width: 0; animation-timing-function: steps(56, end); }
-        14% { width: 504px; }
-        100%{ width: 504px; }
+        2%  { width: 0; animation-timing-function: steps(57, end); }
+        14% { width: 513px; }
+        100%{ width: 513px; }
       }
       .td-typeclip { animation: td-type 28s infinite; }
 
       /* Caret rides the typing edge, then parks + blinks until output starts */
       @keyframes td-caret-x {
         0%  { transform: translateX(0); animation-timing-function: linear; }
-        2%  { transform: translateX(0); animation-timing-function: steps(56, end); }
-        14% { transform: translateX(504px); }
-        100%{ transform: translateX(504px); }
+        2%  { transform: translateX(0); animation-timing-function: steps(57, end); }
+        14% { transform: translateX(513px); }
+        100%{ transform: translateX(513px); }
       }
       @keyframes td-caret-on {
         0%,15%   { opacity: 1; }
@@ -108,7 +108,7 @@
         .td-r8,.td-r9,.td-r10,.td-r11,.td-r12,.td-r13,.td-r14 {
           animation: none;
         }
-        .td-typeclip { width: 504px; }
+        .td-typeclip { width: 513px; }
         .td-caret, .td-fl { opacity: 0; }
       }
     </style>
@@ -131,7 +131,7 @@
   <circle cx="110" cy="41" r="6.5" fill="#febc2e"/>
   <circle cx="132" cy="41" r="6.5" fill="#28c840"/>
   <text x="600" y="46" class="td-sans" font-size="12.5" fill="#8b949e" text-anchor="middle">claude code · ~/your-project</text>
-  <text x="1118" y="46" class="td-sans" font-size="10" fill="#4a5568" text-anchor="end" letter-spacing="1">CITADEL · ILLUSTRATIVE SESSION</text>
+  <text x="1118" y="46" class="td-sans" font-size="10" fill="#4a5568" text-anchor="end" letter-spacing="1">CITADEL · ILLUSTRATIVE LIVE RUNTIME</text>
   <rect x="60" y="20" width="1080" height="2.5" rx="1.25" fill="url(#td-accent)" opacity="0.8"/>
 
   <!-- ════════════ SCENE (everything that resets each loop) ════════════ -->
@@ -140,25 +140,25 @@
     <!-- Command line -->
     <text x="96" y="114" class="td-mono" fill="#3fb950">~/your-project $</text>
     <g clip-path="url(#td-cmdclip)">
-      <text x="262" y="114" class="td-mono" fill="#79c0ff">/do audit the auth module and fix the highest-risk issue</text>
+      <text x="262" y="114" class="td-mono" fill="#79c0ff">/do review the auth module and fix the highest-risk issue</text>
     </g>
     <rect class="td-caret" x="263" y="99" width="9" height="18" fill="#79c0ff"/>
 
     <!-- Router block -->
     <g class="td-r1">
-      <text x="96" y="166" class="td-mono" fill="#00d2ff" filter="url(#td-glow)">◇ citadel router</text>
+      <text x="96" y="166" class="td-mono" fill="#00d2ff" filter="url(#td-glow)">◇ REQUEST · citadel /do runtime</text>
     </g>
     <g class="td-r2">
-      <text x="122" y="194" class="td-mono" fill="#8b949e">tier 0 · pattern match <tspan fill="#30363d">·····················</tspan> <tspan fill="#4a5568">no match</tspan></text>
+      <text x="122" y="194" class="td-mono" fill="#8b949e">tier 0 · exact command <tspan fill="#30363d">·····················</tspan> <tspan fill="#4a5568">no match</tspan></text>
     </g>
     <g class="td-r3">
       <text x="122" y="222" class="td-mono" fill="#8b949e">tier 1 · active state <tspan fill="#30363d">······················</tspan> <tspan fill="#4a5568">no open campaign</tspan></text>
     </g>
     <g class="td-r4">
-      <text x="122" y="250" class="td-mono" fill="#8b949e">tier 2 · keyword table <tspan fill="#30363d">·····················</tspan> <tspan fill="#e6edf3">"audit"</tspan> <tspan fill="#4a5568">→ candidate found</tspan></text>
+      <text x="122" y="250" class="td-mono" fill="#8b949e">tier 2 · generated candidates <tspan fill="#30363d">·················</tspan> <tspan fill="#e6edf3">"review"</tspan> <tspan fill="#4a5568">→ /review candidate</tspan></text>
     </g>
     <g class="td-r5">
-      <text x="122" y="278" class="td-mono" fill="#8b949e">tier 3 · llm classifier <tspan fill="#30363d">····················</tspan> <tspan fill="#4a5568">complexity 3/5 · single session</tspan></text>
+      <text x="122" y="278" class="td-mono" fill="#8b949e">tier 3 · runtime semantic classifier <tspan fill="#30363d">···············</tspan> <tspan fill="#4a5568">complexity 3/5 · single session</tspan></text>
     </g>
     <g class="td-r6">
       <rect class="td-fl" x="114" y="296" width="252" height="30" rx="6" fill="#58a6ff"/>
@@ -168,28 +168,28 @@
 
     <!-- Marshal block -->
     <g class="td-r7">
-      <text x="96" y="372" class="td-mono" fill="#58a6ff">◆ marshal 1/4</text>
+      <text x="96" y="372" class="td-mono" fill="#58a6ff">◆ RUN 1/4</text>
       <text x="312" y="372" class="td-mono" fill="#c9d1d9">/review src/auth <tspan fill="#30363d">··················</tspan> <tspan fill="#3fb950">✓</tspan> <tspan fill="#f0883e">3 findings</tspan></text>
     </g>
     <g class="td-r8">
-      <text x="96" y="400" class="td-mono" fill="#58a6ff">◆ marshal 2/4</text>
+      <text x="96" y="400" class="td-mono" fill="#58a6ff">◆ RUN 2/4</text>
       <text x="312" y="400" class="td-mono" fill="#c9d1d9">fix: token expiry not enforced <tspan fill="#30363d">····</tspan> <tspan fill="#3fb950">✓ patched</tspan></text>
     </g>
     <g class="td-r9">
-      <text x="96" y="428" class="td-mono" fill="#58a6ff">◆ marshal 3/4</text>
+      <text x="96" y="428" class="td-mono" fill="#58a6ff">◆ RUN 3/4</text>
       <text x="312" y="428" class="td-mono" fill="#c9d1d9">/test-gen for changed files <tspan fill="#30363d">·······</tspan> <tspan fill="#3fb950">✓ 12 tests</tspan></text>
     </g>
     <g class="td-r10">
-      <text x="96" y="456" class="td-mono" fill="#58a6ff">◆ marshal 4/4</text>
-      <text x="312" y="456" class="td-mono" fill="#c9d1d9">verify: npm test <tspan fill="#30363d">··················</tspan> <tspan fill="#3fb950">✓ 84 passing</tspan></text>
+      <text x="96" y="456" class="td-mono" fill="#58a6ff">◆ RUN 4/4</text>
+      <text x="312" y="456" class="td-mono" fill="#c9d1d9">verify: declared test script <tspan fill="#30363d">··········</tspan> <tspan fill="#3fb950">✓ 84 passing</tspan></text>
     </g>
 
     <!-- Summary block -->
     <g class="td-r11">
-      <text x="96" y="512" class="td-mono" fill="#3fb950" filter="url(#td-glow)">✓ done · highest-risk issue fixed and verified</text>
+      <text x="96" y="512" class="td-mono" fill="#3fb950" filter="url(#td-glow)">✓ EVIDENCE · highest-risk issue fixed and verified</text>
     </g>
     <g class="td-r12">
-      <text x="122" y="540" class="td-mono" fill="#8b949e">handoff → <tspan fill="#c9d1d9">.planning/handoffs/auth-audit.md</tspan> <tspan fill="#4a5568">· next session resumes from here</tspan></text>
+      <text x="122" y="540" class="td-mono" fill="#8b949e">RESUME → <tspan fill="#c9d1d9">.planning/handoffs/auth-review.md</tspan> <tspan fill="#4a5568">· next session starts from evidence</tspan></text>
     </g>
     <g class="td-r13">
       <text x="122" y="568" class="td-mono" fill="#8b949e">/cost → <tspan fill="#f0883e">this task $0.42</tspan> <tspan fill="#4a5568">· session $1.87 · tracked locally</tspan></text>

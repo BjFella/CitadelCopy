@@ -11,6 +11,7 @@ const {
   applyPlan, createAdoptionPlan, createLeavePlan, doctor,
 } = require('../core/adoption');
 const { ACTIVE_RECEIPT, LOCK_PATH } = require('../core/adoption/footprint');
+const { __test: { publishPlanOutput } } = require('./adopt');
 
 let passed = 0;
 
@@ -54,6 +55,15 @@ function target(root) {
   return initializeGit(root);
 }
 
+function directoryAlias(targetPath, aliasPath) {
+  fs.symlinkSync(
+    path.resolve(targetPath),
+    aliasPath,
+    process.platform === 'win32' ? 'junction' : 'dir',
+  );
+  return aliasPath;
+}
+
 function treeDigest(root) {
   const hash = crypto.createHash('sha256');
   const visit = (directory) => {
@@ -88,6 +98,182 @@ const suite = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-adoption-'));
 const sourceRoot = source(path.join(suite, 'source'));
 
 try {
+  test('CLI rejects an in-target saved plan and the documented outside-target plan applies cleanly', () => {
+    const root = target(path.join(suite, 'external-plan-path'));
+    const script = path.resolve(__dirname, 'adopt.js');
+    const inside = path.join(root, 'citadel-adoption.plan.json');
+    const rejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', inside, '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(rejected.status, 1);
+    assert.match(rejected.stderr, /Saved plan must be outside target/);
+    assert(!fs.existsSync(inside));
+
+    const targetAlias = directoryAlias(root, path.join(suite, 'external-plan-path-alias'));
+    const aliasedInside = path.join(targetAlias, 'citadel-adoption.plan.json');
+    const aliasRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', aliasedInside, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(aliasRejected.status, 1);
+    assert.match(aliasRejected.stderr, /Saved plan must be outside target/);
+    assert(!fs.existsSync(aliasedInside));
+
+    const finalAlias = directoryAlias(root, path.join(suite, 'final-plan-link.json'));
+    const finalAliasRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', finalAlias, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(finalAliasRejected.status, 1);
+    assert.match(finalAliasRejected.stderr, /Saved plan path must not be a symbolic link/);
+
+    const brokenAlias = directoryAlias(
+      path.join(suite, 'missing-plan-target'),
+      path.join(suite, 'broken-plan-link.json'),
+    );
+    const brokenAliasRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', brokenAlias, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(brokenAliasRejected.status, 1);
+    assert.match(brokenAliasRejected.stderr, /Saved plan path must not be a symbolic link/);
+
+    const readme = path.join(root, 'README.md');
+    const readmeBefore = fs.readFileSync(readme, 'utf8');
+    const hardlinkedOutput = path.join(suite, 'hardlinked-plan.json');
+    fs.linkSync(readme, hardlinkedOutput);
+    const hardlinkedOutputRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', hardlinkedOutput, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(hardlinkedOutputRejected.status, 1);
+    assert.match(hardlinkedOutputRejected.stderr, /Saved plan path already exists/);
+    assert.strictEqual(fs.readFileSync(readme, 'utf8'), readmeBefore);
+
+    const existingOutput = path.join(suite, 'existing-plan.json');
+    fs.writeFileSync(existingOutput, 'user-owned\n');
+    const existingOutputRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', existingOutput, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(existingOutputRejected.status, 1);
+    assert.match(existingOutputRejected.stderr, /Saved plan path already exists/);
+    assert.strictEqual(fs.readFileSync(existingOutput, 'utf8'), 'user-owned\n');
+
+    const outside = path.join(suite, 'saved-plans', 'nested', 'citadel-adoption.plan.json');
+    const planned = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', outside, '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(planned.status, 0, planned.stderr);
+    assert(fs.existsSync(outside));
+    assert.strictEqual(git(root, ['status', '--porcelain']), '');
+
+    const hardlinkedInput = path.join(path.dirname(outside), 'hardlinked-input.plan.json');
+    fs.linkSync(outside, hardlinkedInput);
+    const hardlinkedInputRejected = spawnSync(process.execPath, [
+      script, 'apply', hardlinkedInput, '--control-root', path.join(suite, 'external-plan-control'), '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(hardlinkedInputRejected.status, 1);
+    assert.match(hardlinkedInputRejected.stderr, /Saved plan file must have exactly one filesystem link/);
+    fs.unlinkSync(hardlinkedInput);
+
+    const applied = spawnSync(process.execPath, [
+      script, 'apply', outside, '--control-root', path.join(suite, 'external-plan-control'), '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(applied.status, 0, applied.stderr);
+  });
+
+  test('saved plan publication rejects hard-link and ancestor-redirection races', () => {
+    const hardLinkRoot = target(path.join(suite, 'plan-publish-hard-link-target'));
+    const hardLinkPlan = createAdoptionPlan({ source: sourceRoot, target: hardLinkRoot });
+    const collisionDirectory = path.join(suite, 'plan-publish-collision');
+    const collisionOutput = path.join(collisionDirectory, 'plan.json');
+    let stagedPath;
+    assert.throws(() => publishPlanOutput(hardLinkPlan, collisionOutput, {
+      beforeInstall({ stagedPath: pendingPath, target: installedPath }) {
+        stagedPath = pendingPath;
+        assert(!fs.existsSync(installedPath));
+        assert.deepStrictEqual(JSON.parse(fs.readFileSync(pendingPath, 'utf8')), hardLinkPlan);
+        fs.writeFileSync(installedPath, 'user-owned\n', { flag: 'wx' });
+      },
+    }), /Saved plan path already exists/);
+    assert.strictEqual(fs.readFileSync(collisionOutput, 'utf8'), 'user-owned\n');
+    assert(!fs.existsSync(stagedPath));
+    assert.deepStrictEqual(fs.readdirSync(collisionDirectory), ['plan.json']);
+
+    const hardLinkOutput = path.join(suite, 'plan-publish-hard-link', 'plan.json');
+    const racedLink = path.join(hardLinkRoot, 'raced-plan.json');
+    let hardLinkFailure;
+    try {
+      publishPlanOutput(hardLinkPlan, hardLinkOutput, {
+        afterInstall({ target: installedPath }) {
+          fs.linkSync(installedPath, racedLink);
+        },
+      });
+    } catch (error) {
+      hardLinkFailure = error;
+    }
+
+    const redirectRoot = target(path.join(suite, 'plan-publish-redirect-target'));
+    const redirectPlan = createAdoptionPlan({ source: sourceRoot, target: redirectRoot });
+    const redirectPublicationDirectory = path.join(suite, 'plan-publish-redirect-physical');
+    const redirectDirectory = path.join(suite, 'plan-publish-redirect-output');
+    fs.mkdirSync(redirectPublicationDirectory, { recursive: true });
+    directoryAlias(redirectPublicationDirectory, redirectDirectory);
+    const redirectOutput = path.join(redirectDirectory, 'plan.json');
+    const redirectedPlan = path.join(redirectRoot, 'plan.json');
+    let redirectFailure;
+    try {
+      publishPlanOutput(redirectPlan, redirectOutput, {
+        afterInstall() {
+          fs.unlinkSync(redirectDirectory);
+          directoryAlias(redirectRoot, redirectDirectory);
+        },
+      });
+    } catch (error) {
+      redirectFailure = error;
+    }
+
+    assert(hardLinkFailure, 'publication must fail if a hard link is added before final validation');
+    assert.match(hardLinkFailure.message, /exactly one filesystem link/);
+    assert(!fs.existsSync(hardLinkOutput));
+    assert(fs.existsSync(racedLink));
+    fs.unlinkSync(racedLink);
+    assert.strictEqual(git(hardLinkRoot, ['status', '--porcelain']), '');
+
+    assert(redirectFailure, 'publication must fail if the output ancestor is redirected before final validation');
+    assert.match(redirectFailure.message, /Saved plan must be outside target/);
+    assert(!fs.existsSync(redirectOutput));
+    assert(!fs.existsSync(redirectedPlan));
+    assert.strictEqual(git(redirectRoot, ['status', '--porcelain']), '');
+    fs.unlinkSync(redirectDirectory);
+    assert.deepStrictEqual(fs.readdirSync(redirectPublicationDirectory), []);
+  });
+
+  test('saved plan publication leaves the target untouched when an outside ancestor is redirected before mkdir', () => {
+    const root = target(path.join(suite, 'plan-publish-pre-mkdir-target'));
+    const before = treeDigest(root);
+    const plan = createAdoptionPlan({ source: sourceRoot, target: root });
+    const outsideDirectory = path.join(suite, 'plan-publish-pre-mkdir-outside');
+    const outputAlias = path.join(suite, 'plan-publish-pre-mkdir-alias');
+    fs.mkdirSync(outsideDirectory, { recursive: true });
+    const canonicalOutsideDirectory = typeof fs.realpathSync.native === 'function'
+      ? fs.realpathSync.native(outsideDirectory)
+      : fs.realpathSync(outsideDirectory);
+    directoryAlias(outsideDirectory, outputAlias);
+    const output = path.join(outputAlias, 'nested', 'plan.json');
+
+    assert.throws(() => publishPlanOutput(plan, output, {
+      beforeMkdir({ publicationTarget, requestedTarget }) {
+        assert.strictEqual(requestedTarget, output);
+        assert.strictEqual(publicationTarget, path.join(canonicalOutsideDirectory, 'nested', 'plan.json'));
+        fs.unlinkSync(outputAlias);
+        directoryAlias(root, outputAlias);
+      },
+    }), /Saved plan must be outside target/);
+
+    assert.strictEqual(treeDigest(root), before);
+    assert.deepStrictEqual(fs.readdirSync(outsideDirectory), []);
+    assert(!fs.existsSync(path.join(root, 'nested')));
+    assert.strictEqual(git(root, ['status', '--porcelain']), '');
+    fs.unlinkSync(outputAlias);
+  });
+
   test('fresh plan is no-write, apply is receipted, doctor is healthy, and exact leave exits', () => {
     const root = target(path.join(suite, 'fresh'));
     const before = treeDigest(root);

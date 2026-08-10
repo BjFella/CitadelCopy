@@ -1,11 +1,12 @@
 # Architecture
 
-> last-updated: 2026-05-07
+> last-updated: 2026-08-09
 
 How the harness works, from intent to execution.
 
-For the runtime-agnostic contract boundary, see
-[`docs/architecture/runtime-contract.md`](architecture/runtime-contract.md).
+The public operating vocabulary is: **Request → Run → Evidence → Needs You /
+Resume**. The repository is the state and evidence boundary; Claude Code or
+Codex remains the execution runtime.
 
 ## The Orchestration Ladder
 
@@ -20,7 +21,7 @@ For the runtime-agnostic contract boundary, see
   │   │
   │   └─ spawns /marshal for individual phases
   │
-  └─ /fleet ─── Parallel campaigns (waves of agents)
+  └─ /fleet --quick ─ Parallel campaigns (waves of agents)
       │
       └─ spawns agents in isolated worktrees
 ```
@@ -37,19 +38,34 @@ A multi-day feature doesn't fit in a single skill.
 
 ## The /do Router
 
-Four tiers of classification, each cheaper than the next:
+Four runtime stages narrow the request:
 
-1. **Tier 0: Pattern Match** (~0 tokens) — Regex catches trivial commands
-2. **Tier 1: Active State** (~0 tokens) — Checks for campaigns to resume
-3. **Tier 2: Skill Keywords** (~0 tokens) — Matches against installed skills
-4. **Tier 3: LLM Classifier** (~500 tokens) — Structured complexity analysis
+1. **Tier 0: Exact command** (~0 tokens): normalized whole-input equality,
+   never substring matching. Project `test`, `build`, and `typecheck` commands
+   are final only when the target `package.json` declares that script.
+2. **Tier 1: Active state** (~0 tokens): the live agent checks campaigns,
+   Fleet sessions, review-package state, and deterministic continuation.
+3. **Tier 2: Candidate discovery** (~0 tokens): generated built-in keywords
+   plus project-local custom skills produce evidence, not execution authority.
+4. **Tier 3: Runtime semantic classifier** (~500 tokens): the live agent
+   classifies scope, complexity, persistence, parallelism, and judgment, then
+   applies proportionality and activation before dispatch.
 
-First match wins. The router biases toward under-routing because it's cheaper
-to re-invoke than to waste tokens on over-routing.
+Only exact Tier 0 commands can skip semantic classification. A single Tier 2
+match is still a candidate, and multiple matches are carried forward rather
+than resolved by table order. An explicit validated route override changes
+selection only; it does not bypass activation, worktree, approval, or
+verification boundaries.
+
+`scripts/route-preview.js` is deliberately narrower. It reuses the exact
+contract and generated built-in candidates, but does not inspect Tier 1 state,
+discover project custom skills, or run Tier 3. Every natural-language preview
+is therefore non-final with `command: null`, `canRunNow: false`, and boundary
+`semantic-classification-required`. See [Routing Preview](ROUTING_PREVIEW.md).
 
 ## Hooks
 
-Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts covering <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. Full reference: [docs/HOOKS.md](HOOKS.md).
+Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts covering <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events.
 
 | Category | Key Hooks | Purpose |
 |----------|-----------|---------|
@@ -71,7 +87,7 @@ Three layers of policy enforcement:
 |-------|-----------|------|
 | Automatic | Hooks (PreToolUse, PostToolUse) | Every tool call |
 | Spawned judge | `policy-enforcer` agent (Haiku, read-only) | Red-reversibility operations in Archon |
-| Constitution | `docs/CONSTITUTION.md` — 3-tier rules | Tier 1 hard-blocks, Tier 2 warns, Tier 3 advisory |
+| Constitution | loaded governance rules, 3 tiers | Tier 1 hard-blocks, Tier 2 warns, Tier 3 advisory |
 
 The `policy-enforcer` agent receives a proposed action, reads the Tier-appropriate rules, and returns a structured JSON verdict (allow/block). Tier 1 violations always block. Archon spawns it before destructive or hard-to-reverse operations.
 
@@ -81,7 +97,7 @@ New telemetry and artifact records carry stable lineage fields (`event_id`, `run
 
 The default persistent state. An optional user-level SQLite store can preserve a
 strict durable-knowledge subset across disposable clones; active execution state
-remains repository-local. See [Cross-clone repository memory](REPOSITORY_MEMORY.md).
+remains repository-local.
 
 ```markdown
 # Campaign: {name}

@@ -10,18 +10,7 @@
             "timeout": 5
           }
         ],
-        "matcher": "Edit"
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CITADEL_ROOT}/codex-adapter.js protect-files",
-            "statusMessage": "Citadel: protect-files",
-            "timeout": 5
-          }
-        ],
-        "matcher": "Write"
+        "matcher": "apply_patch"
       },
       {
         "hooks": [
@@ -54,18 +43,7 @@
             "timeout": 3
           }
         ],
-        "matcher": "Edit"
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CITADEL_ROOT}/codex-adapter.js governance",
-            "statusMessage": "Citadel: governance",
-            "timeout": 3
-          }
-        ],
-        "matcher": "Write"
+        "matcher": "apply_patch"
       },
       {
         "hooks": [
@@ -110,18 +88,7 @@
             "timeout": 5
           }
         ],
-        "matcher": "Edit"
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CITADEL_ROOT}/codex-adapter.js organize-enforce",
-            "statusMessage": "Citadel: organize-enforce",
-            "timeout": 5
-          }
-        ],
-        "matcher": "Write"
+        "matcher": "apply_patch"
       },
       {
         "hooks": [
@@ -132,18 +99,7 @@
             "timeout": 5
           }
         ],
-        "matcher": "Edit"
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CITADEL_ROOT}/codex-adapter.js complexity-check",
-            "statusMessage": "Citadel: complexity-check",
-            "timeout": 5
-          }
-        ],
-        "matcher": "Write"
+        "matcher": "apply_patch"
       },
       {
         "hooks": [
@@ -201,14 +157,16 @@
             "timeout": 10
           }
         ]
-      },
+      }
+    ],
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CITADEL_ROOT}/codex-adapter.js session-end",
-            "statusMessage": "Citadel: session-end",
-            "timeout": 10
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js user-prompt-submit",
+            "statusMessage": "Citadel: user-prompt-submit",
+            "timeout": 5
           }
         ]
       }
@@ -242,6 +200,18 @@
             "command": "node ${CITADEL_ROOT}/codex-adapter.js intake-scanner",
             "statusMessage": "Citadel: intake-scanner",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js session-end",
+            "statusMessage": "Citadel: session-end",
+            "timeout": 10
           }
         ]
       }

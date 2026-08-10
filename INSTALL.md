@@ -1,6 +1,9 @@
 # Install Citadel
 
-The canonical installation guide. Citadel installs into the project you already have open in Claude Code or OpenAI Codex. This page covers the agent-paste path, manual install for both runtimes, the first-run walkthrough, verification, and troubleshooting.
+The canonical stable installation guide. Citadel installs into the project you
+already have open in Claude Code or OpenAI Codex. GitHub Releases are the only
+supported stable acquisition channel; source `main` is development-only, and
+the public npm package named `citadel` is unrelated to this project.
 
 ## Prerequisites
 
@@ -17,57 +20,128 @@ Open the repository you want Citadel to manage in Claude Code or OpenAI Codex an
 <!-- This prompt is copied verbatim from README.md (Quick Install). If you edit it here, make the same edit in README.md so the two never drift. -->
 
 ```text
-Install Citadel in this repository.
+Install Citadel in this repository from a tagged GitHub Release at
+https://github.com/SethGammon/Citadel/releases.
 
-Use https://github.com/SethGammon/Citadel as the source. If a local clone
-already exists, reuse it or update it. Detect whether this session is running
-in OpenAI Codex or Claude Code. From this project's root, create a governed
-Citadel adoption plan for that runtime. Show me the exact footprint, unknown
-external registrations, plan digest, and confirmation token before applying
-anything. After I approve the saved plan, apply it and run adoption doctor.
+Choose an explicit vX.Y.Z release. Download all three matching assets:
+citadel-vX.Y.Z.tar.gz, citadel-vX.Y.Z.tar.gz.manifest.json, and
+citadel-vX.Y.Z.tar.gz.sha256. Verify that the archive SHA-256 agrees with both
+the sidecar and external manifest before extracting it. Do not use npm and do
+not install from floating main.
 
-After the adoption is healthy and Citadel is enabled in a fresh thread, run:
+Detect whether this session is running in OpenAI Codex or Claude Code. Use the
+extracted citadel-X.Y.Z directory as the source and this repository as the
+target. Create a governed adoption plan for that runtime. Show me the exact
+footprint, unknown external registrations, plan digest, and confirmation token
+before applying anything. After I approve the saved plan, apply it and run
+adoption doctor.
+
+After adoption is healthy and Citadel is enabled in a fresh thread, run:
 
 /do setup --express
-
-Use the current repository as the target project. Do not require placeholder
-path edits.
 ```
 
-That prompt is intentionally path-free. The agent should clone or update
-Citadel, choose the runtime projection, use the repository already open as the
-target, and stop at the reviewable adoption plan. Only the saved plan and exact
-confirmation token may be applied. Follow any external plugin-enable step the
-receipt still reports as unknown, start a fresh session if required, then run
-`/do setup --express`.
+That prompt is intentionally path-free. The agent should select an immutable
+release, verify the complete trio before extraction, use the repository already
+open as the target, and stop at the reviewable adoption plan. Only the saved
+plan and exact confirmation token may be applied. Follow any external
+plugin-enable step the receipt still reports as unknown, start a fresh session
+if required, then run `/do setup --express`.
 
 ## Manual Install
 
-Run the commands below from the project you want Citadel to manage. Do not run them from the Citadel clone unless Citadel itself is the target project. Both runtimes converge on the same harness commands once the runtime-specific install step is done.
+Run the commands below from the project you want Citadel to manage. Do not run
+them from the extracted Citadel directory unless Citadel itself is the target.
 
-First, clone Citadel once:
+### Acquire and verify a stable release
 
-```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+From [GitHub Releases](https://github.com/SethGammon/Citadel/releases), choose
+one explicit `vX.Y.Z` tag and download all three matching assets into the same
+directory:
+
+- `citadel-vX.Y.Z.tar.gz`
+- `citadel-vX.Y.Z.tar.gz.manifest.json`
+- `citadel-vX.Y.Z.tar.gz.sha256`
+
+Before extraction, compute the archive SHA-256 and require it to match both the
+sidecar and `artifact.sha256` in the external manifest. For example, on
+PowerShell:
+
+```powershell
+$citadelArchive = (Resolve-Path '.\citadel-vX.Y.Z.tar.gz').Path
+$citadelActual = (Get-FileHash $citadelArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+$citadelSidecar = ((Get-Content "${citadelArchive}.sha256").Trim() -split '\s+')[0].ToLowerInvariant()
+$citadelManifest = (Get-Content "${citadelArchive}.manifest.json" -Raw | ConvertFrom-Json).artifact.sha256.ToLowerInvariant()
+if ($citadelActual -ne $citadelSidecar -or $citadelActual -ne $citadelManifest) { throw 'Citadel release digest mismatch' }
 ```
 
-If `~/Citadel` already exists, update it instead:
+After that check succeeds, Windows users can extract, verify, and enter the
+supported governed lifecycle without translating Bash paths:
+
+```powershell
+tar -xzf "$citadelArchive"
+$env:CITADEL_ROOT = (Resolve-Path '.\citadel-X.Y.Z').Path
+node "$env:CITADEL_ROOT\scripts\release-verify.js" "$citadelArchive" --ref vX.Y.Z --version X.Y.Z
+
+Set-Location 'C:\absolute\path\to\target-project'
+node "$env:CITADEL_ROOT\scripts\adopt.js" plan "$env:CITADEL_ROOT" --target . --project-runtime codex --out ..\citadel-adoption.plan.json --json
+node "$env:CITADEL_ROOT\scripts\adopt.js" apply ..\citadel-adoption.plan.json --confirm <plan-token> --json
+node "$env:CITADEL_ROOT\scripts\adopt.js" doctor --target . --json
+node "$env:CITADEL_ROOT\scripts\install.js" --runtime codex --add-marketplace
+```
+
+Use `--project-runtime claude` plus the Claude installer flags shown below when
+Claude Code is the intended runtime.
+
+On Linux or macOS, verify the sidecar with `sha256sum -c` (or compare
+`shasum -a 256` output on macOS), then independently compare the result with
+the external manifest. A missing asset or mismatch is a blocked install.
+
+Optionally verify GitHub's signed provenance before running release code:
 
 ```bash
-git -C ~/Citadel pull
+gh attestation verify citadel-vX.Y.Z.tar.gz -R SethGammon/Citadel
+gh attestation verify citadel-vX.Y.Z.tar.gz.manifest.json -R SethGammon/Citadel
+gh attestation verify citadel-vX.Y.Z.tar.gz.sha256 -R SethGammon/Citadel
 ```
+
+On Linux or macOS, extract the archive only after those checks. It contains one
+`citadel-X.Y.Z/` root. Point `CITADEL_ROOT` at that directory, then run its
+structural verifier:
+
+```bash
+tar -xzf citadel-vX.Y.Z.tar.gz
+CITADEL_ROOT=/absolute/path/to/citadel-X.Y.Z
+node "$CITADEL_ROOT/scripts/release-verify.js" citadel-vX.Y.Z.tar.gz \
+  --ref vX.Y.Z --version X.Y.Z
+```
+
+The verifier requires the archive, external manifest, sidecar, embedded
+manifest, file list, and hashes to agree.
+
+### Development source (not a stable install)
+
+Contributors may use
+`git clone --branch main https://github.com/SethGammon/Citadel.git` for source
+testing. Floating `main` has no immutable release boundary and must not be used
+or described as a stable install. `npm install citadel`, `npx citadel`, and npm
+registry tarballs are unsupported acquisition paths.
 
 ### Create the governed project adoption
 
 From the target repository, create a saved no-write plan:
 
 ```bash
-node ~/Citadel/scripts/adopt.js plan ~/Citadel \
+node "$CITADEL_ROOT/scripts/adopt.js" plan "$CITADEL_ROOT" \
   --target . \
   --project-runtime codex \
-  --out citadel-adoption.plan.json \
+  --out ../citadel-adoption.plan.json \
   --json
 ```
+
+Write the plan outside the target repository. Creating a plan inside the target
+changes the target after its preflight snapshot and invalidates apply with
+`TARGET_DRIFT`.
 
 Use `--project-runtime claude` for Claude Code or
 `--project-runtime both` when both projections are intentional. Review the
@@ -75,11 +149,11 @@ owned/shared footprint and every external registration whose removal evidence
 is `unknown`. Then apply the exact saved plan:
 
 ```bash
-node ~/Citadel/scripts/adopt.js apply citadel-adoption.plan.json \
+node "$CITADEL_ROOT/scripts/adopt.js" apply ../citadel-adoption.plan.json \
   --confirm <plan-token> \
   --json
 
-node ~/Citadel/scripts/adopt.js doctor --target . --json
+node "$CITADEL_ROOT/scripts/adopt.js" doctor --target . --json
 ```
 
 Planning writes only when `--out` is explicitly requested. Apply rechecks the
@@ -102,7 +176,7 @@ directly.
 From your target project root:
 
 ```bash
-node ~/Citadel/scripts/install.js --runtime claude --install --scope local
+node "$CITADEL_ROOT/scripts/install.js" --runtime claude --install --scope local
 claude
 ```
 
@@ -117,30 +191,31 @@ In Claude Code, run:
 Alternative manual install from inside Claude Code:
 
 ```text
-/plugin marketplace add ~/Citadel
+/plugin marketplace add /absolute/path/to/citadel-X.Y.Z
 /plugin install citadel@citadel-local --scope local
 ```
 
 For a one-session trial without registering the marketplace:
 
 ```bash
-claude --plugin-dir ~/Citadel
+claude --plugin-dir "$CITADEL_ROOT"
 ```
 
 To preview what the installer would write without changing anything:
 
 ```bash
-node ~/Citadel/scripts/install.js --runtime claude --install --dry-run --json
+node "$CITADEL_ROOT/scripts/install.js" --runtime claude --install --dry-run --json
 ```
 
-For the full Claude-specific flow, see [docs/CLAUDE_INSTALLATION_GUIDE.md](docs/CLAUDE_INSTALLATION_GUIDE.md).
+The installer output names every Claude-specific external enable step and its
+observed or unknown status.
 
 ### OpenAI Codex
 
 From your target project root:
 
 ```bash
-node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
+node "$CITADEL_ROOT/scripts/install.js" --runtime codex --add-marketplace
 codex
 ```
 
@@ -162,12 +237,13 @@ In the new thread, run:
 To preview what the installer would write without changing anything:
 
 ```bash
-node ~/Citadel/scripts/install.js --runtime codex --dry-run --json
+node "$CITADEL_ROOT/scripts/install.js" --runtime codex --dry-run --json
 ```
 
 `scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
 
-For the full Codex-specific flow, see [docs/CODEX_INSTALLATION_GUIDE.md](docs/CODEX_INSTALLATION_GUIDE.md).
+The installer output names every Codex-specific external enable step and its
+observed or unknown status.
 
 ## First Run
 
@@ -222,6 +298,7 @@ In all modes, setup:
 ```text
 /do review src/main.ts              # 5-pass code review
 /do generate tests for utils        # Tests that actually run
+/do preview build a caching layer   # Exact/candidate preflight only; no execution
 /do why is the login slow           # Root cause analysis
 /do refactor the auth module        # Safe multi-file refactoring
 ```
@@ -234,12 +311,25 @@ Or describe what you want in plain English and let the `/do` router pick the too
 /do build a caching layer
 ```
 
+Tier 0 is intentionally exact: `/do status` is deterministic only when the
+whole request matches. `/do build`, `/do test`, and `/do typecheck` additionally
+require the matching non-empty target `package.json` script. Larger requests
+use generated built-in candidates as evidence for runtime semantic
+classification. Preview does not inspect active state, discover custom project
+skills, or run that classifier, so every natural-language preview is
+non-executable. If you already know the route, override selection explicitly
+without bypassing its activation or safety boundaries:
+
+```text
+/do --route /test-gen -- generate tests for utils
+```
+
 ### Scale up when ready
 
 ```text
 /marshal audit the codebase         # Multi-step, single session
 /archon build the payment system    # Multi-session campaign
-/fleet overhaul all three services  # Parallel agents, shared discovery
+/fleet --quick overhaul all three services  # Parallel agents, shared discovery
 /improve citadel --n=5              # Autonomous quality loops
 ```
 
@@ -256,8 +346,8 @@ npm test
 Success is a zero exit code; the suite covers hooks, skill structure, and installer checks.
 
 To exercise the governed lifecycle exactly as a local user or adapter developer
-would—including real scratch Git repositories, plan/apply/leave/restore, an
-installed contracts tarball, NDJSON restart/replay, and proof suppression—run:
+would, including real scratch Git repositories, plan/apply/leave/restore, an
+installed contracts tarball, NDJSON restart/replay, and proof suppression, run:
 
 ```bash
 npm run test:governed-lifecycle
@@ -274,8 +364,8 @@ node scripts/golden-path.js --runtime claude --fixture scripts/fixtures/golden-p
 node scripts/golden-path.js --runtime codex --fixture scripts/fixtures/golden-path/minimal-node.json
 ```
 
-These are isolated fixture runs, not proof of plugin registration or real-user timing. See
-[Golden path verification](docs/GOLDEN_PATH.md) for the exact boundary and cross-OS matrix gate.
+These are isolated fixture runs, not proof of plugin registration or real-user
+timing.
 
 In your target project, success looks like this scaffold, created by the `init-project` hook on first session start:
 
@@ -303,19 +393,23 @@ The harness logs agent events, hook timing, and discovery compression to `.plann
 All lifecycle mutations consume saved plans:
 
 ```bash
-node ~/Citadel/scripts/adopt.js update plan ~/Citadel-v2 \
-  --migration migration.json --target . --out citadel-update.plan.json --json
-node ~/Citadel/scripts/adopt.js update apply citadel-update.plan.json \
+node "$CITADEL_ROOT/scripts/adopt.js" update plan "$CITADEL_NEXT_ROOT" \
+  --migration migration.json --target . --out ../citadel-update.plan.json --json
+node "$CITADEL_ROOT/scripts/adopt.js" update apply ../citadel-update.plan.json \
   --confirm <plan-token> --json
 
-node ~/Citadel/scripts/adopt.js rollback plan \
-  --target . --out citadel-rollback.plan.json --json
+node "$CITADEL_ROOT/scripts/adopt.js" rollback plan \
+  --target . --out ../citadel-rollback.plan.json --json
 
-node ~/Citadel/scripts/adopt.js leave plan \
-  --target . --out citadel-leave.plan.json --json
-node ~/Citadel/scripts/adopt.js leave apply citadel-leave.plan.json \
+node "$CITADEL_ROOT/scripts/adopt.js" leave plan \
+  --target . --out ../citadel-leave.plan.json --json
+node "$CITADEL_ROOT/scripts/adopt.js" leave apply ../citadel-leave.plan.json \
   --confirm <plan-token> --json
 ```
+
+Every saved lifecycle plan stays outside the target repository. This prevents
+the plan file itself from changing the target after preflight and causing
+`TARGET_DRIFT` during apply.
 
 Update switches immutable generations only after verification. Rollback uses
 the retained predecessor receipt and declared state migration compatibility.
@@ -326,44 +420,25 @@ leave plan/apply path. A legacy install without a receipt must first use
 `adopt import plan`; the emergency `unharness --legacy-apply` path is explicitly
 inexact and cannot support an exact-removal claim.
 
-## Optional cross-clone memory
-
-Citadel's core remains repository-local. On Node.js 22.13+, users with disposable
-clones can opt into a user-level SQLite store:
-
-```bash
-citadel memory enable
-citadel memory status
-```
-
-The store is keyed by a SHA-256 digest of the normalized `origin` fetch URL.
-It contains only durable Markdown knowledge and project context, never active
-execution state, telemetry, consent, or runtime configuration. Raw remote URLs
-and clone paths are not stored as identity metadata; allowlisted documents are
-stored verbatim and may themselves mention either. Missing files restore
-automatically in another clone of the enabled repository; different existing
-files remain untouched. See
-[Cross-clone repository memory](docs/REPOSITORY_MEMORY.md) for paths, limits,
-manual sync/restore, disable, and purge.
-
 ## Troubleshooting
 
 **Hook not firing / "command not found" errors:**
 Re-run the runtime-specific install step from your project root, then re-run `/do setup`:
 
 ```bash
-node ~/Citadel/scripts/install.js --runtime claude --install --scope local
-node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
+node "$CITADEL_ROOT/scripts/install.js" --runtime claude --install --scope local
+node "$CITADEL_ROOT/scripts/install.js" --runtime codex --add-marketplace
 ```
 
 Alternatively, run the hook installer directly from your project directory:
 
 ```bash
-node /path/to/Citadel/scripts/install-hooks.js
+node "$CITADEL_ROOT/scripts/install-hooks.js"
 ```
 
-**Moved the Citadel clone:**
-Resolved hook paths point at the old location. Refresh the runtime-specific install step, then re-run `/do setup`.
+**Moved the extracted Citadel directory:**
+Resolved hook paths point at the old location. Refresh the runtime-specific
+install step, then re-run `/do setup`.
 
 **"[protect-files] Blocked" message:**
 Citadel prevented an edit to a protected file. The message names the specific file and the pattern that triggered the block. To allow the edit, remove the pattern from `protectedFiles` in `.claude/harness.json`.
@@ -378,7 +453,7 @@ If a campaign file in `.planning/campaigns/` has corrupted YAML frontmatter or i
 Ensure you are running from your project root (not the Citadel plugin directory). Setup needs to detect your project's language and framework from files like `package.json`, `tsconfig.json`, or `Cargo.toml`.
 
 **Daemon won't start / "No active campaign" error:**
-The daemon attaches to an active campaign. Check `.planning/campaigns/` for a file with `Status: active`. If none exists, start work first with `/improve`, `/archon`, or `/fleet`, then attach the daemon.
+The daemon attaches to an active campaign. Check `.planning/campaigns/` for a file with `Status: active`. If none exists, start work first with `/improve`, `/archon`, or `/fleet --quick`, then attach the daemon.
 
 **Daemon is paused (level-up-pending):**
 An improve loop hit distribution saturation and needs human approval for the next quality level. Review the proposals at `.planning/rubrics/{target}-proposals.md`, edit the rubric with approved changes, and set the campaign status back to `active`. The daemon's watchdog will detect the change and resume automatically.
@@ -389,11 +464,8 @@ An improve loop hit distribution saturation and needs human approval for the nex
 - Add your project's conventions to `AGENTS.md` if you use Codex.
 - Run `/do --list` to see all <!-- GENERATED: skill-count -->49<!-- /GENERATED --> installed skills.
 - Drop a task in `.planning/intake/` and run `/autopilot` for hands-off execution.
-- Try the copyable demo workflow in [DEMO.md](DEMO.md).
-- [docs/CLAUDE_INSTALLATION_GUIDE.md](docs/CLAUDE_INSTALLATION_GUIDE.md): Claude-specific install flow.
-- [docs/CODEX_INSTALLATION_GUIDE.md](docs/CODEX_INSTALLATION_GUIDE.md): Codex-specific install flow.
-- [docs/SKILLS.md](docs/SKILLS.md): full skills reference.
-- [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md): multi-session campaign docs.
-- [docs/migrating.md](docs/migrating.md): migrating from copy-based install.
+- Read [Routing Preview](docs/ROUTING_PREVIEW.md) before treating static candidate evidence as a selected route.
+- Read [Architecture](docs/ARCHITECTURE.md) for the Request → Run → Evidence → Needs You / Resume boundary.
+- Use the [CLI reference](docs/CLI.md) and [Releases](docs/RELEASES.md) for supported commands and artifact verification.
 
 Citadel pairs well with [Superpowers](https://github.com/obra/superpowers), which teaches methodology: brainstorm before coding, write tests first, review before shipping. Citadel supplies the infrastructure to execute that methodology at scale with campaign persistence, fleet coordination, lifecycle hooks, and telemetry. They are complementary.
