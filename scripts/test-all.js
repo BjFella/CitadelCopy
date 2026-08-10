@@ -16,7 +16,8 @@
 
 'use strict';
 
-const { execFileSync } = require('child_process');
+const assert = require('assert');
+const { execFileSync, spawnSync } = require('child_process');
 const path = require('path');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
@@ -171,6 +172,38 @@ const UNLOCK_TESTS = Object.freeze([
 
 const STRICT = process.argv.includes('--strict');
 
+function statusFromExitCode(status) {
+  if (status === 0) return 'pass';
+  if (status === 2) return 'advisory';
+  return 'fail';
+}
+
+function dashboardPerfAccepted(status) {
+  return status === 'pass' || status === 'advisory';
+}
+
+function suiteSuccessMessage(dashboardPerfStatus) {
+  return dashboardPerfStatus === 'advisory'
+    ? 'All required tests pass; dashboard performance timing remains ADVISORY.\n'
+    : 'All tests pass.\n';
+}
+
+if (process.argv.includes('--test-dashboard-perf-status')) {
+  const childAdvisory = runWithAdvisory('Synthetic Dashboard Performance Advisory', '-e', ['process.exit(2)']);
+  assert.equal(statusFromExitCode(0), 'pass');
+  assert.equal(statusFromExitCode(2), 'advisory');
+  assert.equal(statusFromExitCode(1), 'fail');
+  assert.equal(childAdvisory, 'advisory', 'aggregate runner must preserve the child advisory status');
+  assert.equal(dashboardPerfAccepted('advisory'), true,
+    'an explicit host-contention advisory is not a correctness failure');
+  assert(!suiteSuccessMessage('advisory').includes('All tests pass'),
+    'advisory aggregate output must never claim every test passed');
+  assert(suiteSuccessMessage('advisory').includes('ADVISORY'),
+    'advisory aggregate output must preserve the unknown timing state');
+  console.log('dashboard performance aggregate status contract passed');
+  process.exit(0);
+}
+
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
 console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + route preview check + loop core check + operating proof check + usefulness trial check + operator console check + operator journey check + first-use operator check + verification plan check + PR readiness check + stack plan check + deploy steward check + AGENTS.md-only steward check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness + post-edit typecheck + routing sync + watch dedup + teammate rebalance\n');
 
@@ -188,6 +221,18 @@ function run(label, scriptPath, extraArgs = []) {
   } catch (_err) {
     return false;
   }
+}
+
+function runWithAdvisory(label, scriptPath, extraArgs = []) {
+  console.log(`\n> ${label}`);
+  console.log('-'.repeat(40));
+  const result = spawnSync(process.execPath, [scriptPath, ...extraArgs], {
+    cwd: PLUGIN_ROOT,
+    stdio: 'inherit',
+    encoding: 'utf8',
+  });
+  if (result.error) return 'fail';
+  return statusFromExitCode(result.status);
 }
 
 const hooksPassed = run('Hook Smoke Test', SMOKE_TEST);
@@ -264,7 +309,8 @@ const stateHygienePassed = run('State Hygiene Tests', STATE_HYGIENE_TEST);
 const permissionAuditPassed = run('Permission Audit Tests', PERMISSION_AUDIT_TEST);
 const secretsLensPassed = run('Secrets Lens Tests', SECRETS_LENS_TEST);
 const dashboardWebPassed = run('Dashboard Web Tests', DASHBOARD_WEB_TEST);
-const dashboardPerfPassed = run('Dashboard Performance Tests', DASHBOARD_PERF_TEST);
+const dashboardPerfStatus = runWithAdvisory('Dashboard Performance Tests', DASHBOARD_PERF_TEST);
+const dashboardPerfPassed = dashboardPerfAccepted(dashboardPerfStatus);
 const dashboardVisualPassed = run('Dashboard Visual Contract Tests', DASHBOARD_VISUAL_TEST);
 const noopDetectPassed = run('No-op Detector Calibration', NOOP_DETECT_TEST);
 const releaseIntegrityPassed = run('Release Integrity Tests', RELEASE_INTEGRITY_TEST);
@@ -351,7 +397,7 @@ console.log(`  State hygiene:      ${stateHygienePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Permission audit:   ${permissionAuditPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Secrets lens:       ${secretsLensPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Dashboard web:      ${dashboardWebPassed ? 'PASS' : 'FAIL'}`);
-console.log(`  Dashboard perf:     ${dashboardPerfPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Dashboard perf:     ${dashboardPerfStatus.toUpperCase()}`);
 console.log(`  Dashboard visual:   ${dashboardVisualPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  No-op detector:     ${noopDetectPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Release integrity:  ${releaseIntegrityPassed ? 'PASS' : 'FAIL'}`);
@@ -371,7 +417,7 @@ for (const [label, passed] of unlockResults) {
 console.log('');
 
 if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && repositoryMemoryPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed) {
-  console.log('All tests pass.\n');
+  console.log(suiteSuccessMessage(dashboardPerfStatus));
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
   console.log('  node scripts/skill-bench.js             validate scenario files');
@@ -523,6 +569,8 @@ if (!stateHygienePassed) console.log('State hygiene tests failed. Fix expired-st
 if (!permissionAuditPassed) console.log('Permission audit tests failed. Fix permission-events logging or report rendering before shipping.');
 if (!secretsLensPassed) console.log('Secrets lens tests failed. Fix the quality-gate secrets sweep before shipping.');
 if (!dashboardWebPassed) console.log('Dashboard web tests failed. Fix scripts/dashboard-server.js or the dashboard/ UI before shipping.');
+if (dashboardPerfStatus === 'fail') console.log('Dashboard performance tests failed. Fix the measured dashboard regression before shipping.');
+if (dashboardPerfStatus === 'advisory') console.log('Dashboard performance timing is ADVISORY. Re-run on a quiet host before treating the budget as verified.');
 if (!noopDetectPassed) console.log('No-op detector calibration failed. The detector regressed against core/skills/noop-calibration.json. Fix core/skills/noop-detect.js before shipping.');
 if (!releaseIntegrityPassed) console.log('Release integrity tests failed. Fix deterministic packaging, verification, update, or rollback behavior before shipping.');
 if (!activationTelemetryPassed) console.log('Activation telemetry tests failed. Fix local-only schema, privacy, migration, opt-out, or reporting behavior before shipping.');
