@@ -243,6 +243,32 @@ try {
     assert.strictEqual(git(redirectRoot, ['status', '--porcelain']), '');
   });
 
+  test('saved plan publication leaves the target untouched when an outside ancestor is redirected before mkdir', () => {
+    const root = target(path.join(suite, 'plan-publish-pre-mkdir-target'));
+    const before = treeDigest(root);
+    const plan = createAdoptionPlan({ source: sourceRoot, target: root });
+    const outsideDirectory = path.join(suite, 'plan-publish-pre-mkdir-outside');
+    const outputAlias = path.join(suite, 'plan-publish-pre-mkdir-alias');
+    fs.mkdirSync(outsideDirectory, { recursive: true });
+    directoryAlias(outsideDirectory, outputAlias);
+    const output = path.join(outputAlias, 'nested', 'plan.json');
+
+    assert.throws(() => publishPlanOutput(plan, output, {
+      beforeMkdir({ publicationTarget, requestedTarget }) {
+        assert.strictEqual(requestedTarget, output);
+        assert.strictEqual(publicationTarget, path.join(outsideDirectory, 'nested', 'plan.json'));
+        fs.unlinkSync(outputAlias);
+        directoryAlias(root, outputAlias);
+      },
+    }), /Saved plan must be outside target/);
+
+    assert.strictEqual(treeDigest(root), before);
+    assert.deepStrictEqual(fs.readdirSync(outsideDirectory), []);
+    assert(!fs.existsSync(path.join(root, 'nested')));
+    assert.strictEqual(git(root, ['status', '--porcelain']), '');
+    fs.unlinkSync(outputAlias);
+  });
+
   test('fresh plan is no-write, apply is receipted, doctor is healthy, and exact leave exits', () => {
     const root = target(path.join(suite, 'fresh'));
     const before = treeDigest(root);

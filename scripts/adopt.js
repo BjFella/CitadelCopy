@@ -44,7 +44,7 @@ function lstatIfPresent(filePath) {
   }
 }
 
-function canonicalPathIdentity(filePath, label) {
+function resolveCanonicalPath(filePath, label) {
   const resolved = path.resolve(filePath);
   let existing = resolved;
   const missing = [];
@@ -62,13 +62,21 @@ function canonicalPathIdentity(filePath, label) {
       if (missing.length && !fs.statSync(real).isDirectory()) {
         throw new Error(`${label} has a non-directory ancestor: ${existing}`);
       }
-      return path.resolve(real, ...missing);
+      return {
+        canonicalPath: path.resolve(real, ...missing),
+        existingPath: path.resolve(real),
+        missing,
+      };
     }
     const parent = path.dirname(existing);
     if (parent === existing) throw new Error(`${label} cannot be resolved: ${resolved}`);
     missing.unshift(path.basename(existing));
     existing = parent;
   }
+}
+
+function canonicalPathIdentity(filePath, label) {
+  return resolveCanonicalPath(filePath, label).canonicalPath;
 }
 
 function assertPlanPathIsNotLink(filePath) {
@@ -80,6 +88,70 @@ function assertPlanPathIsNotLink(filePath) {
 
 function sameFileIdentity(left, right) {
   return left.dev === right.dev && left.ino === right.ino;
+}
+
+function assertDirectoryOwnsPath(directoryPath, expected) {
+  const current = fs.lstatSync(directoryPath, { bigint: true });
+  if (current.isSymbolicLink() || !current.isDirectory() || !sameFileIdentity(current, expected)) {
+    throw new Error(`Saved plan directory changed during validation: ${directoryPath}`);
+  }
+  return current;
+}
+
+function resolvePublicationDirectory(requestedTarget) {
+  const resolution = resolveCanonicalPath(path.dirname(requestedTarget), 'Saved plan directory');
+  const anchorIdentity = fs.lstatSync(resolution.existingPath, { bigint: true });
+  if (anchorIdentity.isSymbolicLink() || !anchorIdentity.isDirectory()) {
+    throw new Error(`Saved plan directory is not a directory: ${resolution.existingPath}`);
+  }
+  return {
+    anchorIdentity,
+    anchorPath: resolution.existingPath,
+    directory: resolution.canonicalPath,
+    missing: resolution.missing,
+    target: path.join(resolution.canonicalPath, path.basename(requestedTarget)),
+  };
+}
+
+function createPublicationDirectories(publication, plan, createdDirectories) {
+  let parentPath = publication.anchorPath;
+  let parentIdentity = publication.anchorIdentity;
+  assertDirectoryOwnsPath(parentPath, parentIdentity);
+  for (const segment of publication.missing) {
+    assertDirectoryOwnsPath(parentPath, parentIdentity);
+    const directoryPath = path.join(parentPath, segment);
+    try {
+      fs.mkdirSync(directoryPath);
+    } catch (error) {
+      if (error.code === 'EEXIST') {
+        throw new Error(`Saved plan directory changed before creation: ${directoryPath}`);
+      }
+      throw error;
+    }
+    const directoryIdentity = fs.lstatSync(directoryPath, { bigint: true });
+    if (directoryIdentity.isSymbolicLink() || !directoryIdentity.isDirectory()) {
+      throw new Error(`Saved plan directory changed during creation: ${directoryPath}`);
+    }
+    createdDirectories.push({ identity: directoryIdentity, path: directoryPath });
+    assertDirectoryOwnsPath(parentPath, parentIdentity);
+    assertExternalPlanPath(directoryPath, plan);
+    assertDirectoryOwnsPath(directoryPath, directoryIdentity);
+    parentPath = directoryPath;
+    parentIdentity = directoryIdentity;
+  }
+  return parentIdentity;
+}
+
+function cleanupCreatedDirectories(createdDirectories) {
+  for (const created of [...createdDirectories].reverse()) {
+    try {
+      const current = fs.lstatSync(created.path, { bigint: true });
+      if (current.isSymbolicLink() || !current.isDirectory() || !sameFileIdentity(current, created.identity)) continue;
+      fs.rmdirSync(created.path);
+    } catch {
+      // Cleanup is best effort and never removes a changed or non-empty directory.
+    }
+  }
 }
 
 function assertDescriptorOwnsPath(descriptor, filePath, expectedLinks = 1) {
@@ -160,29 +232,41 @@ function loadExternalPlan(filePath) {
 }
 
 function publishPlanOutput(plan, outputPath, testSeam = {}) {
-  const target = path.resolve(outputPath);
+  const requestedTarget = path.resolve(outputPath);
+  assertExternalPlanPath(requestedTarget, plan);
+  const publication = resolvePublicationDirectory(requestedTarget);
+  const target = publication.target;
   assertExternalPlanPath(target, plan);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  assertExternalPlanPath(target, plan);
-  const stagingDirectory = canonicalPathIdentity(path.dirname(target), 'Saved plan directory');
-  if (!fs.statSync(stagingDirectory).isDirectory()) {
-    throw new Error(`Saved plan directory is not a directory: ${stagingDirectory}`);
-  }
+  const createdDirectories = [];
   let descriptor;
   let stagedPath;
   let stagedIdentity;
+  let directoryIdentity;
   let installed = false;
   let destinationConflict = false;
   let failure;
   try {
-    ({ descriptor, stagedPath } = openStagedPlan(stagingDirectory));
+    if (testSeam.beforeMkdir) testSeam.beforeMkdir({ publicationTarget: target, requestedTarget });
+    assertExternalPlanPath(requestedTarget, plan);
+    assertExternalPlanPath(target, plan);
+    directoryIdentity = createPublicationDirectories(publication, plan, createdDirectories);
+    assertDirectoryOwnsPath(publication.directory, directoryIdentity);
+    assertExternalPlanPath(target, plan);
+    ({ descriptor, stagedPath } = openStagedPlan(publication.directory));
+    assertDirectoryOwnsPath(publication.directory, directoryIdentity);
     stagedIdentity = fs.fstatSync(descriptor, { bigint: true });
     stagedIdentity = assertDescriptorOwnsPath(descriptor, stagedPath);
     fs.writeFileSync(descriptor, `${JSON.stringify(plan, null, 2)}\n`, 'utf8');
     fs.fsyncSync(descriptor);
     assertDescriptorOwnsPath(descriptor, stagedPath);
+    assertDirectoryOwnsPath(publication.directory, directoryIdentity);
     assertExternalPlanPath(target, plan);
-    if (testSeam.beforeInstall) testSeam.beforeInstall({ descriptor, stagedPath, target });
+    if (testSeam.beforeInstall) {
+      testSeam.beforeInstall({ descriptor, requestedTarget, stagedPath, target });
+    }
+    assertDirectoryOwnsPath(publication.directory, directoryIdentity);
+    assertExternalPlanPath(requestedTarget, plan);
+    assertExternalPlanPath(target, plan);
     try {
       fs.linkSync(stagedPath, target);
     } catch (error) {
@@ -191,11 +275,17 @@ function publishPlanOutput(plan, outputPath, testSeam = {}) {
     }
     installed = true;
     assertDescriptorOwnsPath(descriptor, target, 2);
+    assertExternalPlanPath(requestedTarget, plan);
+    assertDescriptorOwnsPath(descriptor, requestedTarget, 2);
     unlinkIfSameFile(stagedPath, stagedIdentity);
     if (testSeam.afterInstall) testSeam.afterInstall({ descriptor, target });
     assertDescriptorOwnsPath(descriptor, target);
     assertExternalPlanPath(target, plan);
     assertDescriptorOwnsPath(descriptor, target);
+    assertExternalPlanPath(requestedTarget, plan);
+    assertDescriptorOwnsPath(descriptor, requestedTarget);
+    assertExternalPlanPath(requestedTarget, plan);
+    assertDescriptorOwnsPath(descriptor, requestedTarget);
   } catch (error) {
     failure = error;
   } finally {
@@ -206,8 +296,9 @@ function publishPlanOutput(plan, outputPath, testSeam = {}) {
   if (failure) {
     if (installed && stagedIdentity) unlinkIfSameFile(target, stagedIdentity);
     if (stagedIdentity && stagedPath) unlinkIfSameFile(stagedPath, stagedIdentity);
+    cleanupCreatedDirectories(createdDirectories);
     if (destinationConflict) {
-      throw new Error(`Saved plan path already exists; choose a fresh --out path: ${target}`);
+      throw new Error(`Saved plan path already exists; choose a fresh --out path: ${requestedTarget}`);
     }
     throw failure;
   }
