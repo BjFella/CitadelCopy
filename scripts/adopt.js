@@ -34,14 +34,60 @@ function print(value, json, summary) {
   else process.stdout.write(`${summary}\n`);
 }
 
+function lstatIfPresent(filePath) {
+  try {
+    return fs.lstatSync(filePath);
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return null;
+    throw error;
+  }
+}
+
+function canonicalPathIdentity(filePath, label) {
+  const resolved = path.resolve(filePath);
+  let existing = resolved;
+  const missing = [];
+  while (true) {
+    const stat = lstatIfPresent(existing);
+    if (stat) {
+      let real;
+      try {
+        real = fs.realpathSync.native
+          ? fs.realpathSync.native(existing)
+          : fs.realpathSync(existing);
+      } catch {
+        throw new Error(`${label} contains an unresolved filesystem alias: ${existing}`);
+      }
+      if (missing.length && !fs.statSync(real).isDirectory()) {
+        throw new Error(`${label} has a non-directory ancestor: ${existing}`);
+      }
+      return path.resolve(real, ...missing);
+    }
+    const parent = path.dirname(existing);
+    if (parent === existing) throw new Error(`${label} cannot be resolved: ${resolved}`);
+    missing.unshift(path.basename(existing));
+    existing = parent;
+  }
+}
+
+function assertPlanPathIsNotLink(filePath) {
+  const resolved = path.resolve(filePath);
+  if (lstatIfPresent(resolved)?.isSymbolicLink()) {
+    throw new Error(`Saved plan path must not be a symbolic link: ${resolved}`);
+  }
+}
+
 function planPathInsideTarget(filePath, plan) {
   const targetRoot = plan?.target?.root;
   if (!targetRoot) return false;
-  const relative = path.relative(path.resolve(targetRoot), path.resolve(filePath));
+  const canonicalTarget = canonicalPathIdentity(targetRoot, 'Adoption target');
+  const canonicalPlanPath = canonicalPathIdentity(filePath, 'Saved plan path');
+  const relative = path.relative(canonicalTarget, canonicalPlanPath);
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 function assertExternalPlanPath(filePath, plan) {
+  assertPlanPathIsNotLink(filePath);
   if (planPathInsideTarget(filePath, plan)) {
     throw new Error(`Saved plan must be outside target ${plan.target.root}; use --out ../citadel-${plan.operation}.plan.json`);
   }
@@ -49,6 +95,7 @@ function assertExternalPlanPath(filePath, plan) {
 
 function loadExternalPlan(filePath) {
   const resolved = path.resolve(filePath);
+  assertPlanPathIsNotLink(resolved);
   const plan = loadPlan(resolved);
   assertExternalPlanPath(resolved, plan);
   return plan;

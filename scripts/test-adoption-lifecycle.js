@@ -54,6 +54,15 @@ function target(root) {
   return initializeGit(root);
 }
 
+function directoryAlias(targetPath, aliasPath) {
+  fs.symlinkSync(
+    path.resolve(targetPath),
+    aliasPath,
+    process.platform === 'win32' ? 'junction' : 'dir',
+  );
+  return aliasPath;
+}
+
 function treeDigest(root) {
   const hash = crypto.createHash('sha256');
   const visit = (directory) => {
@@ -99,7 +108,33 @@ try {
     assert.match(rejected.stderr, /Saved plan must be outside target/);
     assert(!fs.existsSync(inside));
 
-    const outside = path.join(suite, 'citadel-adoption.plan.json');
+    const targetAlias = directoryAlias(root, path.join(suite, 'external-plan-path-alias'));
+    const aliasedInside = path.join(targetAlias, 'citadel-adoption.plan.json');
+    const aliasRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', aliasedInside, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(aliasRejected.status, 1);
+    assert.match(aliasRejected.stderr, /Saved plan must be outside target/);
+    assert(!fs.existsSync(aliasedInside));
+
+    const finalAlias = directoryAlias(root, path.join(suite, 'final-plan-link.json'));
+    const finalAliasRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', finalAlias, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(finalAliasRejected.status, 1);
+    assert.match(finalAliasRejected.stderr, /Saved plan path must not be a symbolic link/);
+
+    const brokenAlias = directoryAlias(
+      path.join(suite, 'missing-plan-target'),
+      path.join(suite, 'broken-plan-link.json'),
+    );
+    const brokenAliasRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', brokenAlias, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(brokenAliasRejected.status, 1);
+    assert.match(brokenAliasRejected.stderr, /Saved plan path must not be a symbolic link/);
+
+    const outside = path.join(suite, 'saved-plans', 'nested', 'citadel-adoption.plan.json');
     const planned = spawnSync(process.execPath, [
       script, 'plan', sourceRoot, '--target', root, '--out', outside, '--json',
     ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
