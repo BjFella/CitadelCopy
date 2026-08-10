@@ -134,6 +134,26 @@ try {
     assert.strictEqual(brokenAliasRejected.status, 1);
     assert.match(brokenAliasRejected.stderr, /Saved plan path must not be a symbolic link/);
 
+    const readme = path.join(root, 'README.md');
+    const readmeBefore = fs.readFileSync(readme, 'utf8');
+    const hardlinkedOutput = path.join(suite, 'hardlinked-plan.json');
+    fs.linkSync(readme, hardlinkedOutput);
+    const hardlinkedOutputRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', hardlinkedOutput, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(hardlinkedOutputRejected.status, 1);
+    assert.match(hardlinkedOutputRejected.stderr, /Saved plan path already exists/);
+    assert.strictEqual(fs.readFileSync(readme, 'utf8'), readmeBefore);
+
+    const existingOutput = path.join(suite, 'existing-plan.json');
+    fs.writeFileSync(existingOutput, 'user-owned\n');
+    const existingOutputRejected = spawnSync(process.execPath, [
+      script, 'plan', sourceRoot, '--target', root, '--out', existingOutput, '--json',
+    ], { cwd: suite, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(existingOutputRejected.status, 1);
+    assert.match(existingOutputRejected.stderr, /Saved plan path already exists/);
+    assert.strictEqual(fs.readFileSync(existingOutput, 'utf8'), 'user-owned\n');
+
     const outside = path.join(suite, 'saved-plans', 'nested', 'citadel-adoption.plan.json');
     const planned = spawnSync(process.execPath, [
       script, 'plan', sourceRoot, '--target', root, '--out', outside, '--json',
@@ -141,6 +161,16 @@ try {
     assert.strictEqual(planned.status, 0, planned.stderr);
     assert(fs.existsSync(outside));
     assert.strictEqual(git(root, ['status', '--porcelain']), '');
+
+    const hardlinkedInput = path.join(path.dirname(outside), 'hardlinked-input.plan.json');
+    fs.linkSync(outside, hardlinkedInput);
+    const hardlinkedInputRejected = spawnSync(process.execPath, [
+      script, 'apply', hardlinkedInput, '--control-root', path.join(suite, 'external-plan-control'), '--json',
+    ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
+    assert.strictEqual(hardlinkedInputRejected.status, 1);
+    assert.match(hardlinkedInputRejected.stderr, /Saved plan file must have exactly one filesystem link/);
+    fs.unlinkSync(hardlinkedInput);
+
     const applied = spawnSync(process.execPath, [
       script, 'apply', outside, '--control-root', path.join(suite, 'external-plan-control'), '--json',
     ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });

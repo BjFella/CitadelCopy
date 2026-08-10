@@ -77,6 +77,35 @@ function assertPlanPathIsNotLink(filePath) {
   }
 }
 
+function sameFileIdentity(left, right) {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+function assertDescriptorOwnsPath(descriptor, filePath) {
+  const descriptorStat = fs.fstatSync(descriptor);
+  if (!descriptorStat.isFile()) throw new Error('Saved plan file must be a regular file');
+  if (descriptorStat.nlink !== 1) {
+    throw new Error('Saved plan file must have exactly one filesystem link');
+  }
+  const pathStat = fs.lstatSync(filePath);
+  if (pathStat.isSymbolicLink()) {
+    throw new Error(`Saved plan path must not be a symbolic link: ${filePath}`);
+  }
+  if (!sameFileIdentity(descriptorStat, pathStat)) {
+    throw new Error(`Saved plan path changed during validation: ${filePath}`);
+  }
+  return descriptorStat;
+}
+
+function unlinkIfSameFile(filePath, expected) {
+  try {
+    const current = fs.lstatSync(filePath);
+    if (!current.isSymbolicLink() && sameFileIdentity(current, expected)) fs.unlinkSync(filePath);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+}
+
 function planPathInsideTarget(filePath, plan) {
   const targetRoot = plan?.target?.root;
   if (!targetRoot) return false;
@@ -96,9 +125,18 @@ function assertExternalPlanPath(filePath, plan) {
 function loadExternalPlan(filePath) {
   const resolved = path.resolve(filePath);
   assertPlanPathIsNotLink(resolved);
-  const plan = loadPlan(resolved);
-  assertExternalPlanPath(resolved, plan);
-  return plan;
+  const noFollow = Number.isInteger(fs.constants.O_NOFOLLOW) ? fs.constants.O_NOFOLLOW : 0;
+  const descriptor = fs.openSync(resolved, fs.constants.O_RDONLY | noFollow);
+  try {
+    assertDescriptorOwnsPath(descriptor, resolved);
+    const plan = loadPlan(descriptor);
+    assertDescriptorOwnsPath(descriptor, resolved);
+    assertExternalPlanPath(resolved, plan);
+    assertDescriptorOwnsPath(descriptor, resolved);
+    return plan;
+  } finally {
+    fs.closeSync(descriptor);
+  }
 }
 
 function printPlan(plan, flags) {
@@ -106,7 +144,31 @@ function printPlan(plan, flags) {
     const target = path.resolve(flags.out);
     assertExternalPlanPath(target, plan);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, `${JSON.stringify(plan, null, 2)}\n`, 'utf8');
+    assertExternalPlanPath(target, plan);
+    let descriptor;
+    let created;
+    let failure;
+    try {
+      descriptor = fs.openSync(target, 'wx', 0o600);
+      created = assertDescriptorOwnsPath(descriptor, target);
+      assertExternalPlanPath(target, plan);
+      assertDescriptorOwnsPath(descriptor, target);
+      fs.writeFileSync(descriptor, `${JSON.stringify(plan, null, 2)}\n`, 'utf8');
+      fs.fsyncSync(descriptor);
+    } catch (error) {
+      failure = error;
+    } finally {
+      if (descriptor !== undefined) {
+        try { fs.closeSync(descriptor); } catch (error) { if (!failure) failure = error; }
+      }
+    }
+    if (failure) {
+      if (created) unlinkIfSameFile(target, created);
+      if (failure.code === 'EEXIST') {
+        throw new Error(`Saved plan path already exists; choose a fresh --out path: ${target}`);
+      }
+      throw failure;
+    }
   }
   print(plan, true);
 }
