@@ -2,6 +2,7 @@
 'use strict';
 
 const path = require('path');
+const crypto = require('crypto');
 const {
   AdoptionError, applyPlan, createAdoptionPlan, createImportPlan,
   createLeavePlan, createRestorePlan, createRollbackPlan, createUpdatePlan,
@@ -81,13 +82,16 @@ function sameFileIdentity(left, right) {
   return left.dev === right.dev && left.ino === right.ino;
 }
 
-function assertDescriptorOwnsPath(descriptor, filePath) {
-  const descriptorStat = fs.fstatSync(descriptor);
+function assertDescriptorOwnsPath(descriptor, filePath, expectedLinks = 1) {
+  const descriptorStat = fs.fstatSync(descriptor, { bigint: true });
   if (!descriptorStat.isFile()) throw new Error('Saved plan file must be a regular file');
-  if (descriptorStat.nlink !== 1) {
-    throw new Error('Saved plan file must have exactly one filesystem link');
+  if (descriptorStat.nlink !== BigInt(expectedLinks)) {
+    const expected = expectedLinks === 1
+      ? 'exactly one filesystem link'
+      : `exactly ${expectedLinks} filesystem links during publication`;
+    throw new Error(`Saved plan file must have ${expected}`);
   }
-  const pathStat = fs.lstatSync(filePath);
+  const pathStat = fs.lstatSync(filePath, { bigint: true });
   if (pathStat.isSymbolicLink()) {
     throw new Error(`Saved plan path must not be a symbolic link: ${filePath}`);
   }
@@ -99,11 +103,27 @@ function assertDescriptorOwnsPath(descriptor, filePath) {
 
 function unlinkIfSameFile(filePath, expected) {
   try {
-    const current = fs.lstatSync(filePath);
+    const current = fs.lstatSync(filePath, { bigint: true });
     if (!current.isSymbolicLink() && sameFileIdentity(current, expected)) fs.unlinkSync(filePath);
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
+}
+
+function openStagedPlan(directory) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const suffix = crypto.randomBytes(16).toString('hex');
+    const stagedPath = path.join(directory, `.citadel-plan-${process.pid}-${suffix}.tmp`);
+    try {
+      return {
+        descriptor: fs.openSync(stagedPath, 'wx', 0o600),
+        stagedPath,
+      };
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
+  }
+  throw new Error(`Unable to create a fresh saved-plan staging file in ${directory}`);
 }
 
 function planPathInsideTarget(filePath, plan) {
@@ -139,37 +159,62 @@ function loadExternalPlan(filePath) {
   }
 }
 
-function printPlan(plan, flags) {
-  if (flags.out) {
-    const target = path.resolve(flags.out);
+function publishPlanOutput(plan, outputPath, testSeam = {}) {
+  const target = path.resolve(outputPath);
+  assertExternalPlanPath(target, plan);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  assertExternalPlanPath(target, plan);
+  const stagingDirectory = canonicalPathIdentity(path.dirname(target), 'Saved plan directory');
+  if (!fs.statSync(stagingDirectory).isDirectory()) {
+    throw new Error(`Saved plan directory is not a directory: ${stagingDirectory}`);
+  }
+  let descriptor;
+  let stagedPath;
+  let stagedIdentity;
+  let installed = false;
+  let destinationConflict = false;
+  let failure;
+  try {
+    ({ descriptor, stagedPath } = openStagedPlan(stagingDirectory));
+    stagedIdentity = fs.fstatSync(descriptor, { bigint: true });
+    stagedIdentity = assertDescriptorOwnsPath(descriptor, stagedPath);
+    fs.writeFileSync(descriptor, `${JSON.stringify(plan, null, 2)}\n`, 'utf8');
+    fs.fsyncSync(descriptor);
+    assertDescriptorOwnsPath(descriptor, stagedPath);
     assertExternalPlanPath(target, plan);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    assertExternalPlanPath(target, plan);
-    let descriptor;
-    let created;
-    let failure;
+    if (testSeam.beforeInstall) testSeam.beforeInstall({ descriptor, stagedPath, target });
     try {
-      descriptor = fs.openSync(target, 'wx', 0o600);
-      created = assertDescriptorOwnsPath(descriptor, target);
-      assertExternalPlanPath(target, plan);
-      assertDescriptorOwnsPath(descriptor, target);
-      fs.writeFileSync(descriptor, `${JSON.stringify(plan, null, 2)}\n`, 'utf8');
-      fs.fsyncSync(descriptor);
+      fs.linkSync(stagedPath, target);
     } catch (error) {
-      failure = error;
-    } finally {
-      if (descriptor !== undefined) {
-        try { fs.closeSync(descriptor); } catch (error) { if (!failure) failure = error; }
-      }
+      if (error.code === 'EEXIST') destinationConflict = true;
+      throw error;
     }
-    if (failure) {
-      if (created) unlinkIfSameFile(target, created);
-      if (failure.code === 'EEXIST') {
-        throw new Error(`Saved plan path already exists; choose a fresh --out path: ${target}`);
-      }
-      throw failure;
+    installed = true;
+    assertDescriptorOwnsPath(descriptor, target, 2);
+    unlinkIfSameFile(stagedPath, stagedIdentity);
+    if (testSeam.afterInstall) testSeam.afterInstall({ descriptor, target });
+    assertDescriptorOwnsPath(descriptor, target);
+    assertExternalPlanPath(target, plan);
+    assertDescriptorOwnsPath(descriptor, target);
+  } catch (error) {
+    failure = error;
+  } finally {
+    if (descriptor !== undefined) {
+      try { fs.closeSync(descriptor); } catch (error) { if (!failure) failure = error; }
     }
   }
+  if (failure) {
+    if (installed && stagedIdentity) unlinkIfSameFile(target, stagedIdentity);
+    if (stagedIdentity && stagedPath) unlinkIfSameFile(stagedPath, stagedIdentity);
+    if (destinationConflict) {
+      throw new Error(`Saved plan path already exists; choose a fresh --out path: ${target}`);
+    }
+    throw failure;
+  }
+}
+
+function printPlan(plan, flags) {
+  if (flags.out) publishPlanOutput(plan, flags.out);
   print(plan, true);
 }
 
@@ -306,16 +351,20 @@ function main(argv) {
   return 64;
 }
 
-try {
-  process.exitCode = main(process.argv.slice(2));
-} catch (error) {
-  const payload = {
-    ok: false,
-    code: error instanceof AdoptionError ? error.code : 'INVALID_REQUEST',
-    message: error.message,
-    recovery: error.recovery || null,
-  };
-  if (process.argv.includes('--json')) process.stderr.write(`${JSON.stringify(payload, null, 2)}\n`);
-  else process.stderr.write(`Citadel adoption failed [${payload.code}]: ${payload.message}\n`);
-  process.exitCode = error instanceof AdoptionError && error.code === 'CONFIRMATION_REQUIRED' ? 3 : 1;
+if (require.main === module) {
+  try {
+    process.exitCode = main(process.argv.slice(2));
+  } catch (error) {
+    const payload = {
+      ok: false,
+      code: error instanceof AdoptionError ? error.code : 'INVALID_REQUEST',
+      message: error.message,
+      recovery: error.recovery || null,
+    };
+    if (process.argv.includes('--json')) process.stderr.write(`${JSON.stringify(payload, null, 2)}\n`);
+    else process.stderr.write(`Citadel adoption failed [${payload.code}]: ${payload.message}\n`);
+    process.exitCode = error instanceof AdoptionError && error.code === 'CONFIRMATION_REQUIRED' ? 3 : 1;
+  }
 }
+
+module.exports = { __test: { publishPlanOutput } };

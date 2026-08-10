@@ -11,6 +11,7 @@ const {
   applyPlan, createAdoptionPlan, createLeavePlan, doctor,
 } = require('../core/adoption');
 const { ACTIVE_RECEIPT, LOCK_PATH } = require('../core/adoption/footprint');
+const { __test: { publishPlanOutput } } = require('./adopt');
 
 let passed = 0;
 
@@ -175,6 +176,71 @@ try {
       script, 'apply', outside, '--control-root', path.join(suite, 'external-plan-control'), '--json',
     ], { cwd: root, encoding: 'utf8', shell: false, windowsHide: true });
     assert.strictEqual(applied.status, 0, applied.stderr);
+  });
+
+  test('saved plan publication rejects hard-link and ancestor-redirection races', () => {
+    const hardLinkRoot = target(path.join(suite, 'plan-publish-hard-link-target'));
+    const hardLinkPlan = createAdoptionPlan({ source: sourceRoot, target: hardLinkRoot });
+    const collisionDirectory = path.join(suite, 'plan-publish-collision');
+    const collisionOutput = path.join(collisionDirectory, 'plan.json');
+    let stagedPath;
+    assert.throws(() => publishPlanOutput(hardLinkPlan, collisionOutput, {
+      beforeInstall({ stagedPath: pendingPath, target: installedPath }) {
+        stagedPath = pendingPath;
+        assert(!fs.existsSync(installedPath));
+        assert.deepStrictEqual(JSON.parse(fs.readFileSync(pendingPath, 'utf8')), hardLinkPlan);
+        fs.writeFileSync(installedPath, 'user-owned\n', { flag: 'wx' });
+      },
+    }), /Saved plan path already exists/);
+    assert.strictEqual(fs.readFileSync(collisionOutput, 'utf8'), 'user-owned\n');
+    assert(!fs.existsSync(stagedPath));
+    assert.deepStrictEqual(fs.readdirSync(collisionDirectory), ['plan.json']);
+
+    const hardLinkOutput = path.join(suite, 'plan-publish-hard-link', 'plan.json');
+    const racedLink = path.join(hardLinkRoot, 'raced-plan.json');
+    let hardLinkFailure;
+    try {
+      publishPlanOutput(hardLinkPlan, hardLinkOutput, {
+        afterInstall({ target: installedPath }) {
+          fs.linkSync(installedPath, racedLink);
+        },
+      });
+    } catch (error) {
+      hardLinkFailure = error;
+    }
+
+    const redirectRoot = target(path.join(suite, 'plan-publish-redirect-target'));
+    const redirectPlan = createAdoptionPlan({ source: sourceRoot, target: redirectRoot });
+    const redirectDirectory = path.join(suite, 'plan-publish-redirect-output');
+    fs.mkdirSync(redirectDirectory, { recursive: true });
+    const redirectOutput = path.join(redirectDirectory, 'plan.json');
+    const redirectedPlan = path.join(redirectRoot, 'plan.json');
+    let redirectFailure;
+    try {
+      publishPlanOutput(redirectPlan, redirectOutput, {
+        afterInstall({ target: installedPath }) {
+          fs.linkSync(installedPath, redirectedPlan);
+          fs.unlinkSync(installedPath);
+          fs.rmdirSync(redirectDirectory);
+          directoryAlias(redirectRoot, redirectDirectory);
+        },
+      });
+    } catch (error) {
+      redirectFailure = error;
+    }
+
+    assert(hardLinkFailure, 'publication must fail if a hard link is added before final validation');
+    assert.match(hardLinkFailure.message, /exactly one filesystem link/);
+    assert(!fs.existsSync(hardLinkOutput));
+    assert(fs.existsSync(racedLink));
+    fs.unlinkSync(racedLink);
+    assert.strictEqual(git(hardLinkRoot, ['status', '--porcelain']), '');
+
+    assert(redirectFailure, 'publication must fail if the output ancestor is redirected before final validation');
+    assert.match(redirectFailure.message, /Saved plan must be outside target/);
+    assert(!fs.existsSync(redirectOutput));
+    assert(!fs.existsSync(redirectedPlan));
+    assert.strictEqual(git(redirectRoot, ['status', '--porcelain']), '');
   });
 
   test('fresh plan is no-write, apply is receipted, doctor is healthy, and exact leave exits', () => {
