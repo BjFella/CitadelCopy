@@ -27,6 +27,9 @@
     "displayName": "Citadel Harness",
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/icon.svg",
+    "screenshots": [
+      "./assets/terminal-demo.svg"
+    ],
     "websiteURL": "https://sethgammon.github.io/Citadel/",
     "privacyPolicyURL": "https://github.com/SethGammon/Citadel/blob/main/PRIVACY.md",
     "termsOfServiceURL": "https://github.com/SethGammon/Citadel/blob/main/LICENSE",
