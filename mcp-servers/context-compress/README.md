@@ -21,7 +21,20 @@ structure instead of raw bytes.
 No LLM call needed -- compression uses structural heuristics (function/class
 names, error lines, section headings).
 
-## Enable globally
+## Required project-root boundary
+
+`smart_read` requires `CITADEL_PROJECT_ROOT` to be set to one absolute,
+existing project directory when the server starts. It fails closed when that
+setting is missing, relative, or invalid. Relative read paths resolve against
+that fixed root; absolute paths are accepted only when their canonical target
+is still inside it.
+
+Containment is checked again after resolving symlinks and Windows junctions.
+The server also refuses every `.env*` variant and common credential, private
+runtime-state, private-key, and keystore files. Protected names are omitted
+from directory listings.
+
+## Enable for a fixed project
 
 Add to `~/.claude/settings.json`:
 
@@ -29,14 +42,22 @@ Add to `~/.claude/settings.json`:
 "mcpServers": {
   "context-compress": {
     "command": "node",
-    "args": ["C:/Users/gammo/Desktop/Citadel/mcp-servers/context-compress/index.js"]
+    "args": ["C:/Users/gammo/Desktop/Citadel/mcp-servers/context-compress/index.js"],
+    "env": {
+      "CITADEL_PROJECT_ROOT": "C:/absolute/path/to/project"
+    }
   }
 }
 ```
 
+A global registration is still bound to that one project root. Use separate
+named registrations when you intentionally need the server for multiple
+projects; do not omit the root and rely on the process working directory.
+
 ## Enable for one project only
 
-Add to `.claude/settings.json` in the project root instead.
+Add the same server entry to `.claude/settings.json` in the project root
+instead, with `CITADEL_PROJECT_ROOT` set to that project's absolute path.
 
 ## Usage
 
@@ -54,6 +75,12 @@ loads the tool description, which includes the "Use instead of..." guidance).
 - Targeted reads where you know offset/limit: use native Read
 - Short commands: use native Bash
 - Any operation where you need exact raw output (e.g. checking a specific line)
+
+## Security boundary
+
+The read confinement above applies to `smart_read`. `smart_bash` remains an
+explicit shell-execution capability, equivalent in trust to granting a native
+shell tool; only enable this opt-in server for trusted local workflows.
 
 ## No dependencies
 
