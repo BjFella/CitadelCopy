@@ -161,6 +161,24 @@ function applyReleasePolicy(entries) {
   }).sort(compareNames);
 }
 
+const RELEASE_TEXT_EXTENSIONS = new Set([
+  '.cjs', '.css', '.html', '.js', '.json', '.jsx', '.md', '.mjs', '.ps1',
+  '.sh', '.svg', '.toml', '.ts', '.tsx', '.txt', '.yaml', '.yml',
+]);
+
+function normalizeReleaseTextEntries(entries) {
+  return entries.map((entry) => {
+    const extension = path.posix.extname(entry.name).toLowerCase();
+    if (!RELEASE_TEXT_EXTENSIONS.has(extension) && entry.name !== 'LICENSE') return entry;
+    const source = entry.data.toString('utf8');
+    if (!Buffer.from(source, 'utf8').equals(entry.data)) {
+      throw new Error(`Release text entry is not valid UTF-8: ${entry.name}`);
+    }
+    const data = Buffer.from(source.replace(/\r\n?/g, '\n'));
+    return data.equals(entry.data) ? entry : { ...entry, data };
+  });
+}
+
 function sanitizeReleasePackage(entries) {
   const pkg = jsonFromEntries(entries, 'package.json');
   const releasePackage = {
@@ -519,6 +537,16 @@ const RELEASE_INSTRUCTION_RULES = new Map([
         '  source distribution.',
       ].join('\n'),
       preserves: [/Full Tour/, /Parallel and Operations/, /Delivery workflows require the full/, /source distribution/],
+    },
+  ]],
+  ['skills/cost/SKILL.md', [
+    {
+      id: 'project-runtime-pricing-owner',
+      whenOmitted: [],
+      from: 'scripts/pricing.json',
+      to: 'runtimes/claude-code/adapters/pricing.json',
+      expected: 2,
+      preserves: [/runtimes\/claude-code\/adapters\/pricing\.json/],
     },
   ]],
   ['docs/CAMPAIGNS.md', [
@@ -1224,7 +1252,7 @@ function buildRelease(options = {}) {
     .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
     .filter(Boolean));
   const entries = sanitizeReleaseRuntimeInstructions(sanitizeReleaseInstructions(sanitizeReleaseSkillCounts(sanitizeReleaseMetadata(
-    sanitizeReleaseRouting(sanitizeReleaseBundleCatalog(sanitizeReleaseMcp(sanitizeReleaseCli(sanitizeReleasePackage(applyReleasePolicy(sourceEntries))))))
+    sanitizeReleaseRouting(sanitizeReleaseBundleCatalog(sanitizeReleaseMcp(sanitizeReleaseCli(sanitizeReleasePackage(normalizeReleaseTextEntries(applyReleasePolicy(sourceEntries)))))))
   )), knownSkillNames));
   const identity = assertVersions(entries, ref);
   const commit = gitValue(['rev-parse', ref ? `${ref}^{commit}` : 'HEAD'], sourceDir, 'unknown');

@@ -25,10 +25,12 @@ function makeSource(root, version = '1.1.0') {
   writeJson(path.join(root, '.codex-plugin', 'plugin.json'), { name: 'citadel', version });
   fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
   fs.writeFileSync(path.join(root, 'scripts', 'hello.js'), "console.log('citadel');\n");
+  fs.mkdirSync(path.join(root, 'assets'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'assets', 'fixture.bin'), Buffer.from([0x00, 0x0d, 0x0a, 0xff]));
   writeJson(path.join(root, 'release-files.json'), {
     schema: 1,
     includeFiles: ['package.json', 'release-files.json'],
-    includeDirectories: ['.claude-plugin/', '.codex-plugin/', 'scripts/', '.planning/_templates/'],
+    includeDirectories: ['.claude-plugin/', '.codex-plugin/', 'assets/', 'scripts/', '.planning/_templates/'],
     excludeFiles: [],
     excludeDirectories: [],
     excludePrefixes: [],
@@ -137,6 +139,30 @@ try {
   const second = buildRelease({ sourceDir: source, outputDir: path.join(temp, 'two') });
   assert.equal(first.sha256, second.sha256, 'same source must produce identical archives');
   assert.equal(fs.readFileSync(first.manifestPath, 'utf8'), fs.readFileSync(second.manifestPath, 'utf8'));
+  assert.equal(
+    first.manifest.files.find((file) => file.path === 'assets/fixture.bin')?.sha256,
+    sha256(Buffer.from([0x00, 0x0d, 0x0a, 0xff])),
+    'release text normalization must not alter binary payloads',
+  );
+  for (const relative of [
+    'package.json', 'release-files.json', '.claude-plugin/plugin.json',
+    '.claude-plugin/marketplace.json', '.codex-plugin/plugin.json', 'scripts/hello.js',
+  ]) {
+    const file = path.join(source, ...relative.split('/'));
+    const text = fs.readFileSync(file, 'utf8');
+    assert(!text.includes('\r\n'), `${relative} fixture must begin with LF bytes`);
+    fs.writeFileSync(file, text.replace(/\n/g, '\r\n'));
+  }
+  const crlfEquivalent = buildRelease({ sourceDir: source, outputDir: path.join(temp, 'crlf-equivalent') });
+  assert.equal(
+    crlfEquivalent.sha256,
+    first.sha256,
+    'semantically identical LF and CRLF worktrees must produce identical archives',
+  );
+  assert(
+    fs.readFileSync(crlfEquivalent.archivePath).equals(fs.readFileSync(first.archivePath)),
+    'semantically identical LF and CRLF worktrees must produce byte-identical archives',
+  );
 
   const verified = verifyRelease(first.archivePath, { version: '1.1.0', ref: first.manifest.ref });
   assert.equal(verified.version, '1.1.0');
@@ -448,6 +474,9 @@ try {
   }
   const housecleanSkill = fs.readFileSync(path.join(productRoot, 'skills', 'houseclean', 'SKILL.md'), 'utf8');
   assert.match(housecleanSkill, /monthly manual check/i, 'release houseclean must retain monthly-check guidance');
+  const costSkill = fs.readFileSync(path.join(productRoot, 'skills', 'cost', 'SKILL.md'), 'utf8');
+  assert.doesNotMatch(costSkill, /scripts\/pricing\.json/, 'release cost skill retains the stale pricing owner');
+  assert.match(costSkill, /runtimes\/claude-code\/adapters\/pricing\.json/, 'release cost skill must name the shipped pricing owner');
 
   const setupReference = fs.readFileSync(path.join(productRoot, 'docs', 'SETUP_REFERENCE.md'), 'utf8');
   assert(!setupReference.includes('docs/index.html'), 'release setup reference must not claim the omitted site-only routing surface');
@@ -584,6 +613,23 @@ try {
       assert(fs.existsSync(resolved), `${relative} links omitted archive-local path: ${raw}`);
     }
   }
+
+  const ownedPathSource = String.raw`(?:^|[\s\x60"'(=])((?:\.agents|\.claude-plugin|\.codex-plugin|\.planning[\\/]_templates|agents|assets|bin|core|docs|hooks|hooks_src|mcp-servers|runtimes|scripts|skills|templates)[\\/][A-Za-z0-9_.\\/-]+\.(?:json|(?:c|m)?js|md))(?:#[A-Za-z0-9_-]+)?(?=$|[\s\x60"'),:;])`;
+  const allowedGeneratedPathReferences = new Set(['hooks/README.md::hooks/hooks.json']);
+  const observedGeneratedPathReferences = new Set();
+  for (const relative of [...productPaths].filter((item) => item.endsWith('.md'))) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const match of content.matchAll(new RegExp(ownedPathSource, 'g'))) {
+      const referenced = match[1].replace(/\\/g, '/');
+      const key = `${relative}::${referenced}`;
+      if (allowedGeneratedPathReferences.has(key)) {
+        observedGeneratedPathReferences.add(key);
+        continue;
+      }
+      assert(productPaths.has(referenced), `${relative} references omitted release-owned path ${referenced}`);
+    }
+  }
+  assert.deepEqual(observedGeneratedPathReferences, allowedGeneratedPathReferences, 'release path-reference allowlist drifted');
 
   const releasePackage = JSON.parse(fs.readFileSync(path.join(productRoot, 'package.json'), 'utf8'));
   const releaseChangelog = fs.readFileSync(path.join(productRoot, 'CHANGELOG.md'), 'utf8');
