@@ -72,15 +72,16 @@ acceptance. Missing evidence remains unknown.
 ## Operator sequence
 
 After an owner supplies matched scenarios and consent, create the exact trial
-specification and review it with them before starting:
+specification and review it with them before starting. Run from the repository
+root and pass the same frozen experiment manifest to every command:
 
 ```sh
-node scripts/product-proof-trial.js validate --spec <owner-reviewed-spec.json>
-node scripts/product-proof-trial.js plan --spec <owner-reviewed-spec.json>
-node scripts/product-proof-trial.js start --spec <owner-reviewed-spec.json> --root <private-trial-root>
-node scripts/product-proof-trial.js record --input <validated-record.json> --root <private-trial-root>
-node scripts/product-proof-trial.js report --root <private-trial-root>
-node scripts/product-proof-trial.js share-preview --root <private-trial-root>
+node scripts/product-proof-trial.js validate --spec <owner-reviewed-spec.json> --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json
+node scripts/product-proof-trial.js plan --spec <owner-reviewed-spec.json> --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json
+node scripts/product-proof-trial.js start --spec <owner-reviewed-spec.json> --root <private-trial-root> --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json
+node scripts/product-proof-trial.js record --input <validated-record.json> --root <private-trial-root> --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json
+node scripts/product-proof-trial.js report --root <private-trial-root> --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json
+node scripts/product-proof-trial.js share-preview --root <private-trial-root> --experiment-manifest benchmarks/citadel-proof-experiments/experiment-manifest.json
 ```
 
 The plan must be inspected before `start`. Each assignment uses the canonical

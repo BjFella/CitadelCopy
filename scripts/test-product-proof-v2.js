@@ -17,6 +17,7 @@ const EXPERIMENT_MANIFEST = path.join(
   'citadel-proof-experiments',
   'experiment-manifest.json',
 );
+const EXPERIMENT_MANIFEST_RUNBOOK_PATH = 'benchmarks/citadel-proof-experiments/experiment-manifest.json';
 
 let passed = 0;
 function test(name, fn) {
@@ -119,6 +120,20 @@ function capture() {
 }
 
 process.stdout.write('Real User Proof v2 tests\n');
+
+test('external owner runbook keeps the full operator sequence manifest-bound', () => {
+  const runbook = fs.readFileSync(path.join(__dirname, '..', 'docs', 'EXTERNAL_OWNER_TRIAL.md'), 'utf8');
+  const operatorBlock = runbook.match(/## Operator sequence[\s\S]*?```sh\r?\n([\s\S]*?)\r?\n```/);
+  assert.ok(operatorBlock, 'external owner runbook must publish an sh operator block');
+  assert.deepEqual(operatorBlock[1].split(/\r?\n/), [
+    `node scripts/product-proof-trial.js validate --spec <owner-reviewed-spec.json> --experiment-manifest ${EXPERIMENT_MANIFEST_RUNBOOK_PATH}`,
+    `node scripts/product-proof-trial.js plan --spec <owner-reviewed-spec.json> --experiment-manifest ${EXPERIMENT_MANIFEST_RUNBOOK_PATH}`,
+    `node scripts/product-proof-trial.js start --spec <owner-reviewed-spec.json> --root <private-trial-root> --experiment-manifest ${EXPERIMENT_MANIFEST_RUNBOOK_PATH}`,
+    `node scripts/product-proof-trial.js record --input <validated-record.json> --root <private-trial-root> --experiment-manifest ${EXPERIMENT_MANIFEST_RUNBOOK_PATH}`,
+    `node scripts/product-proof-trial.js report --root <private-trial-root> --experiment-manifest ${EXPERIMENT_MANIFEST_RUNBOOK_PATH}`,
+    `node scripts/product-proof-trial.js share-preview --root <private-trial-root> --experiment-manifest ${EXPERIMENT_MANIFEST_RUNBOOK_PATH}`,
+  ]);
+});
 
 test('assignment generation is deterministic and exactly balanced AB/BA', () => {
   const first = proof.createPlan(spec());
