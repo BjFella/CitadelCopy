@@ -211,17 +211,17 @@ try {
 
     const redirectRoot = target(path.join(suite, 'plan-publish-redirect-target'));
     const redirectPlan = createAdoptionPlan({ source: sourceRoot, target: redirectRoot });
+    const redirectPublicationDirectory = path.join(suite, 'plan-publish-redirect-physical');
     const redirectDirectory = path.join(suite, 'plan-publish-redirect-output');
-    fs.mkdirSync(redirectDirectory, { recursive: true });
+    fs.mkdirSync(redirectPublicationDirectory, { recursive: true });
+    directoryAlias(redirectPublicationDirectory, redirectDirectory);
     const redirectOutput = path.join(redirectDirectory, 'plan.json');
     const redirectedPlan = path.join(redirectRoot, 'plan.json');
     let redirectFailure;
     try {
       publishPlanOutput(redirectPlan, redirectOutput, {
-        afterInstall({ target: installedPath }) {
-          fs.linkSync(installedPath, redirectedPlan);
-          fs.unlinkSync(installedPath);
-          fs.rmdirSync(redirectDirectory);
+        afterInstall() {
+          fs.unlinkSync(redirectDirectory);
           directoryAlias(redirectRoot, redirectDirectory);
         },
       });
@@ -241,6 +241,8 @@ try {
     assert(!fs.existsSync(redirectOutput));
     assert(!fs.existsSync(redirectedPlan));
     assert.strictEqual(git(redirectRoot, ['status', '--porcelain']), '');
+    fs.unlinkSync(redirectDirectory);
+    assert.deepStrictEqual(fs.readdirSync(redirectPublicationDirectory), []);
   });
 
   test('saved plan publication leaves the target untouched when an outside ancestor is redirected before mkdir', () => {
@@ -250,13 +252,16 @@ try {
     const outsideDirectory = path.join(suite, 'plan-publish-pre-mkdir-outside');
     const outputAlias = path.join(suite, 'plan-publish-pre-mkdir-alias');
     fs.mkdirSync(outsideDirectory, { recursive: true });
+    const canonicalOutsideDirectory = typeof fs.realpathSync.native === 'function'
+      ? fs.realpathSync.native(outsideDirectory)
+      : fs.realpathSync(outsideDirectory);
     directoryAlias(outsideDirectory, outputAlias);
     const output = path.join(outputAlias, 'nested', 'plan.json');
 
     assert.throws(() => publishPlanOutput(plan, output, {
       beforeMkdir({ publicationTarget, requestedTarget }) {
         assert.strictEqual(requestedTarget, output);
-        assert.strictEqual(publicationTarget, path.join(outsideDirectory, 'nested', 'plan.json'));
+        assert.strictEqual(publicationTarget, path.join(canonicalOutsideDirectory, 'nested', 'plan.json'));
         fs.unlinkSync(outputAlias);
         directoryAlias(root, outputAlias);
       },
