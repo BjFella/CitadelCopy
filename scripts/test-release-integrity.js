@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const { buildRelease, sanitizeReleaseInstructions, sha256 } = require('./release-package');
 const { parseTar, verifyRelease } = require('./release-verify');
 
@@ -78,6 +78,25 @@ function sectionBody(content, startPattern, endPattern, label) {
   const body = afterStart.slice(0, end).trim();
   assert(body, `${label} must not be empty`);
   return body;
+}
+
+function markdownHeadingAnchors(content) {
+  const counts = new Map();
+  const anchors = new Set();
+  for (const match of content.matchAll(/^#{1,6}\s+(.+?)\s*#*\s*$/gm)) {
+    const base = match[1]
+      .replace(/<[^>]+>/g, '')
+      .replace(/[`*_~]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+    if (!base) continue;
+    const seen = counts.get(base) || 0;
+    anchors.add(seen === 0 ? base : `${base}-${seen}`);
+    counts.set(base, seen + 1);
+  }
+  return anchors;
 }
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-release-integrity-'));
@@ -222,6 +241,8 @@ try {
     'core/cli/package-cli.js', 'runtimes/codex/hooks.json', 'runtimes/claude-code/runtime.js',
     'core/skills/routing.js', 'core/skills/routing-table.json', 'scripts/route-preview.js',
     'skills/do/SKILL.md', 'hooks_src/init-project.js', 'docs/CLI.md', 'docs/RELEASES.md',
+    'docs/CONSTITUTION.md', 'docs/CAMPAIGNS.md', 'docs/SETUP_REFERENCE.md',
+    'docs/FLEET.md', 'docs/JUDGE_TIERING.md',
   ]) assert(productPaths.has(required), `release allowlist omitted runtime path: ${required}`);
   for (const forbidden of productPaths) {
     assert(!forbidden.startsWith('benchmarks/'), `release leaked benchmark content: ${forbidden}`);
@@ -238,7 +259,7 @@ try {
   for (const forbidden of [
     'assets/social-preview.png', 'docs/index.html', 'hooks_src/smoke-test.js',
     'agents/knowledge-extractor.md', 'mcp-servers/citadel-state/README.md',
-    'docs/DAEMON.md', 'docs/FLEET.md', 'docs/GOVERNED_LIFECYCLE.md', 'docs/OPERATION_CONTROL.md',
+    'docs/DAEMON.md', 'docs/GOVERNED_LIFECYCLE.md', 'docs/OPERATION_CONTROL.md',
     'mcp-servers/codebase-memory/smoke-test.js', 'core/team/pilot.js',
     'core/telemetry/activation-cohort.js', 'core/telemetry/github-traffic.js',
     'scripts/check-sentient-grant-form.js', 'scripts/github-traffic-snapshot.js',
@@ -255,6 +276,24 @@ try {
     fs.writeFileSync(destination, data);
   }
   const productRoot = path.join(extracted, `citadel-${product.manifest.version}`);
+  const runbookAnchors = new Map();
+  const assertRunbookReference = (relative, match) => {
+    const runbook = match[1];
+    assert(productPaths.has(runbook), `${relative} references omitted release runbook ${runbook}`);
+    const anchor = match[2] ? match[2].slice(1) : null;
+    if (!anchor) return;
+    if (!runbookAnchors.has(runbook)) {
+      const content = fs.readFileSync(path.join(productRoot, ...runbook.split('/')), 'utf8');
+      runbookAnchors.set(runbook, markdownHeadingAnchors(content));
+    }
+    assert(runbookAnchors.get(runbook).has(anchor), `${relative} references missing release runbook anchor ${runbook}#${anchor}`);
+  };
+  for (const relative of [...productPaths].filter((item) => /\.(?:c?js|mjs|json|md|html?|svg|txt)$/i.test(item))) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    for (const match of content.matchAll(/\b(docs\/[A-Za-z0-9._/-]+\.md)(#[A-Za-z0-9_-]+)?/g)) {
+      assertRunbookReference(relative, match);
+    }
+  }
   const productBin = path.join(productRoot, 'bin', 'citadel.js');
   const cliHelp = execFileSync(process.execPath, [productBin, '--help'], { cwd: productRoot, encoding: 'utf8' });
   const cliCommands = new Set([...cliHelp.matchAll(/^  ([a-z][a-z-]+)\s+/gm)].map((match) => match[1]));
@@ -410,6 +449,99 @@ try {
   const housecleanSkill = fs.readFileSync(path.join(productRoot, 'skills', 'houseclean', 'SKILL.md'), 'utf8');
   assert.match(housecleanSkill, /monthly manual check/i, 'release houseclean must retain monthly-check guidance');
 
+  const setupReference = fs.readFileSync(path.join(productRoot, 'docs', 'SETUP_REFERENCE.md'), 'utf8');
+  assert(!setupReference.includes('docs/index.html'), 'release setup reference must not claim the omitted site-only routing surface');
+  assert.match(setupReference, /both packaged routing surfaces are in sync/i, 'release setup reference must describe the two shipped routing surfaces');
+  const fleetReference = fs.readFileSync(path.join(productRoot, 'docs', 'FLEET.md'), 'utf8');
+  assert.match(fleetReference, /\.planning\/telemetry\/agent-runs\.jsonl/, 'release Fleet reference must use the real telemetry path');
+  assert.match(fleetReference, /Preserve staged findings for review; compilation requires a full source checkout\./, 'release Fleet reference must preserve the source-only compilation boundary');
+  assert.match(fleetReference, /hooks_src\/worktree-setup\.js/, 'release Fleet reference must name the shipped readiness owner');
+  for (const omittedProgram of ['scripts/worktree-readiness.js', '.citadel/scripts/parse-handoff.cjs', '.citadel/scripts/telemetry-report.cjs']) {
+    assert(!fleetReference.includes(omittedProgram), `release Fleet reference retains omitted helper ${omittedProgram}`);
+  }
+  const campaignReference = fs.readFileSync(path.join(productRoot, 'docs', 'CAMPAIGNS.md'), 'utf8');
+  assert.match(campaignReference, /\.planning\/campaigns\/completed\//, 'release campaign reference must use the real archive path');
+  const releaseInstall = fs.readFileSync(path.join(productRoot, 'INSTALL.md'), 'utf8');
+  assert.match(releaseInstall, /Delivery workflows require the full\s+source distribution\./, 'release install guide must bound Delivery to the full source distribution');
+  assert.match(setupSkill, /slim release does not expose Delivery; those workflows require the full source distribution\./, 'release setup skill must not promise unavailable Delivery activation');
+  for (const relative of [...productPaths].filter((item) => item.endsWith('.md'))) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    assert.doesNotMatch(content, /Delivery remains off|enable delivery\b/i, `${relative} promises unavailable Delivery activation`);
+  }
+  const releaseBundleIds = require(path.join(productRoot, 'core', 'config', 'contract.js')).BUNDLE_IDS;
+  const releaseBundleCatalog = require(path.join(productRoot, 'core', 'config', 'bundle-catalog.js')).BUNDLE_CATALOG;
+  assert.deepEqual(releaseBundleIds, ['core', 'persistence', 'parallel', 'operations', 'delivery']);
+  assert.deepEqual(Object.keys(releaseBundleCatalog), releaseBundleIds, 'release bundle catalog must exactly match its selectable bundle IDs');
+  for (const bundle of Object.values(releaseBundleCatalog)) {
+    const executableCount = bundle.owns.skills.length + bundle.owns.hooks.length;
+    if (bundle.available === false) {
+      assert.equal(bundle.stage, 'source-only', `unavailable release bundle ${bundle.id} must not claim stable availability`);
+      assert.equal(bundle.unavailableReasonCode, 'BUNDLE_EXECUTABLES_NOT_SHIPPED');
+      assert.equal(executableCount, 0, `unavailable release bundle ${bundle.id} unexpectedly owns shipped executables`);
+      continue;
+    }
+    assert(executableCount > 0, `available release bundle ${bundle.id} must own a shipped executable`);
+    for (const skill of bundle.owns.skills) {
+      assert(productPaths.has(`skills/${skill}/SKILL.md`), `release bundle ${bundle.id} activates omitted skill /${skill}`);
+    }
+    for (const hook of bundle.owns.hooks) {
+      assert(productPaths.has(`hooks_src/${hook}.js`), `release bundle ${bundle.id} activates omitted hook ${hook}`);
+    }
+  }
+  assert.equal(releaseBundleCatalog.delivery.available, false, 'release delivery bundle must be explicitly unavailable');
+  const releaseConfigScript = path.join(productRoot, 'scripts', 'citadel-config.js');
+  const releaseConfigTarget = path.join(temp, 'release-config-target');
+  fs.mkdirSync(releaseConfigTarget, { recursive: true });
+  const unavailableDelivery = spawnSync(process.execPath, [
+    releaseConfigScript, 'enable', 'delivery', '--project-root', releaseConfigTarget, '--json',
+  ], { cwd: productRoot, encoding: 'utf8' });
+  assert.equal(unavailableDelivery.status, 1, 'release config must reject an omitted delivery bundle');
+  assert.equal(unavailableDelivery.stderr, '');
+  const unavailableDeliveryPlan = JSON.parse(unavailableDelivery.stdout);
+  assert.equal(unavailableDeliveryPlan.blocked, true);
+  assert.equal(unavailableDeliveryPlan.candidateConfig, null);
+  assert.match(unavailableDeliveryPlan.errors.join('\n'), /delivery.*unavailable in this release.*BUNDLE_EXECUTABLES_NOT_SHIPPED/i);
+  for (const bundleId of releaseBundleIds.filter((id) => releaseBundleCatalog[id].available !== false)) {
+    const result = spawnSync(process.execPath, [
+      releaseConfigScript, 'enable', bundleId, '--project-root', releaseConfigTarget, '--json',
+    ], { cwd: productRoot, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const plan = JSON.parse(result.stdout);
+    assert.equal(plan.blocked, false, `release config blocked retained bundle ${bundleId}`);
+    assert(plan.candidateConfig.activation.bundles.includes(bundleId));
+    assert(plan.candidateConfig.activation.bundles.every((id) => releaseBundleIds.includes(id)));
+  }
+  assert(!fs.existsSync(path.join(releaseConfigTarget, '.claude', 'harness.json')), 'release bundle previews must not mutate the target');
+
+  const releaseConfig = require(path.join(productRoot, 'core', 'config', 'index.js'));
+  const existingDeliveryTarget = path.join(temp, 'release-existing-delivery-target');
+  const existingDeliveryConfig = releaseConfig.createDefaultConfig();
+  existingDeliveryConfig.activation.bundles = ['core', 'persistence', 'operations', 'delivery'];
+  writeJson(path.join(existingDeliveryTarget, '.claude', 'harness.json'), existingDeliveryConfig);
+  const existingDelivery = spawnSync(process.execPath, [
+    releaseConfigScript, 'show', '--project-root', existingDeliveryTarget, '--runtime', 'codex', '--json',
+  ], { cwd: productRoot, encoding: 'utf8' });
+  assert.equal(existingDelivery.status, 1, 'existing delivery config must fail closed until repaired');
+  const existingDeliveryReceipt = JSON.parse(existingDelivery.stdout);
+  assert(existingDeliveryReceipt.bundles.unavailable.some((entry) => (
+    entry.id === 'delivery' && entry.reasonCode === 'BUNDLE_EXECUTABLES_NOT_SHIPPED'
+  )), 'existing delivery config must explain the unavailable release executable boundary');
+  const disableDelivery = JSON.parse(execFileSync(process.execPath, [
+    releaseConfigScript, 'disable', 'delivery', '--project-root', existingDeliveryTarget, '--json',
+  ], { cwd: productRoot, encoding: 'utf8' }));
+  assert.equal(disableDelivery.blocked, false, 'existing delivery config must retain a recovery plan');
+  assert(!disableDelivery.candidateConfig.activation.bundles.includes('delivery'));
+
+  const fullRuntime = {
+    id: 'release-test',
+    capabilities: Object.fromEntries([
+      'workspace', 'agents', 'worktrees', 'approvals', 'history', 'surfaces',
+    ].map((capability) => [capability, 'full'])),
+  };
+  const legacyReceipt = releaseConfig.resolveConfig({ legacySetting: true }, { runtime: fullRuntime });
+  assert.equal(legacyReceipt.status, 'ready', `legacy release config did not resolve: ${legacyReceipt.errors.join('; ')}`);
+  assert.deepEqual(legacyReceipt.bundles.requested, ['core', 'persistence', 'parallel', 'operations']);
+
   const releaseMetadata = JSON.parse(fs.readFileSync(path.join(productRoot, 'citadel-metadata.json'), 'utf8'));
   const shippedSkillCount = [...productPaths].filter((relative) => /^skills\/[^/]+\/SKILL\.md$/.test(relative)).length;
   assert.equal(releaseMetadata.skills.count, shippedSkillCount, 'release metadata skill count must match the archive');
@@ -482,6 +614,7 @@ try {
     ['.planning/_templates/campaign.md', new Set(['test'])],
     ['.planning/_templates/deploy/static.md', new Set(['start'])],
     ['docs/ARCHITECTURE.md', new Set(['test'])],
+    ['docs/CAMPAIGNS.md', new Set(['test'])],
     ['skills/do/SKILL.md', new Set(['test', 'build', 'typecheck'])],
     ['skills/experiment/SKILL.md', new Set(['test', 'build'])],
     ['skills/map/SKILL.md', new Set(['test', 'typecheck'])],

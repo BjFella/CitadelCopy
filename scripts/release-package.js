@@ -258,6 +258,160 @@ function sanitizeReleaseMcp(entries) {
   return entries.map((entry) => (entry.name === '.mcp.json' ? { ...entry, data } : entry));
 }
 
+function sanitizeReleaseBundleCatalog(entries) {
+  const catalogName = 'core/config/bundle-catalog.js';
+  const catalogEntry = entries.find((entry) => entry.name === catalogName);
+  if (!catalogEntry) return entries;
+  const resolveName = 'core/config/resolve.js';
+  const migrateName = 'core/config/migrate.js';
+  const contractEntry = entries.find((entry) => entry.name === 'core/config/contract.js');
+  const resolveEntry = entries.find((entry) => entry.name === resolveName);
+  const migrateEntry = entries.find((entry) => entry.name === migrateName);
+  if (!contractEntry || !resolveEntry || !migrateEntry) {
+    throw new Error('Release bundle projection requires contract, resolve, and migration owners');
+  }
+  const shippedSkills = new Set(entries
+    .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
+    .filter(Boolean));
+  const contractSource = contractEntry.data.toString('utf8');
+  const bundleIdsMatch = /const BUNDLE_IDS = Object\.freeze\(\[([\s\S]*?)\]\);/.exec(contractSource);
+  if (!bundleIdsMatch) throw new Error('Release bundle projection could not read BUNDLE_IDS');
+  const bundleIds = [...bundleIdsMatch[1].matchAll(/'([a-z][a-z0-9-]*)'/g)].map((match) => match[1]);
+  if (!bundleIds.length) throw new Error('Release bundle projection found no bundle IDs');
+  const projectedSkillsByBundle = new Map();
+  let blockCount = 0;
+  let catalogSource = catalogEntry.data.toString('utf8').replace(
+    /^(\s*)skills:\s*\[([\s\S]*?)\],\r?\n(\s*)hooks:/gm,
+    (_match, skillIndent, body, hookIndent) => {
+      const bundleId = bundleIds[blockCount];
+      if (!bundleId) throw new Error(`Release bundle projection found an unexpected skill block at ${blockCount + 1}`);
+      blockCount += 1;
+      const declared = [...body.matchAll(/'([a-z][a-z0-9-]*)'/g)].map((match) => match[1]);
+      const projected = declared.filter((skill) => shippedSkills.has(skill));
+      projectedSkillsByBundle.set(bundleId, projected);
+      return `${skillIndent}skills: [${projected.map((skill) => `'${skill}'`).join(', ')}],\n${hookIndent}hooks:`;
+    },
+  );
+  if (blockCount !== bundleIds.length) {
+    throw new Error(`Release bundle projection expected ${bundleIds.length} skill ownership blocks, found ${blockCount}`);
+  }
+  const hookBlocks = [...catalogSource.matchAll(/^\s*hooks:\s*\[([\s\S]*?)\],\r?\n\s*state:/gm)];
+  if (hookBlocks.length !== bundleIds.length) {
+    throw new Error(`Release bundle projection expected ${bundleIds.length} hook ownership blocks, found ${hookBlocks.length}`);
+  }
+  const hookCountByBundle = new Map(bundleIds.map((id, index) => [
+    id,
+    [...hookBlocks[index][1].matchAll(/'([a-z][a-z0-9-]*)'/g)].length,
+  ]));
+  const availableBundleIds = bundleIds.filter((id) => (
+    projectedSkillsByBundle.get(id)?.length > 0 || hookCountByBundle.get(id) > 0
+  ));
+  const unavailableBundleIds = bundleIds.filter((id) => !availableBundleIds.includes(id));
+  if (!availableBundleIds.includes('core')) throw new Error('Release bundle projection cannot omit core');
+
+  const replaceOnce = (source, pattern, replacement, owner, label) => {
+    const matches = source.match(new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)) || [];
+    if (matches.length !== 1) {
+      throw new Error(`${owner}: release bundle projection expected one ${label}, found ${matches.length}`);
+    }
+    return source.replace(pattern, replacement);
+  };
+  for (const bundleId of unavailableBundleIds) {
+    const escaped = bundleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    catalogSource = replaceOnce(
+      catalogSource,
+      new RegExp(`(^  ${escaped}: \\{\\r?\\n    id: '${escaped}',\\r?\\n)`, 'm'),
+      `$1    available: false,\n    unavailableReasonCode: 'BUNDLE_EXECUTABLES_NOT_SHIPPED',\n`,
+      catalogName,
+      `${bundleId} availability marker`,
+    );
+    catalogSource = replaceOnce(
+      catalogSource,
+      new RegExp(`(^  ${escaped}: \\{[\\s\\S]*?^    stage: )'stable'`, 'm'),
+      "$1'source-only'",
+      catalogName,
+      `${bundleId} source-only stage`,
+    );
+  }
+  catalogSource = replaceOnce(
+    catalogSource,
+    /(^  for \(const id of closed\) \{\r?\n    const bundle = BUNDLE_CATALOG\[id\];\r?\n)/m,
+    [
+      '$1',
+      '    if (bundle.available === false) {',
+      "      statuses.set(id, 'unavailable');",
+      "      unavailable.push(unavailableEntry(id, bundle.unavailableReasonCode || 'BUNDLE_UNAVAILABLE'));",
+      '      continue;',
+      '    }',
+      '',
+    ].join('\n'),
+    catalogName,
+    'unavailable-bundle negotiation gate',
+  );
+  catalogSource = replaceOnce(
+    catalogSource,
+    /(function assertBundleId\(id\) \{\r?\n  if \(!BUNDLE_IDS\.includes\(id\)\) throw new TypeError\(`Unknown product bundle: \$\{String\(id\)\}`\);\r?\n  return id;\r?\n\})/m,
+    [
+      '$1',
+      '',
+      'function assertActivatableBundleId(id) {',
+      '  assertBundleId(id);',
+      '  const bundle = BUNDLE_CATALOG[id];',
+      '  if (bundle.available === false) {',
+      '    throw new TypeError(`Product bundle ${id} is unavailable in this release: ${bundle.unavailableReasonCode}`);',
+      '  }',
+      '  return id;',
+      '}',
+    ].join('\n'),
+    catalogName,
+    'activatable-bundle guard',
+  );
+  catalogSource = replaceOnce(
+    catalogSource,
+    /(  assertBundleId,\r?\n)/,
+    '  assertActivatableBundleId,\n$1',
+    catalogName,
+    'activatable-bundle export',
+  );
+
+  let resolveSource = resolveEntry.data.toString('utf8');
+  let legacyBundleListMatches = 0;
+  resolveSource = resolveSource.replace(/requested:\s*\[((?:\s*'[^']+'\s*,?)+)\],/g, (match, body) => {
+    const ids = [...body.matchAll(/'([^']+)'/g)].map((item) => item[1]);
+    if (JSON.stringify(ids) !== JSON.stringify(bundleIds)) return match;
+    legacyBundleListMatches += 1;
+    return `requested: [${availableBundleIds.map((id) => `'${id}'`).join(', ')}],`;
+  });
+  if (legacyBundleListMatches !== 1) {
+    throw new Error(`${resolveName}: release bundle projection expected one legacy bundle list, found ${legacyBundleListMatches}`);
+  }
+
+  let migrateSource = migrateEntry.data.toString('utf8');
+  migrateSource = replaceOnce(
+    migrateSource,
+    /const \{ dependencyClosure, dependentsOf, assertBundleId \} = require\('\.\/bundle-catalog'\);/,
+    "const { dependencyClosure, dependentsOf, assertBundleId, assertActivatableBundleId } = require('./bundle-catalog');",
+    migrateName,
+    'activatable-bundle import',
+  );
+  migrateSource = replaceOnce(
+    migrateSource,
+    /(function withBundleEnabled\(raw, bundleId\) \{\r?\n)  assertBundleId\(bundleId\);/,
+    '$1  assertActivatableBundleId(bundleId);',
+    migrateName,
+    'enable-bundle guard',
+  );
+
+  const replacements = new Map([
+    [catalogName, Buffer.from(catalogSource)],
+    [resolveName, Buffer.from(resolveSource)],
+    [migrateName, Buffer.from(migrateSource)],
+  ]);
+  return entries.map((entry) => (replacements.has(entry.name)
+    ? { ...entry, data: replacements.get(entry.name) }
+    : entry));
+}
+
 function sanitizeReleaseRouting(entries) {
   const tableName = 'core/skills/routing-table.json';
   const doName = 'skills/do/SKILL.md';
@@ -351,6 +505,140 @@ const RELEASE_INSTRUCTION_RULES = new Map([
       from: '/improve citadel --n=5              # Autonomous quality loops',
       to: '',
     },
+    {
+      id: 'project-source-only-delivery-bundle',
+      whenOmitted: ['deploy-steward', 'pr-watch', 'triage'],
+      from: [
+        '- **Full Tour**: everything in Recommended, then offers separate plan/apply',
+        '  decisions for Parallel and Operations. Delivery remains off unless explicitly',
+        '  selected and supported.',
+      ].join('\n'),
+      to: [
+        '- **Full Tour**: everything in Recommended, then offers separate plan/apply',
+        '  decisions for Parallel and Operations. Delivery workflows require the full',
+        '  source distribution.',
+      ].join('\n'),
+      preserves: [/Full Tour/, /Parallel and Operations/, /Delivery workflows require the full/, /source distribution/],
+    },
+  ]],
+  ['docs/CAMPAIGNS.md', [
+    {
+      id: 'fix-campaign-archive-path',
+      whenOmitted: [],
+      from: '6. **Archive**: Campaign moves to `campaigns/completed/`',
+      to: '6. **Archive**: Campaign moves to `.planning/campaigns/completed/`',
+      preserves: [/\.planning\/campaigns\/completed/],
+    },
+    {
+      id: 'omit-source-only-campaign-example',
+      whenOmitted: [],
+      from: '- `examples/campaign-example.md` — A complete, realistic campaign',
+      to: '',
+    },
+    {
+      id: 'omit-source-only-report-artifact-guide-link',
+      whenOmitted: [],
+      from: "- [REPORT_ARTIFACTS.md](REPORT_ARTIFACTS.md) — Guide to Citadel's research,",
+      to: '',
+    },
+    {
+      id: 'omit-source-only-report-artifact-guide-continuation',
+      whenOmitted: [],
+      from: '  verification, review, approval, readiness, and handoff reports',
+      to: '',
+    },
+    {
+      id: 'replace-package-operator-summary-alias',
+      whenOmitted: [],
+      from: 'npm run operator:summary',
+      to: 'node scripts/operator-console.js --summary',
+    },
+    {
+      id: 'replace-package-stack-plan-json-alias',
+      whenOmitted: [],
+      from: 'npm run stack:plan:json',
+      to: 'node scripts/stack-plan.js --json',
+    },
+    {
+      id: 'replace-package-stack-plan-alias',
+      whenOmitted: [],
+      from: 'npm run stack:plan',
+      to: 'node scripts/stack-plan.js',
+    },
+  ]],
+  ['docs/FLEET.md', [
+    {
+      id: 'project-source-only-wiki-compilation',
+      whenOmitted: [],
+      from: '| `.planning/wiki/_staging/*.jsonl` | append-only | Each agent writes a uniquely-named staging file. Compile step resolves all of them in order. No concurrent write conflicts possible. |',
+      to: '| `.planning/wiki/_staging/*.jsonl` | append-only | Each agent writes a uniquely-named staging file. Preserve staged findings for review; compilation requires a full source checkout. |',
+      preserves: [/Preserve staged findings/, /full source checkout/],
+    },
+    {
+      id: 'fix-fleet-vote-telemetry-path',
+      whenOmitted: [],
+      from: '4. Log the vote and outcome to `telemetry/agent-runs.jsonl`',
+      to: '4. Log the vote and outcome to `.planning/telemetry/agent-runs.jsonl`',
+      preserves: [/\.planning\/telemetry\/agent-runs\.jsonl/],
+    },
+    {
+      id: 'omit-source-only-handoff-parser',
+      whenOmitted: [],
+      from: '| `.citadel/scripts/parse-handoff.cjs` | Extract HANDOFF blocks from agent output |',
+      to: '',
+    },
+    {
+      id: 'omit-source-only-telemetry-report',
+      whenOmitted: [],
+      from: '| `.citadel/scripts/telemetry-report.cjs` | Generate performance summaries |',
+      to: '',
+    },
+    {
+      id: 'project-worktree-readiness-owner',
+      whenOmitted: [],
+      from: '| `scripts/worktree-readiness.js` | Record dependency, env, port, and health readiness for worktrees |',
+      to: '| `hooks_src/worktree-setup.js` | Record dependency, env, port, and health readiness during worktree setup |',
+      preserves: [/hooks_src\/worktree-setup\.js/, /readiness during worktree setup/],
+    },
+    {
+      id: 'replace-package-coordination-sweep-alias',
+      whenOmitted: [],
+      from: 'npm run coord:sweep',
+      to: 'node scripts/coordination.js sweep',
+    },
+  ]],
+  ['docs/SETUP_REFERENCE.md', [
+    {
+      id: 'project-packaged-routing-surfaces',
+      whenOmitted: [],
+      from: '- The demo routing data in `docs/index.html`',
+      to: '- Source checkouts also update demo routing data; the slim release omits that site-only surface.',
+    },
+    {
+      id: 'project-packaged-routing-surface-count',
+      whenOmitted: [],
+      from: 'means all three surfaces are in sync.',
+      to: 'means both packaged routing surfaces are in sync.',
+      preserves: [/both packaged routing surfaces/],
+    },
+    {
+      id: 'omit-source-only-learn-tour-item',
+      whenOmitted: ['learn'],
+      from: '/learn                 — extract reusable patterns from a completed campaign',
+      to: '',
+    },
+    {
+      id: 'omit-source-only-improve-reference-card-item',
+      whenOmitted: ['improve'],
+      from: '│  4. /improve [target]   autonomous quality loop          │',
+      to: '',
+    },
+    {
+      id: 'remove-omitted-skills-catalog-footer',
+      whenOmitted: [],
+      from: '│  docs/SKILLS.md · INSTALL.md · /do --list               │',
+      to: '│  INSTALL.md · /do --list                                  │',
+    },
   ]],
   ['skills/archon/SKILL.md', [
     {
@@ -391,6 +679,18 @@ const RELEASE_INSTRUCTION_RULES = new Map([
     },
   ]],
   ['skills/dashboard/SKILL.md', [
+    {
+      id: 'inline-routine-quota-warning',
+      whenOmitted: [],
+      from: '  account; see `docs/ROUTINE-QUOTA.md`)',
+      to: '  account)',
+    },
+    {
+      id: 'inline-rendered-routine-quota-warning',
+      whenOmitted: [],
+      from: '  WARNING: {N} of 15 routine runs used in the last 24h. Hitting the cap pauses every routine on the account. See docs/ROUTINE-QUOTA.md.',
+      to: '  WARNING: {N} of 15 routine runs used in the last 24h. Hitting the account-wide cap pauses every routine.',
+    },
     {
       id: 'remove-source-only-local-runner-names',
       whenOmitted: ['daemon'],
@@ -552,6 +852,31 @@ const RELEASE_INSTRUCTION_RULES = new Map([
       to: '- NEXT STEPS: add conventions to CLAUDE.md, `/do --list`, `/create-skill`',
       preserves: [/NEXT STEPS/, /CLAUDE\.md/, /\/do --list/, /\/create-skill/],
     },
+    {
+      id: 'remove-omitted-skills-catalog-footer',
+      whenOmitted: [],
+      from: '- Footer: `docs/SKILLS.md · INSTALL.md · /do --list`',
+      to: '- Footer: `INSTALL.md · /do --list`',
+    },
+    {
+      id: 'project-source-only-delivery-activation',
+      whenOmitted: ['deploy-steward', 'pr-watch', 'triage'],
+      from: [
+        'Recommended and Express use `standard@1.0.0` with Core + Persistence. Full Tour',
+        'may preview Parallel and Operations, but each bundle needs an explicit enable',
+        'plan. If the runtime is partial, show the named adapter and require',
+        '`--allow-degraded-runtime`; never silently describe degraded support as full.',
+        'Delivery remains off until the user explicitly enables it.',
+      ].join('\n'),
+      to: [
+        'Recommended and Express use `standard@1.0.0` with Core + Persistence. Full Tour',
+        'may preview Parallel and Operations, but each bundle needs an explicit enable',
+        'plan. If the runtime is partial, show the named adapter and require',
+        '`--allow-degraded-runtime`; never silently describe degraded support as full.',
+        'The slim release does not expose Delivery; those workflows require the full source distribution.',
+      ].join('\n'),
+      preserves: [/Core \+ Persistence/, /Parallel and Operations/, /explicit enable/, /slim release does not expose Delivery/, /full source distribution/],
+    },
   ]],
   ['skills/test-gen/SKILL.md', [
     {
@@ -574,6 +899,7 @@ const RELEASE_INSTRUCTION_RULES = new Map([
 ]);
 
 function replaceRequiredInstruction(source, entryName, rule) {
+  source = source.replace(/\r\n/g, '\n');
   const expected = rule.expected || 1;
   let count = 0;
   let offset = 0;
@@ -752,6 +1078,11 @@ function sanitizeReleaseRuntimeInstructions(entries) {
     ].join('\n')
   ));
 
+  project('scripts/dashboard.js', (source) => source.replace(
+    '    lines.push(`  WARNING: ${routineQuota.runsLast24h} of ${routineQuota.cap} routine runs used in the last 24h. Hitting the cap pauses every routine on the account. See docs/ROUTINE-QUOTA.md.`);',
+    '    lines.push(`  WARNING: ${routineQuota.runsLast24h} of ${routineQuota.cap} routine runs used in the last 24h. Hitting the account-wide cap pauses every routine.`);',
+  ));
+
   if (!shippedSkills.has('telemetry')) {
     project('scripts/dashboard.js', (source) => source
       .replace(
@@ -893,7 +1224,7 @@ function buildRelease(options = {}) {
     .map((entry) => /^skills\/([^/]+)\/SKILL\.md$/.exec(entry.name)?.[1])
     .filter(Boolean));
   const entries = sanitizeReleaseRuntimeInstructions(sanitizeReleaseInstructions(sanitizeReleaseSkillCounts(sanitizeReleaseMetadata(
-    sanitizeReleaseRouting(sanitizeReleaseMcp(sanitizeReleaseCli(sanitizeReleasePackage(applyReleasePolicy(sourceEntries)))))
+    sanitizeReleaseRouting(sanitizeReleaseBundleCatalog(sanitizeReleaseMcp(sanitizeReleaseCli(sanitizeReleasePackage(applyReleasePolicy(sourceEntries))))))
   )), knownSkillNames));
   const identity = assertVersions(entries, ref);
   const commit = gitValue(['rev-parse', ref ? `${ref}^{commit}` : 'HEAD'], sourceDir, 'unknown');
