@@ -1,24 +1,36 @@
 # Hooks
 
-> last-updated: 2026-05-07
+> last-updated: 2026-08-09
 
-Hooks are Node.js scripts that fire automatically at lifecycle events in Claude Code.
-You never invoke them manually. They provide automated quality enforcement and telemetry.
+Hooks are Node.js scripts registered for lifecycle events in Claude Code and
+projected onto supported Codex lifecycle events. They provide blocking
+guardrails on covered tool paths plus advisory quality signals and telemetry.
+They do not replace runtime permissions, review, or repository protections.
 
-## Active Hooks (29 of 29 Claude Code events)
+## Defined Hook Handlers
+
+Citadel defines handlers for 29 Claude Code event names. The default installer
+detects the Claude Code version and activates only the compatible profile. If
+the version cannot be detected, it installs the safe fallback of eight events:
+`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PreCompact`, `Stop`,
+`SessionStart`, `SessionEnd`, and `SubagentStop`. The explicit `latest` profile
+requests the full template and should be used only with a runtime that supports it.
+Claude Code 2.1.219's [documented hook surface](https://code.claude.com/docs/en/hooks)
+contains 31 events; Citadel implements 29 and reports `MessageDisplay` and
+`DirectoryAdded` as unimplemented coverage gaps instead of generating placeholders.
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `protect-files.js` | PreToolUse | Block edits to protected files and out-of-scope paths |
-| `external-action-gate.js` | PreToolUse (Bash) | Gate external actions (git push, API calls) |
-| `governance.js` | PreToolUse (Edit/Write/Bash/Agent) | Audit every significant tool call |
+| `protect-files.js` | PreToolUse | Block configured protected paths and covered outside-root writes; campaign restriction blocking is configurable |
+| `external-action-gate.js` | PreToolUse (Bash) | Block P-001/P-004 matches and configured hard or consent-gated actions on covered Bash paths |
+| `governance.js` | PreToolUse (Edit/Write/Bash/Agent) | Audit covered significant tool calls |
 | `post-edit.js` | PostToolUse | Project-scope incremental typecheck + structural/performance/visual lenses; sync eligible opted-in memory files |
-| `organize-enforce.js` | PostToolUse (Edit/Write) | Enforce file placement conventions |
+| `organize-enforce.js` | PostToolUse (Edit/Write) | Report file placement convention warnings |
 | `circuit-breaker.js` | PostToolUse (Bash) + PostToolUseFailure | Detect failure loops |
 | `cost-tracker.js` | PostToolUse | Real-time session cost monitoring |
 | `complexity-check.js` | PostToolUse (Edit/Write) | Advisory complexity score for JS/TS files |
 | `post-tool-batch.js` | PostToolBatch | Wave-level quality checkpoint (async, asyncRewake) |
-| `quality-gate.js` | Stop | Cold-path anti-pattern scan plus advisory secrets sweep (AWS, GitHub, Slack, private keys, high-entropy literals) on session-changed files |
+| `quality-gate.js` | Stop | Cold-path scan on tracked session changes; advisory by default, with an optional configured Stop block |
 | `stop-failure.js` | StopFailure | Log hook failures |
 | `user-prompt-submit.js` | UserPromptSubmit | Log turn boundaries; extension point for prompt gating |
 | `user-prompt-expansion.js` | UserPromptExpansion | Log skill invocations to skill-usage.jsonl |
@@ -42,7 +54,11 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `pre-compact.js` | PreCompact | Save context before compression |
 | `post-compact.js` | PostCompact | Restore compact state |
 
-## Lifecycle Events (all 29)
+## Defined Lifecycle Event Template (29 Event Names)
+
+This table documents the full template, not the active set in every install.
+The installed Claude profile and Codex translation metadata are the authority
+for a particular project.
 
 | Event | When | Can Block? | Citadel Hook |
 |-------|------|------------|--------------|
@@ -54,7 +70,7 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `PostToolUse` | After a tool completes | No | `post-edit.js`, `organize-enforce.js`, `circuit-breaker.js`, `cost-tracker.js`, `complexity-check.js` |
 | `PostToolBatch` | After ALL parallel tools in a wave settle | No | `post-tool-batch.js` |
 | `PostToolUseFailure` | After a tool fails | No | `circuit-breaker.js` |
-| `Stop` | Session turn ending | No | `quality-gate.js` |
+| `Stop` | Session turn ending | Configurable | `quality-gate.js` |
 | `StopFailure` | Hook error on Stop | No | `stop-failure.js` |
 | `SessionEnd` | Session terminated | No | `session-end.js` |
 | `SubagentStart` | Subagent spawns (Agent tool) | No | `subagent-start.js` |
@@ -76,16 +92,26 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `WorktreeCreate` | Agent creates a worktree | No | `worktree-setup.js` |
 | `WorktreeRemove` | Worktree deleted | No | `worktree-remove.js` |
 
+## Runtime Boundary
+
+Claude Code invokes the installed compatible event subset. Codex projects
+supported events through `codex-adapter.js`; for P-006, the adapter projects a
+Codex `apply_patch` target into the Edit/Write path shape consumed by
+`protect-files.js`. Codex tool matchers are guardrails, not complete
+enforcement. The official Codex hook documentation notes that specialized tool
+paths may opt out of the local function-hook path:
+https://developers.openai.com/codex/hooks
+
 ## Hook Protocol
 
 Hooks receive a JSON payload on stdin and communicate results via:
 
 | Mechanism | How | When |
 |-----------|-----|------|
-| **Exit 0** | Success — no block | Always for observer hooks |
-| **Exit 2** | Block — abort the tool | PreToolUse and UserPromptSubmit only |
+| **Exit 0** | Success - no block | Always for observer hooks |
+| **Exit 2** | Block the covered tool or prompt | Supported PreToolUse and prompt events |
 | **`additionalContext`** | JSON `{"additionalContext": "text"}` on stdout | Inject text into Claude's context window |
-| **`hookSpecificOutput`** | JSON on stdout | PermissionRequest auto-approve decisions |
+| **`hookSpecificOutput`** | JSON on stdout | Event-specific context, Stop, and PermissionRequest decisions |
 | **`asyncRewake: true`** | Declared in hook registration | Run async, wake Claude only on exit 2 |
 
 Key protocol fields from the event payload that hooks consume:
@@ -112,13 +138,13 @@ To force the full hook surface after upgrading Claude Code:
 node /path/to/Citadel/scripts/install-hooks.js --hook-profile latest
 ```
 
-## PostToolBatch — Wave-Level Quality Checkpoint
+## PostToolBatch - Wave-Level Quality Checkpoint
 
 `post-tool-batch.js` fires **once** after all parallel tool calls in a wave settle,
-rather than once per tool. This is the wave-level checkpoint — more efficient than
+rather than once per tool. This is the wave-level checkpoint - more efficient than
 per-tool checks for multi-file edit waves.
 
-Registered with `async: true, asyncRewake: true` — runs in the background without
+Registered with `async: true, asyncRewake: true` - runs in the background without
 blocking the edit path. If it exits 2, Claude Code wakes Claude with the stderr as
 feedback. Currently exit 0 only (observer mode).
 
@@ -250,8 +276,8 @@ Tracks tool failures. After 3 failures: suggests alternatives. After 5: escalate
 
 ## Rules
 
-1. **Hooks are fail-safe.** Observer hooks always exit 0. Only PreToolUse and UserPromptSubmit can block (exit 2).
-2. **Hot-path hooks must be fast.** PostToolUse fires on every edit — keep it under 5 seconds.
+1. **Observer hooks fail open.** Observer hooks exit 0. Covered PreToolUse and prompt events can block with exit 2; PermissionRequest and configured Stop gates use their documented structured outputs.
+2. **Hot-path hooks must be fast.** PostToolUse fires on covered edits; keep it under 5 seconds.
 3. **Use `additionalContext` for feedback.** Inject quality signals into Claude's context window rather than printing to stderr.
-4. **Heavy checks use `asyncRewake`.** Slow quality checks (typecheck, test runs) run async on PostToolBatch — zero blocking penalty on the edit path.
+4. **Heavy checks use `asyncRewake`.** Slow quality checks (typecheck, test runs) run async on PostToolBatch, avoiding a blocking penalty on the edit path.
 5. **Fleet agents are attributed.** `agent_id` and `agent_type` are captured on every audit log entry when inside a subagent.

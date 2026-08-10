@@ -546,37 +546,119 @@ test('permission-request: writes audit entry', () => {
   if (after <= before) return 'audit.jsonl not updated';
 });
 
-test('permission-request: auto-approves citadel script (stdout has allow decision)', () => {
+test('permission-request: defers generated Citadel script execution', () => {
   const payload = {
     tool_name: 'Bash',
-    tool_input: { command: 'node .citadel/scripts/telemetry-log.cjs --event test' },
+    tool_input: { command: 'node .citadel/scripts/evil.js' },
   };
   const r = fireHook('permission-request.js', payload, rDir);
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
-  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"'))
-    return 'expected auto-approve decision in stdout';
+  if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"'))
+    return 'generated script execution must defer to native permission';
 });
 
-test('permission-request: auto-approves known verification commands', () => {
+test('permission-request: defers arbitrary npm verification scripts', () => {
   const payload = {
     tool_name: 'Bash',
     tool_input: { command: 'npm run test' },
   };
   const r = fireHook('permission-request.js', payload, rDir);
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
-  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"'))
-    return 'expected auto-approve decision in stdout';
+  if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"'))
+    return 'npm scripts must defer to native permission';
 });
 
-test('permission-request: auto-approves generated codex artifact writes', () => {
+test('permission-request: defers compound verification commands', () => {
+  for (const command of [
+    'npm run test && git push origin main',
+    'node scripts/test-all.js; git push origin main',
+    'git status | tee status.txt',
+    'git diff > diff.txt',
+    'node hooks_src/smoke-test.js\nnpm publish',
+  ]) {
+    const payload = { tool_name: 'Bash', tool_input: { command } };
+    const r = fireHook('permission-request.js', payload, rDir);
+    if (r.exitCode !== 0) return `exit ${r.exitCode} for ${JSON.stringify(command)}`;
+    if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"')) {
+      return `compound command was auto-approved: ${JSON.stringify(command)}`;
+    }
+  }
+});
+
+test('permission-request: defers Codex hook configuration writes', () => {
   const payload = {
     tool_name: 'Write',
-    tool_input: { file_path: path.join(rDir, '.codex', 'config.toml') },
+    tool_input: { file_path: path.join(rDir, '.codex', 'hooks.json') },
   };
   const r = fireHook('permission-request.js', payload, rDir);
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
-  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"'))
-    return 'expected auto-approve decision in stdout';
+  if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"'))
+    return 'Codex hook config writes must defer to native permission';
+});
+
+test('permission-request: defers executable writes under .citadel scripts', () => {
+  const payload = {
+    tool_name: 'Write',
+    tool_input: { file_path: path.join(rDir, '.citadel', 'scripts', 'evil.js') },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"'))
+    return 'executable Citadel writes must defer to native permission';
+});
+
+test('permission-request: canonicalizes relative generated-state paths', () => {
+  const payload = {
+    tool_name: 'Write',
+    tool_input: { file_path: path.join('.planning', 'campaigns', 'state.md') },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"')) {
+    return 'expected canonical repo-relative path to auto-approve';
+  }
+});
+
+test('permission-request: defers executable files even under .planning', () => {
+  const payload = {
+    tool_name: 'Write',
+    tool_input: { file_path: path.join(rDir, '.planning', 'evil.js') },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"')) {
+    return 'executable planning file was auto-approved';
+  }
+});
+
+test('permission-request: rejects traversal that only has an allowed string prefix', () => {
+  const traversal = `${path.join(rDir, '.planning').replace(/\\/g, '/')}/../outside.txt`;
+  const payload = { tool_name: 'Write', tool_input: { file_path: traversal } };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"')) {
+    return `traversal path was auto-approved: ${traversal}`;
+  }
+});
+
+test('permission-request: rejects an allowed-directory symlink that escapes the project', () => {
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-permission-outside-'));
+  const link = path.join(rDir, '.planning', 'outside-link');
+  try {
+    fs.symlinkSync(outside, link, process.platform === 'win32' ? 'junction' : 'dir');
+    const payload = {
+      tool_name: 'Write',
+      tool_input: { file_path: path.join(link, 'state.md') },
+    };
+    const r = fireHook('permission-request.js', payload, rDir);
+    if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+    if (r.stdout.includes('"behavior":"allow"') || r.stdout.includes('"behavior": "allow"')) {
+      return 'symlink escape was auto-approved';
+    }
+  } finally {
+    fs.rmSync(link, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
 });
 
 test('permission-request: defers unknown command (no decision in stdout)', () => {

@@ -45,6 +45,7 @@ const bootstrapReview = buildPreview('review auth module', {
   projectRoot: root,
   runtime: fullRuntime,
   gitDirty: false,
+  routeOverride: '/review',
   now: '2026-07-30T20:00:00.000Z',
 });
 assert.equal(bootstrapReview.activation.context.status, 'bootstrap');
@@ -57,6 +58,7 @@ const bootstrapMarshal = buildPreview('research competitors and write implementa
   projectRoot: root,
   runtime: fullRuntime,
   gitDirty: false,
+  routeOverride: '/marshal',
 });
 assert.equal(bootstrapMarshal.selected, '/marshal');
 assert.equal(bootstrapMarshal.activation.decision.bundleId, 'operations');
@@ -160,6 +162,7 @@ const stalePreview = buildPreview('review auth module', {
   projectRoot: root,
   runtime: fullRuntime,
   gitDirty: false,
+  routeOverride: '/review',
 });
 assert.equal(stalePreview.activation.context.status, 'stale');
 assert.equal(stalePreview.activation.decision.status, 'blocked');

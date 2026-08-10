@@ -14,13 +14,15 @@ evidence remains unknown or blocked.
 | Safety gates | Across 6 malicious and 6 benign matched cases, treatment had 100% malicious recall, 0% benign false positives, 0 canary effects, and 0 unknown-to-pass conversions. | The tested hooks and governance evaluator discriminate the declared cases and fail closed on missing or malformed evidence. | Dangerous commands were never executed. This is not exploit containment or cross-OS proof. |
 | Deploy steward | Across three matched 15-PR batches per arm, both arms landed 45/45 simulated PRs. Independent loops produced 315 stale-head race attempts and 315 interventions; the leased steward produced 0 of each and exactly one deploy per merge. | The real steward state machine and lease seam serialize the deterministic fake-provider workload. | This is not GitHub, Actions, branch-protection, API-race, or real-deployment evidence. |
 | Protected GitHub deploy steward | Across three valid matched public runs, both arms merged 45/45 PRs through strict GitHub Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. Controls produced 106 failed merge races, 315 stale updates, and 421 interventions. Stewards produced 0 of each, with 0 repairs. | Under this bounded live workload, the leased steward eliminated the independent controls' racing merge attempts and corrective interventions while preserving complete merges and deployment records in every valid run. | Six disposable repositories under one GitHub account, generated workloads, and GitHub Deployment API records. One invalid run is disclosed and excluded. This is not production deployment, controlled performance, cost, outage-resilience, human-utility, or broad reliability evidence. |
-| npm distribution | The installed tarball is more than 5% smaller and ships 66 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only site media, skill benchmarks, and private workspace adapters need not ship in the runtime tarball. The focused experiment tests stay because the strict suite exercises them. | The files remain hash-accounted in source. One Windows and Node environment was measured; no second release artifact or cross-OS claim was tested. |
+| Historical npm-pack profile | At source commit `9bebf1a`, the private source package measured 9,123,375 packed bytes and 1,888 files, 5.7385% and 66 files below its frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks passed at that commit. | The scoped experiment showed that selected source-only media, benchmarks, and private workspaces could be omitted without breaking its frozen installed smoke. | This is a retained historical result, not a current distribution claim. GitHub Releases are now the only supported stable acquisition channel, and the slim release artifact has its own integrity and reproducibility gates. |
 
-The package experiment also rejected a tempting invalid optimization. Editing
-`package.json` reduced bytes but broke its frozen public-proof source binding.
-Scoped `.npmignore` files achieved the kept result while preserving the signed
-`package.json` digest exactly. The excluded source-only inventory is still
-accounted for: 101 files and 836,818 bytes remain in source with stable hashes.
+The historical package experiment also rejected a tempting invalid optimization.
+Editing `package.json` reduced bytes but broke its frozen public-proof source
+binding. Scoped `.npmignore` files achieved the kept result at `9bebf1a` while
+preserving that commit's signed `package.json` digest. Those ignore files are
+not part of the current source package policy. The retained result accounts for
+101 excluded files and 836,818 source bytes with stable hashes, but it must not
+be used to describe the current GitHub Release artifact.
 
 ## Instruments that are not yet product proof
 
@@ -43,13 +45,18 @@ node scripts/experiment-deploy-steward.js verify
 node scripts/live-github-steward-ab-proof.js --run-id <stable-id>
 node scripts/test-live-github-steward-ab-proof.js
 node scripts/experiment-package-bloat.js verify
-node scripts/experiment-package-bloat.js metric
+node scripts/test-experiment-package-bloat.js
 node scripts/test-experiment-judge-eval.js
 node scripts/test-experiment-fleet-ablation.js
 node scripts/test-product-proof-v2.js
 npm run grant:verify
 node scripts/test-all.js --strict
 ```
+
+`experiment-package-bloat.js verify` now verifies the frozen record's
+self-consistency and reports that it did not replay the current tree. Current
+release closure is measured separately with `npm run release:dry-run` and
+`node scripts/release-package.js --output-dir <directory> --verify-reproducible`.
 
 The local runners regenerate detailed deterministic traces under
 `.planning/research/`. JudgeEval and Fleet observations require new agent trials;

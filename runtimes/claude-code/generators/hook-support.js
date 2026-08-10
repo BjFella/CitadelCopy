@@ -13,6 +13,45 @@ const SAFE_EVENTS = Object.freeze([
   'SubagentStop',
 ]);
 
+// Capability snapshot verified against Claude Code 2.1.219 and the official
+// hook reference. Citadel's template intentionally implements only 29 of
+// these events; MessageDisplay and DirectoryAdded are reported as gaps rather
+// than receiving placeholder hooks.
+const CURRENT_CLAUDE_BASELINE_VERSION = '2.1.219';
+const CURRENT_CLAUDE_HOOK_EVENTS = Object.freeze([
+  'SessionStart',
+  'Setup',
+  'UserPromptSubmit',
+  'UserPromptExpansion',
+  'MessageDisplay',
+  'PreToolUse',
+  'PermissionRequest',
+  'PermissionDenied',
+  'PostToolUse',
+  'PostToolUseFailure',
+  'PostToolBatch',
+  'Notification',
+  'SubagentStart',
+  'SubagentStop',
+  'TaskCreated',
+  'TaskCompleted',
+  'Stop',
+  'StopFailure',
+  'TeammateIdle',
+  'InstructionsLoaded',
+  'ConfigChange',
+  'CwdChanged',
+  'DirectoryAdded',
+  'FileChanged',
+  'WorktreeCreate',
+  'WorktreeRemove',
+  'PreCompact',
+  'PostCompact',
+  'Elicitation',
+  'ElicitationResult',
+  'SessionEnd',
+]);
+
 function parseClaudeVersion(raw) {
   if (typeof raw !== 'string') return null;
   const match = raw.match(/(\d+\.\d+\.\d+)/);
@@ -54,31 +93,17 @@ function detectClaudeVersion(claudeBin = 'claude') {
 }
 
 function getSupportedEventsForVersion(version, templateEvents) {
-  const supported = new Set(SAFE_EVENTS.filter((event) => templateEvents.includes(event)));
+  const baseline = version && compareVersions(version, CURRENT_CLAUDE_BASELINE_VERSION) >= 0
+    ? CURRENT_CLAUDE_HOOK_EVENTS
+    : SAFE_EVENTS;
+  return new Set(baseline.filter((event) => templateEvents.includes(event)));
+}
 
-  if (!version) {
-    return supported;
-  }
-
-  if (compareVersions(version, '2.1.76') >= 0) {
-    supported.add('PostCompact');
-  }
-
-  if (compareVersions(version, '2.1.78') >= 0) {
-    supported.add('StopFailure');
-  }
-
-  if (compareVersions(version, '2.1.83') >= 0) {
-    supported.add('TaskCompleted');
-  }
-
-  if (compareVersions(version, '2.1.84') >= 0) {
-    supported.add('TaskCreated');
-    supported.add('WorktreeCreate');
-    supported.add('WorktreeRemove');
-  }
-
-  return supported;
+function compatibilityCoverage(templateEvents, runtimeEvents) {
+  return {
+    runtimeSupportedEvents: [...runtimeEvents],
+    missingTemplateEvents: runtimeEvents.filter((event) => !templateEvents.includes(event)),
+  };
 }
 
 function selectSupportedClaudeHookEvents(options = {}) {
@@ -86,6 +111,10 @@ function selectSupportedClaudeHookEvents(options = {}) {
   const requestedProfile = (options.hookProfile || 'auto').toLowerCase();
 
   if (requestedProfile === 'latest' || requestedProfile === 'full' || requestedProfile === 'all') {
+    const runtimeEvents = options.claudeVersion
+      && compareVersions(options.claudeVersion, CURRENT_CLAUDE_BASELINE_VERSION) >= 0
+      ? CURRENT_CLAUDE_HOOK_EVENTS
+      : templateEvents;
     return {
       hookProfile: 'latest',
       claudeVersion: options.claudeVersion || null,
@@ -93,6 +122,7 @@ function selectSupportedClaudeHookEvents(options = {}) {
       supportedEvents: templateEvents,
       skippedEvents: [],
       reason: 'forced latest profile',
+      ...compatibilityCoverage(templateEvents, runtimeEvents),
     };
   }
 
@@ -105,6 +135,7 @@ function selectSupportedClaudeHookEvents(options = {}) {
       supportedEvents,
       skippedEvents: templateEvents.filter((event) => !supportedEvents.includes(event)),
       reason: 'forced safe profile',
+      ...compatibilityCoverage(templateEvents, SAFE_EVENTS),
     };
   }
 
@@ -113,6 +144,9 @@ function selectSupportedClaudeHookEvents(options = {}) {
     : detectClaudeVersion(options.claudeBin);
   const supported = getSupportedEventsForVersion(detected.version, templateEvents);
   const supportedEvents = templateEvents.filter((event) => supported.has(event));
+  const isCurrentBaseline = detected.version
+    && compareVersions(detected.version, CURRENT_CLAUDE_BASELINE_VERSION) >= 0;
+  const runtimeEvents = isCurrentBaseline ? CURRENT_CLAUDE_HOOK_EVENTS : SAFE_EVENTS;
 
   return {
     hookProfile: detected.version ? 'auto' : 'safe',
@@ -120,13 +154,18 @@ function selectSupportedClaudeHookEvents(options = {}) {
     versionSource: detected.source,
     supportedEvents,
     skippedEvents: templateEvents.filter((event) => !supportedEvents.includes(event)),
-    reason: detected.version
-      ? `auto-detected Claude Code ${detected.version}`
+    reason: isCurrentBaseline
+      ? `auto-detected Claude Code ${detected.version}; using verified ${CURRENT_CLAUDE_BASELINE_VERSION} capability baseline`
+      : detected.version
+        ? `auto-detected Claude Code ${detected.version}; using conservative safe profile below verified ${CURRENT_CLAUDE_BASELINE_VERSION} baseline`
       : 'Claude version unavailable; falling back to safe profile',
+    ...compatibilityCoverage(templateEvents, runtimeEvents),
   };
 }
 
 module.exports = {
+  CURRENT_CLAUDE_BASELINE_VERSION,
+  CURRENT_CLAUDE_HOOK_EVENTS,
   SAFE_EVENTS,
   compareVersions,
   detectClaudeVersion,

@@ -548,7 +548,7 @@
       display: flex; flex-direction: column; justify-content: center; gap: 6px;
     }
 
-    /* Tier 0  -  scanning regex highlight */
+/* Tier 0  -  exact-input highlight */
     .t0-code { color: var(--dim); }
     @keyframes t0-scan {
       0%,15%  { background: transparent; color: var(--dim); border-radius: 3px; }
@@ -1521,7 +1521,7 @@
         <h1>Start with <code>/do</code>.<br><span class="h1-sub">Scale when the work demands it.</span></h1>
         <p>Citadel adds <strong>durable state, verification, recovery, and coordination</strong> around the coding agent you already use. No new IDE. No orchestration vocabulary to memorize.</p>
         <div class="site-button-row">
-          <a class="site-button primary" href="#do-demo">Try the live router</a>
+          <a class="site-button primary" href="#do-demo">Preview route evidence</a>
           <a class="site-button" href="#product-story">See the work survive a session</a>
         </div>
         <div class="home-proof-line" aria-label="Citadel product proof">
@@ -1543,8 +1543,8 @@
 
   <section class="do-demo" id="do-demo" aria-labelledby="do-demo-title" data-site-reveal>
   <div class="do-demo-heading">
-    <div><div class="section-kicker">Level 1 · Do</div><h2 id="do-demo-title">Describe the outcome. Citadel chooses the lane.</h2></div>
-    <p>This deterministic demo shows the routing decision. In a real repository, the selected workflow executes under your project rules and writes a handoff.</p>
+    <div><div class="section-kicker">Level 1 · Do</div><h2 id="do-demo-title">Describe the outcome. Inspect the routing evidence.</h2></div>
+    <p>This local visualization resolves only exact commands. For natural-language work it shows generated skill candidates, then stops where the real <code>/do</code> agent performs semantic classification.</p>
   </div>
   <!-- Search bar -->
   <div class="search-wrap">
@@ -1554,11 +1554,11 @@
              autocomplete="off" spellcheck="false" />
       <div class="search-actions">
         <span class="live-badge" id="live-badge"></span>
-        <button class="enter-key" id="enter-key" title="Route (Enter)" onclick="triggerRoute()">↵</button>
+        <button class="enter-key" id="enter-key" title="Preview (Enter)" onclick="triggerRoute()">↵</button>
       </div>
     </div>
     <div class="search-hint">
-      <kbd>Enter</kbd> to route &nbsp;·&nbsp; <kbd>↑ ↓</kbd> history &nbsp;·&nbsp; <kbd>Esc</kbd> clear
+      <kbd>Enter</kbd> to preview &nbsp;·&nbsp; <kbd>↑ ↓</kbd> history &nbsp;·&nbsp; <kbd>Esc</kbd> clear
     </div>
   </div>
 
@@ -1569,30 +1569,30 @@
     <div class="generators">
       <button class="gen-btn" style="--gc:var(--green)" onclick="generate('instant')">
         <span class="gen-icon">⚡</span>
-        <div class="gen-name">Instant</div>
+        <div class="gen-name">Exact command</div>
         <div class="gen-meta">~0 tokens · &lt;1ms</div>
-        <div class="gen-desc">regex match  -  no model call</div>
+        <div class="gen-desc">whole-input match  -  final locally</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--cyan)" onclick="generate('skill')">
         <span class="gen-icon">◆</span>
-        <div class="gen-name">Skill</div>
+        <div class="gen-name">Skill candidates</div>
         <div class="gen-meta">~0 tokens · &lt;10ms</div>
-        <div class="gen-desc">keyword match  -  skill dispatched directly</div>
+        <div class="gen-desc">keyword evidence  -  no automatic dispatch</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--orange)" onclick="generate('campaign')">
         <span class="gen-icon">⬡</span>
-        <div class="gen-name">Campaign</div>
-        <div class="gen-meta">~500 tokens · Archon</div>
-        <div class="gen-desc">LLM classifier → multi-phase execution</div>
+        <div class="gen-name">Persistence signal</div>
+        <div class="gen-meta">candidate evidence</div>
+        <div class="gen-desc">shows likely routes  -  classifier decides</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--purple)" onclick="generate('fleet')">
         <span class="gen-icon">⬢</span>
-        <div class="gen-name">Fleet</div>
-        <div class="gen-meta">~500 tokens · parallel</div>
-        <div class="gen-desc">LLM classifier → agents in parallel worktrees</div>
+        <div class="gen-name">Parallel signal</div>
+        <div class="gen-meta">candidate evidence</div>
+        <div class="gen-desc">shows likely routes  -  classifier decides</div>
         <div class="gen-again">try another →</div>
       </button>
     </div>
@@ -1615,8 +1615,8 @@
             <span class="tier-sub">~0 tokens</span>
           </div>
           <div class="tier-center">
-            <div class="tier-name">Pattern Match</div>
-            <div class="tier-desc">Regex on raw input  -  fix typo, rename, commit, build, status</div>
+            <div class="tier-name">Exact Command</div>
+            <div class="tier-desc">Whole normalized input only  -  build, test, typecheck, status, next</div>
           </div>
           <span class="tier-status" id="tier0-status"></span>
         </div>
@@ -1639,8 +1639,8 @@
             <span class="tier-sub">~0 tokens</span>
           </div>
           <div class="tier-center">
-            <div class="tier-name">Keyword Match</div>
-            <div class="tier-desc">Matched against the installed skill keyword table  -  review, test, debug, scaffold…</div>
+            <div class="tier-name">Candidate Lookup</div>
+            <div class="tier-desc">Generated skill keywords supply evidence, not final execution authority</div>
           </div>
           <span class="tier-status" id="tier2-status"></span>
         </div>
@@ -1651,8 +1651,8 @@
             <span class="tier-sub">~500 tokens</span>
           </div>
           <div class="tier-center">
-            <div class="tier-name">LLM Classifier</div>
-            <div class="tier-desc">6-dimension classification: scope · complexity · intent · persist · parallel · taste</div>
+            <div class="tier-name">Runtime Semantic Classifier</div>
+            <div class="tier-desc">Runs in the real /do agent; this static page stops at the handoff boundary</div>
           </div>
           <span class="tier-status" id="tier3-status"></span>
         </div>
@@ -1823,22 +1823,22 @@
       <summary class="cascade-summary">
         <span class="how-tier-badge" style="color:var(--green)">TIER 0</span>
         <div class="cascade-summary-text">
-          <div class="cascade-summary-name">Pattern Match</div>
-          <div class="cascade-summary-sub">Regex · 9 built-in patterns</div>
+          <div class="cascade-summary-name">Exact Command Match</div>
+          <div class="cascade-summary-sub">Generated whole-input command contract</div>
         </div>
         <div class="cascade-summary-cost">~0 tokens · &lt;1ms</div>
         <span class="cascade-toggle">+</span>
       </summary>
       <div class="cascade-body">
         <div class="card-vis">
-          <div class="t0-code"><span class="t0-pre">/do </span><span class="t0-word">fix typo</span><span class="t0-pre"> on line 42</span></div>
-          <div class="t0-tag">✓ REGEX HIT · &lt;1ms · 0 TOKENS</div>
+          <div class="t0-code"><span class="t0-pre">/do </span><span class="t0-word">typecheck</span></div>
+          <div class="t0-tag">✓ EXACT COMMAND · &lt;1ms · 0 TOKENS</div>
         </div>
-        <p class="how-card-desc">Pure regex against the raw input string. No model call, no skill load. Catches exact-intent commands that need no classification  -  typos, renames, commits, status checks. If it matches here, Claude executes it directly and stops.</p>
+        <p class="how-card-desc">The normalized whole input must equal a registered deterministic command. A word inside a larger request never triggers execution. Project commands such as "build" become executable only after the target package declares that script; "build a caching layer" always continues to semantic routing.</p>
         <div class="how-examples">
-          <div class="how-example" style="--ex-color:var(--green)" data-cmd="fix the typo on line 42">/do fix the typo on line 42</div>
-          <div class="how-example" style="--ex-color:var(--green)" data-cmd="rename AuthService to AuthHandler">/do rename AuthService to AuthHandler</div>
-          <div class="how-example" style="--ex-color:var(--green)" data-cmd="commit my changes">/do commit my changes</div>
+          <div class="how-example" style="--ex-color:var(--green)" data-cmd="operator">/do operator</div>
+          <div class="how-example" style="--ex-color:var(--green)" data-cmd="status">/do status</div>
+          <div class="how-example" style="--ex-color:var(--green)" data-cmd="next">/do next</div>
         </div>
         <p class="cascade-footnote">Tier 1 (active session context) is evaluated in live Claude Code sessions  -  skipped in this demo.</p>
       </div>
@@ -1855,8 +1855,8 @@
       <summary class="cascade-summary">
         <span class="how-tier-badge" style="color:var(--cyan)">TIER 2</span>
         <div class="cascade-summary-text">
-          <div class="cascade-summary-name">Keyword Lookup</div>
-          <div class="cascade-summary-sub">12 registered skill keywords</div>
+          <div class="cascade-summary-name">Candidate Lookup</div>
+          <div class="cascade-summary-sub">Generated from every routable skill</div>
         </div>
         <div class="cascade-summary-cost">~0 tokens · &lt;10ms</div>
         <span class="cascade-toggle">+</span>
@@ -1869,7 +1869,7 @@
             <div class="t2-row t2-r3">scaffold <span>→ /scaffold</span></div>
           </div>
         </div>
-        <p class="how-card-desc">The input is scanned against a keyword table built from every installed skill. "review" → /review, "debug" → /systematic-debugging. New skills register their own keywords automatically. No LLM needed.</p>
+        <p class="how-card-desc">The input is scanned against the generated skill catalog. Matches such as "review" → /review and "debug" → /systematic-debugging become candidate evidence. The real agent still confirms intent before dispatch.</p>
         <div class="how-examples">
           <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="review the auth module">/do review the auth module</div>
           <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="write tests for UserService">/do write tests for UserService</div>
@@ -1890,7 +1890,7 @@
         <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
         <div class="cascade-summary-text">
           <div class="cascade-summary-name">LLM Classifier</div>
-          <div class="cascade-summary-sub">One evaluation · two possible dispatches</div>
+          <div class="cascade-summary-sub">Performed by the real /do agent</div>
         </div>
         <div class="cascade-summary-cost">~500 tokens · &lt;2s</div>
         <span class="cascade-toggle">+</span>
@@ -1907,13 +1907,13 @@
           </div>
           <div class="t3-route">→ /classifier dispatched</div>
         </div>
-        <p class="how-card-desc">Classifies 6 dimensions: scope, complexity (1–5), intent, multi-session persistence, parallel execution, and taste. The result determines the dispatch  -  Archon for contained work, Fleet for platform-wide scope.</p>
+        <p class="how-card-desc">The runtime agent classifies scope, complexity, intent, persistence, parallelism, and judgment using the request plus candidate evidence. This static visualization does not imitate that model decision or claim a final route.</p>
         <div class="tier3-fork">
           <div class="fork-stem"></div>
           <div class="fork-branches">
             <div class="fork-branch" style="--branch-color:var(--orange); border-left-color:var(--orange)">
               <div class="fork-branch-name" style="color:var(--orange)">→ Archon</div>
-              <div class="fork-branch-desc">Single-feature, single-session work</div>
+              <div class="fork-branch-desc">Possible persistent, multi-session route after semantic confirmation</div>
               <div class="fork-branch-examples">
                 <div class="how-example" style="--ex-color:var(--orange); color:var(--muted)" data-cmd="build me a recipe app">/do build me a recipe app</div>
                 <div class="how-example" style="--ex-color:var(--orange); color:var(--muted)" data-cmd="add Stripe payments to checkout">/do add Stripe payments to checkout</div>
@@ -1922,7 +1922,7 @@
             <div class="fork-or-divider">or</div>
             <div class="fork-branch" style="--branch-color:var(--purple); border-left-color:var(--purple)">
               <div class="fork-branch-name" style="color:var(--purple)">→ Fleet</div>
-              <div class="fork-branch-desc">Platform-wide or parallel work</div>
+              <div class="fork-branch-desc">Possible parallel route after semantic confirmation and approval</div>
               <div class="fork-branch-examples">
                 <div class="how-example" style="--ex-color:var(--purple); color:#c9d1d9" data-cmd="migrate the platform to TypeScript strict mode">/do migrate the platform to TypeScript strict mode</div>
                 <div class="how-example" style="--ex-color:var(--purple); color:#c9d1d9" data-cmd="redesign the entire data layer">/do redesign the entire data layer</div>
@@ -1948,8 +1948,8 @@
         <div class="preview-card-label">ROUTING</div>
         <div class="preview-card-context">/do review the auth module</div>
       </div>
-      <div class="preview-card-body"><span class="pv-dim">Tier 2 keyword match</span>
-<span class="pv-label">Routing to</span> <span class="pv-cmd">/review</span> <span class="pv-dim">because input contains "review" (keyword match, 0 tokens)</span>
+      <div class="preview-card-body"><span class="pv-dim">Tier 2 candidate evidence: /review</span>
+<span class="pv-label">Semantic confirmation</span> <span class="pv-cmd">/review</span> <span class="pv-dim">matches the leading review intent; activation and worktree boundaries still apply</span>
 
 <span class="pv-green">--- HANDOFF ---</span>
 <span class="pv-label">- 5-pass review complete</span>: auth module (src/auth/)
@@ -1982,7 +1982,7 @@
       <div class="preview-card-header">
         <div class="preview-card-dot"></div>
         <div class="preview-card-label">FLEET</div>
-        <div class="preview-card-context">/fleet  -  Wave 2 of 3</div>
+        <div class="preview-card-context">/fleet --quick  -  Wave 2 of 3</div>
       </div>
       <div class="preview-card-body"><span class="pv-dim">Wave 2 complete · 3 agents · isolated worktrees</span>
 
@@ -2231,7 +2231,7 @@
       <div class="panel-section-label">Orchestration</div>
       <div class="skill-list">
         <div class="skill-row"><span class="skill-name">/archon</span><span class="skill-desc">Multi-session campaign executor. Decomposes into phases, enforces quality gates, self-corrects direction drift.</span></div>
-        <div class="skill-row"><span class="skill-name">/fleet</span><span class="skill-desc">Parallel coordinator. Spawns 2–3 agents in isolated git worktrees per wave.</span></div>
+        <div class="skill-row"><span class="skill-name">/fleet --quick</span><span class="skill-desc">Canonical parallel route. Spawns 2–3 agents in isolated git worktrees per wave.</span></div>
         <div class="skill-row"><span class="skill-name">/marshal</span><span class="skill-desc">Single-session orchestrator. Chains skills end-to-end within one conversation.</span></div>
         <div class="skill-row"><span class="skill-name">/autopilot</span><span class="skill-desc">Intake-to-delivery pipeline. Processes items from .planning/intake/ automatically.</span></div>
       </div>
@@ -2361,22 +2361,22 @@
   <script>
     const storyScenarios = {
       campaign: [
-        ['Request','request received','A persistent feature enters through one command','Citadel begins with the request, not a manually selected orchestrator.','/do rework authentication across the application','Input is local to this deterministic demo.',{'request.txt':'rework authentication across the application'}],
-        ['Route','tier 3 selected','Cheap routes miss, so complexity earns a campaign','Pattern, active-state, and keyword checks do not resolve the request. Tier 3 selects Archon because the work spans files and sessions.','Tier 0  no pattern match\nTier 1  no active campaign\nTier 2  no registered skill match\nTier 3  → Archon','The route mirrors Citadel’s published tier contract.',{'routing.json':'{\n  "scope": "application",\n  "complexity": 4,\n  "persistence": true,\n  "route": "archon"\n}'}],
+        ['Request','request received','A persistent feature enters through one command','Citadel begins with the request, not a manually selected orchestrator.','/do rework authentication across the application','Illustrative scenario input; the page does not execute a router.',{'request.txt':'rework authentication across the application'}],
+        ['Route','tier 3 selected','Cheap routes miss, so complexity earns a campaign','Pattern, active-state, and keyword checks do not resolve the request. The runtime agent selects Archon because the work spans files and sessions.','Tier 0  no exact command\nTier 1  no active campaign\nTier 2  no registered skill candidate\nTier 3  → Archon','Illustrative semantic decision, not a route computed by this page.',{'routing.json':'{\n  "scope": "application",\n  "complexity": 4,\n  "persistence": true,\n  "route": "archon"\n}'}],
         ['Contract','state written','The work becomes a repository contract','Direction, phases, end conditions, decisions, and the next action are written before long-running work advances.','Created .planning/campaigns/auth-overhaul.md\nPhase 1: map boundary\nPhase 2: implement rotation\nPhase 3: verify security\nPhase 4: package handoff','Campaign contract: docs/CAMPAIGNS.md', {'.planning/campaigns/auth-overhaul.md':'status: active\ncurrent_phase: 2\n\n✓ map current auth boundary\n→ implement token rotation\n○ verify security\n○ package handoff','.planning/discoveries/auth-boundary.md':'Decision: keep the old session path available until verification passes.'}],
         ['Verify','evidence recorded','Completion requires evidence, not confidence','Tests and source health update the contract. A missing source remains unknown instead of becoming a pass.','rotation-tests     PASS\nboundary-map       PASS\nexternal-review    BLOCKED\nproduction-source  UNKNOWN','Evidence contract: docs/DASHBOARD_SPEC.md',{'.planning/campaigns/auth-overhaul.md':'rotation-tests: pass\nboundary-map: pass\nexternal-review: blocked\nproduction-telemetry: unknown'}],
         ['Close','conversation closed','The conversation ends. The contract remains.','Chat context disappears. Campaign state, decisions, evidence, and the next action remain in repository files.','SESSION A CLOSED\n\nChat context: discarded\nRepository state: preserved','Deterministic representation of file-backed campaign state.',{'.planning/handoffs/latest.md':'Completed: token rotation implementation\nNext: independent security verification\nRisk: old session path must remain available'}],
         ['Resume','fresh process restored','A fresh session knows what comes next','The next agent reads the active campaign and restores the next useful action without relying on the previous conversation.','FRESH SESSION\n\n/do next\n→ Resume auth-overhaul\n→ Next: independent security verification','Operating-loop proof: docs/OPERATING_LOOP_PROOF.md',{'.planning/campaigns/auth-overhaul.md':'status: active\ncurrent_phase: 3\nnext_action: independent security verification','.planning/handoffs/latest.md':'The next session continues from this file-backed handoff.'}]
       ],
       review: [
-        ['Request','request received','A focused review stays focused','The request names a known workflow and does not need campaign machinery.','/do review the authentication module','Local deterministic route preview.',{'request.txt':'review the authentication module'}],
-        ['Route','tier 2 selected','Known language routes without model classification','The registered review keyword resolves at Tier 2 for zero classifier tokens.','Tier 0  no pattern match\nTier 1  no active work\nTier 2  review → /review','routing-table.json',{'routing.json':'{ "keyword": "review", "route": "/review", "classifier_tokens": 0 }'}],
+        ['Request','request received','A focused review stays focused','The request names a known workflow and does not need campaign machinery.','/do review the authentication module','Generated candidate visualization; the page does not execute a router.',{'request.txt':'review the authentication module'}],
+        ['Route','tier 2 candidate','Known language narrows the runtime decision','The registered review keyword produces candidate evidence. The runtime agent still checks active state, project skills, intent, and activation before dispatch.','Tier 0  no exact command\nTier 1  runtime-only\nTier 2  candidate: /review\nTier 3  semantic confirmation required','Illustrative runtime decision, not a route computed by this page.',{'routing.json':'{ "keyword": "review", "candidate": "/review", "final": false }'}],
         ['Inspect','five passes running','The workflow applies a bounded review contract','Correctness, security, performance, readability, and consistency run against the named scope.','correctness   PASS\nsecurity      1 issue\nperformance   PASS\nreadability   2 notes\nconsistency   PASS','skills/review/SKILL.md',{'.planning/handoffs/review.md':'Scope: src/auth/\nBlocking: token expiry unchecked\nNotes: 2 style findings'}],
         ['Verify','evidence recorded','Findings point to files and verification','The handoff distinguishes blocking findings from notes and records whether tests regressed.','3 findings\n1 blocking security issue\n0 test regressions','skills/review/SKILL.md',{'.planning/handoffs/review.md':'Blocking: verify token expiry before merge\nTests: no regressions detected'}]
       ],
       fleet: [
-        ['Request','request received','Platform-wide work earns parallel coordination','The objective spans independent areas and can benefit from isolated work.','/do migrate the platform to TypeScript strict mode','Local deterministic route preview.',{'request.txt':'migrate the platform to TypeScript strict mode'}],
-        ['Route','fleet selected','Scope and parallelism select Fleet','Citadel chooses coordinated waves instead of asking the operator to manage several terminals.','scope: platform\ncomplexity: 5\nparallel: true\nroute: fleet','docs/FLEET.md',{'.planning/fleet/session.json':'{ "objective": "strict mode", "wave": 1, "agents": 3 }'}],
+        ['Request','request received','Platform-wide work earns parallel coordination','The objective spans independent areas and can benefit from isolated work.','/do migrate the platform to TypeScript strict mode','Illustrative scenario input; the page does not execute a router.',{'request.txt':'migrate the platform to TypeScript strict mode'}],
+        ['Route','/fleet --quick selected','Runtime scope and parallelism select Fleet','After active-state, project-skill, and semantic checks, the runtime agent may choose coordinated waves instead of several operator-managed terminals.','scope: platform\ncomplexity: 5\nparallel: true\nroute: /fleet --quick','Illustrative runtime decision, not a route computed by this page.',{'.planning/fleet/session.json':'{ "objective": "strict mode", "wave": 1, "agents": 3 }'}],
         ['Isolate','three worktrees ready','Each agent owns an isolated worktree','API, components, and utilities advance independently without sharing one branch.','Agent A  wt-fleet-api\nAgent B  wt-fleet-components\nAgent C  wt-fleet-utils','docs/worktree-isolation.md',{'.planning/fleet/session.json':'A: wt-fleet-api\nB: wt-fleet-components\nC: wt-fleet-utils'}],
         ['Relay','discovery shared','One discovery changes the rest of the wave','Agent A finds shared implicit casts. Citadel relays the discovery before the next wave compounds it.','Agent A discovered 12 implicit any casts\n→ relayed to Agents B and C','docs/FLEET.md',{'.planning/discoveries/shared-types.md':'12 implicit any casts found in shared types. Apply before Wave 2.'}],
         ['Merge','two merged, one blocked','Conflict remains visible instead of becoming green','Two worktrees merge. One conflict stays pending for reconciliation.','Agent A  MERGED\nAgent B  MERGED\nAgent C  BLOCKED: shared type conflict','docs/FLEET.md',{'.planning/fleet/session.json':'A: merged\nB: merged\nC: blocked\nreason: shared type conflict'}]
@@ -2504,164 +2504,186 @@
     });
 
     // ─── Routing logic ─────────────────────────────────────────────────────
+    // <!-- BEGIN GENERATED: exact-command-data -->
     const TIER0 = [
-      { re: /\b(fix|correct)\s+(the\s+)?typo\b/i,    label: 'pattern: "fix typo"',     color: 'var(--green)' },
-      { re: /\brename\s+\w+\s+to\b/i,                label: 'pattern: "rename X to Y"', color: 'var(--green)' },
-      { re: /\b(commit|stage)\b/i,                    label: 'pattern: "commit"',        color: 'var(--green)' },
-      { re: /\b(typecheck|type.?check)\b|\bbuild\b(?!\s+(?:me\s+)?(?:a|an)\b)/i, label: 'pattern: "build/check"',   color: 'var(--green)' },
-      { re: /\b(run tests?|test suite)\b/i,           label: 'pattern: "run tests"',     color: 'var(--green)' },
-      { re: /\bstatus\b/i,                            label: 'pattern: "status"',        color: 'var(--green)' },
-      { re: /\b(continue|keep going|resume)\b/i,      label: 'pattern: "continue"',      color: 'var(--green)' },
-      { re: /\bsetup\b/i,                             label: 'pattern: "setup"',         color: 'var(--green)' },
-      { re: /\b(list|--list)\b/i,                     label: 'pattern: "list"',          color: 'var(--green)' },
+      { id: "status", phrases: ["status","dashboard","what's happening","what's going on","show activity"],
+        selected: "/dashboard", command: "node scripts/dashboard.js", projectScript: null, reason: "an exact status command maps to the dashboard." },
+      { id: "next", phrases: ["next","what should i do next","fix harness state","repair harness"],
+        selected: "/do next", command: "node scripts/operator-console.js --run", projectScript: null, reason: "an exact next-action command maps to the deterministic operator console." },
+      { id: "operator", phrases: ["operator","operator console","approval capsule","what's up","what should happen next"],
+        selected: "/do operator", command: "node scripts/operator-console.js", projectScript: null, reason: "an exact operator command asks for the inspect-only cockpit." },
+      { id: "continue", phrases: ["continue","keep going"],
+        selected: "/do continue", command: "node scripts/continue-action.js --run", projectScript: null, reason: "an exact continuation command resumes active campaign or fleet state." },
+      { id: "setup", phrases: ["setup","first run","configure harness"],
+        selected: "/setup", command: "/do setup", projectScript: null, reason: "an exact setup command opens the first-run experience." },
+      { id: "setup-express", phrases: ["setup --express"],
+        selected: "/setup", command: "/do setup --express", projectScript: null, reason: "the exact express setup command selects the zero-question setup mode." },
+      { id: "list", phrases: ["--list","list","list skills"],
+        selected: "/do --list", command: "/do --list", projectScript: null, reason: "an exact list command shows the installed routing catalog." },
+      { id: "test", phrases: ["test","tests","run test","run tests"],
+        selected: null, command: null, projectScript: "test", reason: "an exact test command may use the target project test script when that capability is declared." },
+      { id: "build", phrases: ["build","run build"],
+        selected: null, command: null, projectScript: "build", reason: "an exact build command may use the target project build script when that capability is declared." },
+      { id: "typecheck", phrases: ["typecheck","type check","run typecheck","run type check"],
+        selected: null, command: null, projectScript: "typecheck", reason: "an exact typecheck command may use the target project typecheck script when that capability is declared." },
     ];
+    // <!-- END GENERATED: exact-command-data -->
 
     // <!-- BEGIN GENERATED: routing-data -->
     const TIER2 = [
-      { re: /\b(architect|architecture|design the system|file structure|plan the build)\b/i, skill: '/architect', bundle: 'core',
+      { re: /(?:^|[^\w])(architect|architecture|design the system|file structure|plan the build)(?=$|[^\w])/i, skill: "/architect", bundle: 'core',
         desc: "Given a PRD, produces an implementation architecture: file tree, component breakdown, data model, and a phased build plan with end conditions that Archon can execute directly. Multi-candidate evaluation for key decisions.", icon: '🏗' },
-      { re: /\b(ascii diagram|ascii art|box diagram|architecture diagram|flow diagram|sequence diagram|draw a diagram|text diagram)\b/i, skill: '/ascii-diagram', bundle: 'core',
+      { re: /(?:^|[^\w])(campaign|multi-session|phases)(?=$|[^\w])/i, skill: "/archon", bundle: 'operations',
+        desc: "Autonomous multi-session campaign agent. Decomposes large work into phases, delegates to sub-agents, reviews output, and maintains campaign state across context windows. Use for work that spans multiple sessions and needs persistent state, quality judgment, and strategic decomposition.", icon: '◇' },
+      { re: /(?:^|[^\w])(ascii diagram|ascii art|box diagram|architecture diagram|flow diagram|sequence diagram|draw a diagram|text diagram)(?=$|[^\w])/i, skill: "/ascii-diagram", bundle: 'core',
         desc: "Generate perfectly aligned ASCII diagrams  -  architecture, flow, sequence, box-and-arrow. Uses a programmatic character-grid approach so alignment is guaranteed by math, not token prediction. Includes post-render verification.", icon: '◇' },
-      { re: /\b(intake|process pending|pipeline)\b/i, skill: '/autopilot', bundle: 'operations',
+      { re: /(?:^|[^\w])(intake|process pending|pipeline)(?=$|[^\w])/i, skill: "/autopilot", bundle: 'operations',
         desc: "Intake-to-delivery pipeline. Processes pending items from .planning/intake/: briefs new ideas, executes approved work through research → plan → build → verify. Drop a file in .planning/intake/ and invoke this skill.", icon: '◇' },
-      { re: /\b(cost|costs|cost breakdown|campaign cost|token usage|burn rate|model breakdown)\b/i, skill: '/cost', bundle: 'persistence',
+      { re: /(?:^|[^\w])(cost|costs|cost breakdown|campaign cost|token usage|burn rate|model breakdown)(?=$|[^\w])/i, skill: "/cost", bundle: 'persistence',
         desc: "Deep cost exploration and transparency. Shows real token usage, session costs, campaign spend, burn rates, and model breakdown. Reads Claude Code's native session data for exact numbers. Complements /dashboard with focused cost views.", icon: '◇' },
-      { re: /\b(create skill|new skill|make a skill|teach the harness|custom skill|my own skill|skill for|automate this pattern|repeated pattern)\b/i, skill: '/create-skill', bundle: 'core',
+      { re: /(?:^|[^\w])(create app|build app|build me|make an app|new app|generate app|add auth|add payments|integrate)(?=$|[^\w])/i, skill: "/create-app", bundle: 'core',
+        desc: "End-to-end app creation from a single description. Five tiers: blank project, guided, templated, fully generated, or feature addition to existing codebase. Routes through PRD, architecture, and Archon campaign with verification at every step.", icon: '◇' },
+      { re: /(?:^|[^\w])(create skill|new skill|make a skill|teach the harness|custom skill|my own skill|skill for|automate this pattern|repeated pattern)(?=$|[^\w])/i, skill: "/create-skill", bundle: 'core',
         desc: "Creates new skills from the user's repeating patterns. Interview-driven: discovers the task, analyzes failure modes, generates a production SKILL.md, installs it, tests it on a real target, and teaches the user how to use it. Use when a user wants to encode a repeating workflow; do NOT use for one-off tasks or modifying existing skills.", icon: '◇' },
-      { re: /\b(daemon|continuous|run overnight|keep running|24\/7|unattended|run autonomously|daemon start|daemon stop|daemon status)\b/i, skill: '/daemon', bundle: 'operations',
+      { re: /(?:^|[^\w])(daemon|continuous|run overnight|keep running|24\/7|unattended|run autonomously|daemon start|daemon stop|daemon status)(?=$|[^\w])/i, skill: "/daemon", bundle: 'operations',
         desc: "Continuous autonomous operation mode. Keeps campaigns running 24/7 by chaining Claude Code sessions via RemoteTrigger. Each session picks up from the campaign's continuation state, works until context runs low or the phase completes, then schedules the next session. Auto-stops on campaign completion or budget exhaustion. The thing that makes Citadel run overnight.", icon: '◇' },
-      { re: /\b(dashboard|what's happening|what's going on|show activity|harness state|show me status)\b/i, skill: '/dashboard', bundle: 'persistence',
+      { re: /(?:^|[^\w])(dashboard|what's happening|what's going on|show activity|harness state|show me status)(?=$|[^\w])/i, skill: "/dashboard", bundle: 'persistence',
         desc: "Real-time harness observability dashboard. Reads campaigns, fleet sessions, telemetry, and pending queues to present a snapshot of harness state at a glance. Invoked by /dashboard, /do status, or phrases like \"what's happening\" and \"show activity\".", icon: '◇' },
-      { re: /\b(decision map|plan this out|figure this out|investigation plan|planning map)\b/i, skill: '/decision-map', bundle: 'persistence',
+      { re: /(?:^|[^\w])(decision map|plan this out|figure this out|investigation plan|planning map)(?=$|[^\w])/i, skill: "/decision-map", bundle: 'persistence',
         desc: "Turn a loose idea into a git-tracked, session-resumable map of typed investigation tickets, then drive them to resolution one at a time. The planning-loop engine for work that is still being figured out  -  too fuzzy for a campaign, too big for a single intake item. Resolved tickets graduate into .planning/intake/ for the autopilot to build.", icon: '◇' },
-      { re: /\b(deploy steward|deploy queue|merge steward|mainline steward|land prs|land PRs|deploy prs|deploy PRs|merge queue|release train)\b/i, skill: '/deploy-steward', bundle: 'delivery',
+      { re: /(?:^|[^\w])(deploy steward|deploy queue|merge steward|mainline steward|land prs|land PRs|deploy prs|deploy PRs|merge queue|release train)(?=$|[^\w])/i, skill: "/deploy-steward", bundle: 'delivery',
         desc: "Mainline deploy steward. Consumes ready PRs, owns a lease on mainline landing, refreshes PR state, updates stale branches, waits for CI and deploy gates, merges or queues one candidate at a time, and opens repair tasks for failures.", icon: '◇' },
-      { re: /\b(design|style guide|design manifest|visual consistency)\b/i, skill: '/design', bundle: 'core',
+      { re: /(?:^|[^\w])(design|style guide|design manifest|visual consistency)(?=$|[^\w])/i, skill: "/design", bundle: 'core',
         desc: "Generates and maintains a design manifest for visual consistency. In existing projects, reads current styles and documents the design language. In new projects, asks a few questions and generates a starter manifest. The post-edit hook reads the manifest and flags deviations.", icon: '◇' },
-      { re: /\b(document|docs|docstring|jsdoc|readme|api docs)\b/i, skill: '/doc-gen', bundle: 'core',
+      { re: /(?:^|[^\w])(document|docs|docstring|jsdoc|readme|api docs)(?=$|[^\w])/i, skill: "/doc-gen", bundle: 'core',
         desc: "Documentation generator with three modes: function-level (JSDoc/docstrings), module-level (directory READMEs), and API reference (endpoints/exports). Reads existing project doc style and matches it. Never generates docs that just restate what the signature already says.", icon: '📄' },
-      { re: /\b(evolve|sustained improve|improvement director|research-driven improve|multi-cycle improve|run until done|improve until ceiling|keep improving|hypothesis|belief model|scout agents)\b/i, skill: '/evolve', bundle: 'operations',
+      { re: /(?:^|[^\w])(evolve|sustained improve|improvement director|research-driven improve|multi-cycle improve|run until done|improve until ceiling|keep improving|hypothesis|belief model|scout agents)(?=$|[^\w])/i, skill: "/evolve", bundle: 'operations',
         desc: "Research-driven multi-cycle improvement director. Forms causal hypotheses about why scores are low, validates them with scout agents before attacking, dispatches axis-parallel fleet attacks, extracts transferable patterns, and runs indefinitely within a budget envelope. Accumulates a persistent belief model and pattern library across sessions.", icon: '◇' },
-      { re: /\b(experiment|optimize|try|A\/B|measure)\b/i, skill: '/experiment', bundle: 'operations',
+      { re: /(?:^|[^\w])(experiment|optimize|try|A\/B|measure)(?=$|[^\w])/i, skill: "/experiment", bundle: 'operations',
         desc: "Automated optimization loop with scalar fitness function. Proposes changes in isolated worktrees, measures with a metric command, keeps improvements, discards failures. Supports convergence detection and diminishing returns.", icon: '⚗' },
-      { re: /\b(grill me|grill|stress-test the plan|sharpen the plan|pressure-test|interview me)\b/i, skill: '/grill', bundle: 'core',
+      { re: /(?:^|[^\w])(parallel|simultaneous|multiple agents|at the same time)(?=$|[^\w])/i, skill: "/fleet --quick", bundle: 'parallel',
+        desc: "Parallel campaign orchestrator. Runs multiple campaigns in coordinated waves within a single session. Spawns 2-3 agents per wave in isolated worktrees, collects discoveries, shares context between waves. Use when work decomposes into 3+ independent streams that can run simultaneously.", icon: '◇' },
+      { re: /(?:^|[^\w])(grill me|grill|stress-test the plan|sharpen the plan|pressure-test|interview me)(?=$|[^\w])/i, skill: "/grill", bundle: 'core',
         desc: "Relentless one-question-at-a-time interview that sharpens a vague plan or design into shared understanding before any build. The elicitation engine other planning skills call instead of inventing their own interview. Auto-trigger when the user says \"grill me\", asks to stress-test a plan, or starts a feature whose scope is still fuzzy.", icon: '◇' },
-      { re: /\b(houseclean|house clean|disk space|free space|c drive full|drive full|running out of space|clean up disk|orphaned worktrees|clean worktrees|disk audit|storage audit|move to another drive|free up space)\b/i, skill: '/houseclean', bundle: 'core',
+      { re: /(?:^|[^\w])(houseclean|house clean|disk space|free space|c drive full|drive full|running out of space|clean up disk|orphaned worktrees|clean worktrees|disk audit|storage audit|move to another drive|free up space)(?=$|[^\w])/i, skill: "/houseclean", bundle: 'core',
         desc: "Cross-drive storage audit and cleanup. Surveys all drives, finds orphaned git worktrees, large AI tool caches (.ollama, .gemini, .cursor, npm, pip), and buildable artifacts (node_modules, .venv). Produces a prioritized action plan with specific migration commands. Use when disk space is low or worktrees need cleanup; do NOT use for project structure issues (use /organize instead).", icon: '◇' },
-      { re: /\b(improve|improvement loop|quality loop|rubric|score against|run improvement|improve citadel)\b/i, skill: '/improve', bundle: 'operations',
+      { re: /(?:^|[^\w])(improve|improvement loop|quality loop|rubric|score against|run improvement|improve citadel)(?=$|[^\w])/i, skill: "/improve", bundle: 'operations',
         desc: "Autonomous quality improvement loop. Scores a target against a rubric, selects the highest-leverage axis, attacks it, verifies, documents, and loops. No pre-planning between iterations  -  each loop re-scores from scratch.", icon: '◇' },
-      { re: /\b(infra|infrastructure|what databases|what systems|docker-compose|infra audit|map infrastructure|what does this connect to)\b/i, skill: '/infra-audit', bundle: 'core',
+      { re: /(?:^|[^\w])(infra|infrastructure|what databases|what systems|docker-compose|infra audit|map infrastructure|what does this connect to)(?=$|[^\w])/i, skill: "/infra-audit", bundle: 'core',
         desc: "Reads docker-compose, env files, ORM configs, and connection strings to map current infrastructure. Flags missing layers (cache, queue, analytics) based on observed access patterns. Outputs a structured infrastructure manifest.", icon: '◇' },
-      { re: /\b(learn|extract patterns|learn from that|save what worked|patterns from campaign)\b/i, skill: '/learn', bundle: 'persistence',
+      { re: /(?:^|[^\w])(learn|extract patterns|learn from that|save what worked|patterns from campaign)(?=$|[^\w])/i, skill: "/learn", bundle: 'persistence',
         desc: "Knowledge compiler. Extracts patterns, decisions, and anti-patterns from completed campaigns and evolve cycles, then compiles them into structured wiki pages that integrate with existing knowledge rather than appending isolated files. Implements flush→compile→lint pipeline. Auto-triggered by /postmortem and /evolve Phase 6.", icon: '◇' },
-      { re: /\b(preview|screenshot|visual check|does it render)\b/i, skill: '/live-preview', bundle: 'core',
+      { re: /(?:^|[^\w])(preview|screenshot|visual check|does it render)(?=$|[^\w])/i, skill: "/live-preview", bundle: 'core',
         desc: "Mid-build visual verification loop. Takes screenshots of components during construction, not just after. Catches visual regressions and invisible features before they compound. Requires Playwright or similar screenshot tool.", icon: '◇' },
-      { re: /\b(loop|repeat until|until tests pass|until lint passes|max attempts|retry until)\b/i, skill: '/loop', bundle: 'operations',
+      { re: /(?:^|[^\w])(loop|repeat until|until tests pass|until lint passes|max attempts|retry until)(?=$|[^\w])/i, skill: "/loop", bundle: 'operations',
         desc: "Bounded foreground repetition for the current session. Creates a loop contract, runs or coordinates an action plus verifier up to a declared attempt limit, and records evidence under .planning/loops/. Use for repeat-until-pass work that is too small for daemon and not time-based scheduling.", icon: '◇' },
-      { re: /\b(map|index codebase|codebase map|structural index|scan codebase|map stats|map query)\b/i, skill: '/map', bundle: 'core',
+      { re: /(?:^|[^\w])(map|index codebase|codebase map|structural index|scan codebase|map stats|map query)(?=$|[^\w])/i, skill: "/map", bundle: 'core',
         desc: "Structural codebase index generator. Builds a compact JSON map of files, exports, imports, dependency graph, and roles. Queryable by keyword. Injected into fleet agents as context slices to reduce token usage on code navigation.", icon: '◇' },
-      { re: /\b(merge review|check merges|any conflicts|fleet conflicts|pending branches|safe to merge)\b/i, skill: '/merge-review', bundle: 'parallel',
+      { re: /(?:^|[^\w])(orchestrate|chain skills|multi-step)(?=$|[^\w])/i, skill: "/marshal", bundle: 'operations',
+        desc: "Meta-orchestrator that takes any direction  -  broad, specific, or vague  -  and autonomously chains skills and context into actionable work. Gathers context from codebase, docs, and memory. Only asks the user when it genuinely cannot proceed. Single-session orchestrator.", icon: '◇' },
+      { re: /(?:^|[^\w])(merge review|check merges|any conflicts|fleet conflicts|pending branches|safe to merge)(?=$|[^\w])/i, skill: "/merge-review", bundle: 'parallel',
         desc: "Reviews pending fleet worktree merges before they're accepted. Reads the merge-check queue, detects file-level conflicts between branches, proposes a safe merge order, and surfaces reconciliation plans for overlapping changes.", icon: '◇' },
-      { re: /\b(organize|directory structure|folder structure|project structure|file organization|organize directories|organize files|cleanup directories|directory convention|where should this go|messy project)\b/i, skill: '/organize', bundle: 'core',
+      { re: /(?:^|[^\w])(organize|directory structure|folder structure|project structure|file organization|organize directories|organize files|cleanup directories|directory convention|where should this go|messy project)(?=$|[^\w])/i, skill: "/organize", bundle: 'core',
         desc: "Repository structure only: directory layout, file placement, naming conventions, and where-does-this-belong decisions. Detects the project's convention, audits files against it, and executes move plans with import-path updates. Never changes code inside files beyond the import updates a move forces; in-file restructuring is /refactor.", icon: '◇' },
-      { re: /\b(postmortem|retro|what broke|what happened|debrief)\b/i, skill: '/postmortem', bundle: 'persistence',
+      { re: /(?:^|[^\w])(postmortem|retro|what broke|what happened|debrief)(?=$|[^\w])/i, skill: "/postmortem", bundle: 'persistence',
         desc: "Auto-generates a structured postmortem from a completed campaign. Reads the campaign file, telemetry logs, and feature ledger. Produces a documented analysis of what broke, what the safety systems caught, and what patterns emerged. Can also be invoked manually for any incident.", icon: '📊' },
-      { re: /\b(watch pr|watch ci|monitor pr|fix ci|ci failing|pr failing|auto-fix|auto fix pr|pr is red|checks failing)\b/i, skill: '/pr-watch', bundle: 'delivery',
+      { re: /(?:^|[^\w])(watch pr|watch ci|monitor pr|fix ci|ci failing|pr failing|auto-fix|auto fix pr|pr is red|checks failing)(?=$|[^\w])/i, skill: "/pr-watch", bundle: 'delivery',
         desc: "Local PR watcher. Monitors CI status, automatically fixes failing checks by reading failure logs and applying targeted fixes, then optionally merges when all checks pass. Local CLI analog to Claude Code's cloud auto-fix feature.", icon: '◇' },
-      { re: /\b(prd|requirements|spec|plan an app|design an app)\b/i, skill: '/prd', bundle: 'core',
+      { re: /(?:^|[^\w])(prd|requirements|spec|plan an app|design an app)(?=$|[^\w])/i, skill: "/prd", bundle: 'core',
         desc: "Generates a Product Requirements Document from a natural language app description. Asks clarifying questions, researches similar apps, defines scope, stack, architecture, and produces a structured PRD that Archon can decompose into a campaign.", icon: '📋' },
-      { re: /\b(qa|test the app|click through|does it work|browser test)\b/i, skill: '/qa', bundle: 'core',
+      { re: /(?:^|[^\w])(qa|test the app|click through|does it work|browser test)(?=$|[^\w])/i, skill: "/qa", bundle: 'core',
         desc: "Browser-based QA verification. Launches a real browser, navigates the app, clicks buttons, fills forms, and tests user flows. Works as a standalone skill or as a phase end condition in campaigns. Requires Playwright (optional dependency, graceful skip if not installed).", icon: '◇' },
-      { re: /\b(refactor|rename|extract|inline|move file|split file|merge files)\b/i, skill: '/refactor', bundle: 'core',
+      { re: /(?:^|[^\w])(refactor|rename|extract|inline|move file|split file|merge files)(?=$|[^\w])/i, skill: "/refactor", bundle: 'core',
         desc: "Safe multi-file refactoring with automatic rollback. Establishes a type/test baseline, plans all changes, executes file-by-file, and verifies zero regressions. Reverts if verification fails after two fix attempts. Handles renames, extracts, moves, splits, merges, and inlines.", icon: '↻' },
-      { re: /\b(research|investigate|look into|find out|research fleet|parallel research|multi-angle research|compare options)\b/i, skill: '/research', bundle: 'core',
+      { re: /(?:^|[^\w])(research|investigate|look into|find out|research fleet|parallel research|multi-angle research|compare options)(?=$|[^\w])/i, skill: "/research", bundle: 'core',
         desc: "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Single agent by default; with --parallel (or when the question decomposes into 3+ independent angles) it spawns scout agents whose findings are compressed into a unified brief. Does not make decisions; produces information that informs the next step.", icon: '⌕' },
-      { re: /\b(\/review|code review|review this|review PR|review)\b/i, skill: '/review', bundle: 'core',
+      { re: /(?:^|[^\w])(\/review|code review|review this|review PR|review)(?=$|[^\w])/i, skill: "/review", bundle: 'core',
         desc: "5-pass structured code review  -  correctness, security, performance, readability, consistency", icon: '◆' },
-      { re: /\b(scaffold|generate component|generate module|generate service|new component|new module|new route|new service|create component|stub out|bootstrap)\b/i, skill: '/scaffold', bundle: 'core',
+      { re: /(?:^|[^\w])(scaffold|generate component|generate module|generate service|new component|new module|new route|new service|create component|stub out|bootstrap)(?=$|[^\w])/i, skill: "/scaffold", bundle: 'core',
         desc: "Project-aware file generation. Reads existing codebase conventions (naming, structure, imports, exports, test patterns) then generates new files that match exactly. Wires generated files into the project's registration points.", icon: '⬡' },
-      { re: /\b(schedule|recurring|every N minutes|cron|set a reminder|run periodically)\b/i, skill: '/schedule', bundle: 'operations',
+      { re: /(?:^|[^\w])(schedule|recurring|every N minutes|cron|set a reminder|run periodically)(?=$|[^\w])/i, skill: "/schedule", bundle: 'operations',
         desc: "Manages recurring and one-off scheduled tasks. Session-scoped scheduling via CronCreate/CronDelete/CronList. Documents the cloud path for tasks that need to survive machine sleep or network drops.", icon: '◇' },
-      { re: /\b(handoff|session summary)\b/i, skill: '/session-handoff', bundle: 'persistence',
+      { re: /(?:^|[^\w])(handoff|session summary)(?=$|[^\w])/i, skill: "/session-handoff", bundle: 'persistence',
         desc: "Synthesizes the current session into a structured HANDOFF block for context transfer between sessions. Captures what was built, decisions made, and unresolved items.", icon: '◇' },
-      { re: /\b(setup|first run|configure harness|install citadel|getting started)\b/i, skill: '/setup', bundle: 'core',
+      { re: /(?:^|[^\w])(setup|first run|configure harness|install citadel|getting started)(?=$|[^\w])/i, skill: "/setup", bundle: 'core',
         desc: "First-run experience for the harness. Three modes: Recommended (guided, ~3 min), Full Tour (guided + skill walkthrough, ~8 min), and Express (zero questions, ~30 sec). Installs hooks first, detects stack, configures harness.json, runs a live demo on real code, and prints a reference card.", icon: '◇' },
-      { re: /\b(debug|root cause|diagnose|why is|investigate bug)\b/i, skill: '/systematic-debugging', bundle: 'core',
+      { re: /(?:^|[^\w])(debug|root cause|diagnose|why is|investigate bug)(?=$|[^\w])/i, skill: "/systematic-debugging", bundle: 'core',
         desc: "4-phase root cause analysis: observe, hypothesize, verify, fix. Enforces investigation before any code changes. Emergency stop after 2 failed fixes. Prevents shotgun debugging and fix cascades.", icon: '⚡' },
-      { re: /\b(telemetry|what did this cost|session cost|how much did that cost|how much have I spent|what hooks fired|trust level|show me telemetry|spending|session stats|what telemetry|verify audit|audit integrity|check audit|tampered records)\b/i, skill: '/telemetry', bundle: 'persistence',
+      { re: /(?:^|[^\w])(telemetry|what did this cost|session cost|how much did that cost|how much have I spent|what hooks fired|trust level|show me telemetry|spending|session stats|what telemetry|verify audit|audit integrity|check audit|tampered records)(?=$|[^\w])/i, skill: "/telemetry", bundle: 'persistence',
         desc: "Unified telemetry hub. Shows current session cost, today's spend, all-time totals, hook activity, trust level, and a directory of every telemetry command available. Also the control surface to toggle telemetry on/off and tune thresholds. Single entry point for anyone asking \"what does this cost\" or \"what telemetry does Citadel have\".", icon: '◇' },
-      { re: /\b(\/test-gen|generate tests|write tests|add tests|test)\b/i, skill: '/test-gen', bundle: 'core',
+      { re: /(?:^|[^\w])(\/test-gen|generate tests|write tests|add tests|test)(?=$|[^\w])/i, skill: "/test-gen", bundle: 'core',
         desc: "Generate and verify tests  -  happy path, edge cases, error paths  -  using the project's own framework and patterns", icon: '⚗' },
-      { re: /\b(triage|open issues|unlabeled issues|review pr|review prs|investigate issue)\b/i, skill: '/triage', bundle: 'delivery',
+      { re: /(?:^|[^\w])(triage|open issues|unlabeled issues|review pr|review prs|investigate issue)(?=$|[^\w])/i, skill: "/triage", bundle: 'delivery',
         desc: "GitHub issue and PR investigator. Pulls open issues/PRs, classifies them, searches the codebase for root cause or reviews contributed code, proposes fixes with file:line references, and optionally implements fixes. Use for investigating GitHub issues and reviewing PRs; do NOT use for general code review unrelated to GitHub issues.", icon: '📌' },
-      { re: /\b(unharness|remove citadel|uninstall citadel|clean up citadel|remove harness|uninstall harness)\b/i, skill: '/unharness', bundle: 'core',
+      { re: /(?:^|[^\w])(unharness|remove citadel|uninstall citadel|clean up citadel|remove harness|uninstall harness)(?=$|[^\w])/i, skill: "/unharness", bundle: 'core',
         desc: "Safely leave Citadel using the active adoption receipt. Produces a no-write, reviewable plan, preserves a portable archive, removes only exact owned material, and reports modified or externally registered surfaces as retained or unknown. Legacy installs must be imported before exact leave is claimed.", icon: '◇' },
-      { re: /\b(verify|verify hooks|hook health|self-test|check hooks|harness health)\b/i, skill: '/verify', bundle: 'core',
+      { re: /(?:^|[^\w])(verify|verify hooks|hook health|self-test|check hooks|harness health)(?=$|[^\w])/i, skill: "/verify", bundle: 'core',
         desc: "Self-test the Citadel hook pipeline from within a live session. Exercises real tool calls (Write, Edit, Bash, Read) and checks that hooks fired, telemetry accumulated, and no errors occurred. Reports HOOK HEALTH: PASS or HOOK HEALTH: FAIL with a per-hook breakdown.", icon: '◇' },
-      { re: /\b(watch|watch files|watch changes|file sentinel|monitor files|watch start|watch stop|watch scan|marker comments|@citadel)\b/i, skill: '/watch', bundle: 'operations',
+      { re: /(?:^|[^\w])(watch|watch files|watch changes|file sentinel|monitor files|watch start|watch stop|watch scan|marker comments|@citadel)(?=$|[^\w])/i, skill: "/watch", bundle: 'operations',
         desc: "File sentinel that monitors the working directory for changes and marker comments, then auto-triggers appropriate skills. Poll-based via git diff against the last scan commit. Writes intake items for batch processing and routes marker actions through /do. Use for automatic reactions to file changes; do NOT use for one-off inspection or tasks needing human judgment per file.", icon: '◇' },
-      { re: /\b(wiki|knowledge base|llm wiki|project wiki|build a wiki|maintain knowledge|knowledge management|llm-wiki|karpathy wiki)\b/i, skill: '/wiki', bundle: 'persistence',
+      { re: /(?:^|[^\w])(wiki|knowledge base|llm wiki|project wiki|build a wiki|maintain knowledge|knowledge management|llm-wiki|karpathy wiki)(?=$|[^\w])/i, skill: "/wiki", bundle: 'persistence',
         desc: "Markdown-first knowledge base where the LLM acts as librarian. Ingests raw sources, compiles and interlinks topic files, self-maintains an index. No vector DB or embeddings required -- uses LLM-native navigation over structured markdown up to ~400K words.", icon: '▤' },
-      { re: /\b(workspace|multi-repo|cross-repo|across repos|multiple repos|coordinate repos|add redis and snowflake|split into repos)\b/i, skill: '/workspace', bundle: 'parallel',
+      { re: /(?:^|[^\w])(workspace|multi-repo|cross-repo|across repos|multiple repos|coordinate repos|add redis and snowflake|split into repos)(?=$|[^\w])/i, skill: "/workspace", bundle: 'parallel',
         desc: "Multi-repo campaign coordinator. Same lifecycle as fleet -- scope claims, discovery relay, wave-based execution -- but the unit of work is a repo, not a file. Coordinates campaigns across repositories with shared context.", icon: '◇' },
     ];
     // <!-- END GENERATED: routing-data -->
 
-    const TIER3 = [
-      { re: /\b(overhaul|redesign|rewrite|rearchitect|rebuild|migrate)\b.*\b(all|entire|platform|services|system)\b/i,
-        tool: '/fleet', icon: '⬢',
-        desc: 'Parallel campaign coordinator. Spawns 2-3 agents in isolated git worktrees per wave. Discoveries shared between waves via compressed briefs. Merge arbitration on completion.',
-        dims: { intent: 'redesign', scope: 'platform-wide', complexity: 5, persist: true, parallel: true, taste: true }, color: 'var(--purple)' },
-      { re: /\b(migrate|migration)\b/i,
-        tool: '/fleet', icon: '⬢',
-        desc: 'Parallel campaign coordinator. Spawns 2-3 agents in isolated git worktrees per wave. Discoveries shared between waves via compressed briefs. Merge arbitration on completion.',
-        dims: { intent: 'migrate', scope: 'platform-wide', complexity: 5, persist: true, parallel: true, taste: true }, color: 'var(--purple)' },
-      { re: /\b(redesign|overhaul)\b/i,
-        tool: '/fleet', icon: '⬢',
-        desc: 'Parallel campaign coordinator. Spawns 2-3 agents in isolated git worktrees per wave. Discoveries shared between waves via compressed briefs.',
-        dims: { intent: 'redesign', scope: 'cross-domain', complexity: 4, persist: true, parallel: true, taste: true }, color: 'var(--purple)' },
-      { re: /\b(create|build|make|generate)\b.*\b(app|application|tool|service|site|website|feature|system)\b/i,
-        tool: '/archon', icon: '⬡',
-        desc: 'Multi-session campaign executor. Decomposes into phases, delegates to Marshal sub-agents, enforces quality gates at each phase. Self-corrects direction every 2 phases.',
-        dims: { intent: 'create', scope: 'single-domain', complexity: 4, persist: true, parallel: false, taste: true }, color: 'var(--orange)' },
-      { re: /\b(add|implement|integrate)\b/i,
-        tool: '/create-app', icon: '⬡',
-        desc: 'Feature addition mode. Reads existing codebase conventions and architecture, adds the feature without breaking existing patterns.',
-        dims: { intent: 'add', scope: 'single-domain', complexity: 3, persist: false, parallel: false, taste: false }, color: 'var(--orange)' },
-    ];
-
     function route(cmd) {
-      for (const p of TIER0) {
-        if (p.re.test(cmd)) return {
-          tier: 0, label: p.label, color: p.color,
-          tool: 'Direct Edit', icon: '✎',
-          desc: 'Claude performs the change inline  -  no skill loaded, no orchestrator spawned. Fastest possible path.',
-          tokens: '0', latency: '<1ms'
+      const normalized = String(cmd || '')
+        .trim()
+        .replace(/^\/do(?:\s+|$)/i, '')
+        .replace(/[\u2018\u2019]/g, "'")
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+      const exact = TIER0.find(item => item.phrases.includes(normalized));
+      if (exact) {
+        if (exact.projectScript) {
+          return {
+            tier: 0, label: `exact command needs target capability: ${exact.id}`, color: 'var(--orange)',
+            tool: `Target package script check required: ${exact.projectScript}`,
+            selected: null, suggestedRoute: null, command: null,
+            icon: '◇', desc: `${exact.reason} This static page cannot inspect the target package.json, so the result is non-executable.`,
+            tokens: '0', latency: '<1ms', final: false, candidates: [],
+            canRunNow: false, boundary: 'semantic-classification-required'
+          };
+        }
+        return {
+          tier: 0, label: `exact command: ${exact.id}`, color: 'var(--green)',
+          tool: exact.selected === 'direct-command' ? exact.command : exact.selected,
+          selected: exact.selected, suggestedRoute: null, command: exact.command,
+          icon: '✎', desc: exact.reason, tokens: '0', latency: '<1ms',
+          final: true, candidates: [], canRunNow: false, boundary: 'static-demo-no-execution'
         };
       }
-      for (const k of TIER2) {
-        if (k.re.test(cmd)) return {
-          tier: 2, label: 'keyword hit', color: 'var(--cyan)',
-          tool: k.skill, icon: k.icon, desc: k.desc,
-          tokens: '0', latency: '<10ms'
+
+      const candidates = TIER2.filter(item => item.re.test(cmd));
+      if (candidates.length > 0) {
+        const names = candidates.map(item => item.skill);
+        return {
+          tier: 2,
+          label: `${candidates.length} candidate${candidates.length === 1 ? '' : 's'}; semantic confirmation required`,
+          color: 'var(--cyan)',
+          tool: candidates.length === 1 ? `${candidates[0].skill} candidate` : 'Semantic classification required',
+          selected: null, suggestedRoute: candidates.length === 1 ? candidates[0].skill : null, command: null,
+          icon: candidates.length === 1 ? candidates[0].icon : '◇',
+          desc: `Keyword evidence found ${names.join(', ')}. The real /do classifier uses these as candidates; this page does not choose the final workflow.`,
+          tokens: '0', latency: '<10ms', final: false, candidates: names,
+          canRunNow: false, boundary: 'semantic-classification-required'
         };
       }
-      for (const r of TIER3) {
-        if (r.re.test(cmd)) return {
-          tier: 3, label: `intent: ${r.dims.intent}`, color: r.color,
-          tool: r.tool, icon: r.icon, desc: r.desc,
-          tokens: '~500', latency: '~1–2s', dims: r.dims
-        };
-      }
+
       return {
-        tier: 3, label: 'confidence < 0.7 → safe default', color: 'var(--purple)',
-        tool: '/marshal', icon: '⟳',
-        desc: 'Single-session meta-orchestrator. Takes any direction and executes it end-to-end by chaining the appropriate skills in sequence.',
-        tokens: '~500', latency: '~1–2s'
+        tier: 3, label: 'semantic classification required', color: 'var(--orange)',
+        tool: 'Semantic classification required', icon: '⟳',
+        selected: null, suggestedRoute: null, command: null,
+        desc: 'No exact command or registered keyword candidate resolved this request. The real /do agent classifies intent, scope, persistence, parallelism, and judgment before choosing a workflow.',
+        tokens: '~500', latency: 'runtime-dependent', final: false, candidates: [],
+        canRunNow: false, boundary: 'semantic-classification-required'
       };
     }
 
-    // ─── Live preview ─────────────────────────────────────────────────────
+    // ─── Static exact/candidate preview ───────────────────────────────────
     const input = document.getElementById('cmd-input');
     const liveBadge = document.getElementById('live-badge');
     const enterKey = document.getElementById('enter-key');
@@ -2743,6 +2765,15 @@
           tierEl.classList.add('matched');
           statusEl.textContent = `✓  ${result.label}`;
           statusEl.style.color = result.color;
+
+          if (i === 2 && result.final === false) {
+            const semanticTier = document.getElementById('tier3');
+            const semanticStatus = document.getElementById('tier3-status');
+            semanticTier.classList.add('matched');
+            semanticStatus.textContent = '→ runtime classification required';
+            semanticStatus.style.color = 'var(--orange)';
+            break;
+          }
 
           for (let j = i + 1; j <= 3; j++) {
             document.getElementById(`tier${j}`).classList.add('skipped');
@@ -2916,13 +2947,13 @@
     // ─── Generator pools ─────────────────────────────────────────────────
     const POOLS = {
       instant: [
-        'fix the typo on line 42',
-        'rename UserController to UserHandler',
-        'commit my changes',
-        'typecheck',
-        'rename AuthService to AuthHandler',
         'list skills',
         'status',
+        'next',
+        'operator',
+        'continue',
+        'setup',
+        'setup --express',
       ],
       skill: [
         'review the auth module',
@@ -2935,18 +2966,14 @@
         'debug the login failure',
       ],
       campaign: [
-        'build me a recipe app',
-        'add a dark mode toggle',
-        'implement Stripe payments',
-        'create a real-time chat feature',
-        'add OAuth login to the app',
-        'implement a search feature',
+        'run a campaign',
+        'plan this as a multi-session campaign',
+        'continue through several phases',
       ],
       fleet: [
-        'overhaul all three services',
-        'redesign the entire data layer',
-        'migrate the platform to TypeScript strict mode',
-        'rebuild the entire API layer',
+        'use multiple agents',
+        'work on these scopes in parallel',
+        'coordinate multiple repos',
       ],
     };
 

@@ -106,7 +106,7 @@ withTempProject((projectRoot) => {
   assert.equal(snapshot.nextAction.repairAvailable, true);
   assert(output.includes('Command: /do setup --express'));
   assert(output.includes('OPERATOR ARTIFACTS'));
-  assert(output.includes('(none recorded yet - run npm run next)'));
+  assert(output.includes('(none recorded yet - run node scripts/next-action.js)'));
   assert(output.includes('REPAIR CONSOLE'));
   assert(output.includes('CAMPAIGNS'));
   assert(output.includes('FLEET SESSIONS'));
@@ -160,7 +160,7 @@ withTempProject((projectRoot) => {
   assert(output.includes('Approval capsule: .planning/approval-capsules/latest.md'));
   assert(output.includes('boundary: agent-continuation | risk: medium | freshness: stale'));
   assert(output.includes('request: Approve running `/do continue` for this project.'));
-  assert(output.includes('stale: latest report final command is /do continue, current command is npm run dashboard'));
+  assert(output.includes('stale: latest report final command is /do continue, current command is node scripts/dashboard.js'));
   assert(output.includes('stale: no current repair or approval boundary is queued'));
 });
 
@@ -440,8 +440,8 @@ withTempProject((projectRoot) => {
 
   assert.equal(snapshot.pending.docSync, 2);
   assert.equal(snapshot.nextAction.label, 'Drain doc-sync queue');
-  assert.equal(snapshot.nextAction.command, '/learn --doc-sync');
-  assert.equal(snapshot.repairs[0].runbook, 'skills/learn/SKILL.md');
+  assert.equal(snapshot.nextAction.command, 'node hooks_src/doc-sync.js --project-root .');
+  assert.equal(snapshot.repairs[0].runbook, 'hooks_src/doc-sync.js');
   assert(output.includes('repair | medium | Drain doc-sync queue'));
   assert(output.includes('why: 2 doc-sync item(s) are queued'));
 });

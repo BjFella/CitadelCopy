@@ -60,7 +60,7 @@ function installClaudeHooks(options = {}) {
       Object.entries(selected.hooks || {}).filter(([event]) => compatibility.supportedEvents.includes(event))
     ),
   };
-  const existing = readJson(settingsPath, {});
+  const existing = readJson(settingsPath, {}, { strict: true });
   const mergedHooks = mergeHookMaps({
     existingHooks: existing.hooks || {},
     generatedHooks: generated.hooks || {},

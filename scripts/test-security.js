@@ -27,6 +27,7 @@ const os = require('os');
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROTECT_FILES_HOOK = path.join(PLUGIN_ROOT, 'hooks_src', 'protect-files.js');
 const QUALITY_GATE_HOOK = path.join(PLUGIN_ROOT, 'hooks_src', 'quality-gate.js');
+const CODEX_ADAPTER = path.join(PLUGIN_ROOT, 'hooks_src', 'codex-adapter.js');
 
 let passed = 0;
 let failed = 0;
@@ -474,6 +475,134 @@ function main() {
       env: { ...process.env, CLAUDE_PROJECT_DIR: envProj },
     });
   }
+
+  function runCodexHook(hookName, toolName, toolInput) {
+    const input = JSON.stringify({
+      hook_event_name: 'PreToolUse',
+      cwd: envProj,
+      tool_name: toolName,
+      tool_input: toolInput,
+    });
+    return spawnSync(process.execPath, [CODEX_ADAPTER, hookName], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: envProj,
+        CITADEL_DEV: 'false',
+      },
+    });
+  }
+
+  test('external-action-gate fails closed on malformed input', () => {
+    const result = spawnSync(process.execPath, [EAG_HOOK], {
+      input: '{',
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: envProj },
+    });
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+  });
+
+  test('external-action-gate fails closed on malformed external-action policy', () => {
+    const configDir = path.join(envProj, '.claude');
+    const configPath = path.join(configDir, 'harness.json');
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(configPath, JSON.stringify({
+      policy: { externalActions: { hard: 'gh release create' } },
+    }));
+    try {
+      const result = runBashGate('git push origin feat/test');
+      assert(result.status === 2, `Expected malformed policy to block, got ${result.status}: ${result.stderr}`);
+    } finally {
+      fs.rmSync(configPath, { force: true });
+    }
+  });
+
+  test('external-action-gate enforces P-001 and P-004 while preserving normal push', () => {
+    const forceMain = runBashGate('git push --force origin main');
+    assert(forceMain.status === 2, `Expected P-001 block, got ${forceMain.status}`);
+    assert(forceMain.stderr.includes('P-001'), `Expected P-001 reason, got: ${forceMain.stderr}`);
+
+    const quotedMain = runBashGate('git push --force origin "main"');
+    assert(quotedMain.status === 2, `Expected quoted-ref P-001 block, got ${quotedMain.status}`);
+
+    const globalOption = runBashGate('git -C repo push --force origin main');
+    assert(globalOption.status === 2, `Expected git-global-option P-001 block, got ${globalOption.status}`);
+
+    const plusRefspec = runBashGate('git push origin +HEAD:main');
+    assert(plusRefspec.status === 2, `Expected leading-plus P-001 block, got ${plusRefspec.status}`);
+
+    const implicitForce = runBashGate('git push -f');
+    assert(implicitForce.status === 2, `Expected implicit-target P-001 block, got ${implicitForce.status}`);
+
+    const noVerify = runBashGate('git commit --no-verify -m test');
+    assert(noVerify.status === 2, `Expected P-004 block, got ${noVerify.status}`);
+    assert(noVerify.stderr.includes('P-004'), `Expected P-004 reason, got: ${noVerify.stderr}`);
+
+    const normalPush = runBashGate('git push origin feat/test');
+    assert(normalPush.status === 0, `Expected normal reversible push to remain allowed, got ${normalPush.status}`);
+  });
+
+  test('external-action-gate enforces hard invariants through common command wrappers', () => {
+    for (const command of [
+      'env git push --force origin main',
+      'cmd /c "git push --force origin main"',
+      "bash -c 'git push --force origin main'",
+      '"C:\\Program Files\\Git\\bin\\git.exe" push --force origin main',
+      'C:\\Git\\bin\\git.exe push --force origin main',
+      'cmd /c call git push --force origin main',
+      'bash -c "exec git push --force origin main"',
+      'git push --force origin HEAD',
+      'git push -fu origin main',
+      'command git commit --no-verify -m test',
+      'git commit -n -m test',
+      'powershell -Command "git commit --no-verify -m test"',
+    ]) {
+      const result = runBashGate(command);
+      assert(result.status === 2, `Expected wrapped hard-invariant block for ${command}, got ${result.status}: ${result.stderr}`);
+    }
+  });
+
+  test('canonical Claude and Codex Bash events enforce the same hard invariant', () => {
+    const claude = runBashGate('git commit --no-verify -m test');
+    const codex = runCodexHook('external-action-gate', 'Bash', {
+      command: 'git commit --no-verify -m test',
+    });
+    assert(claude.status === 2, `Expected Claude boundary to block, got ${claude.status}`);
+    assert(codex.status === 2, `Expected Codex boundary to block, got ${codex.status}: ${codex.stderr}`);
+  });
+
+  test('Codex apply_patch projection checks every target and blocks protected files', () => {
+    const patchCommand = [
+      '*** Begin Patch',
+      '*** Add File: src/safe.js',
+      '+safe',
+      '*** Update File: .claude/harness.json',
+      '@@',
+      '-old',
+      '+new',
+      '*** End Patch',
+    ].join('\n');
+    const result = runCodexHook('protect-files', 'apply_patch', { command: patchCommand });
+    assert(result.status === 2, `Expected protected apply_patch target to block, got ${result.status}: ${result.stderr}`);
+    assert(
+      result.stderr.includes('.claude/harness.json'),
+      `Expected protected target in block reason, got: ${result.stderr}`
+    );
+  });
+
+  test('Codex apply_patch projection allows a repo-local unprotected target', () => {
+    const patchCommand = [
+      '*** Begin Patch',
+      '*** Add File: src/safe.js',
+      '+safe',
+      '*** End Patch',
+    ].join('\n');
+    const result = runCodexHook('protect-files', 'apply_patch', { command: patchCommand });
+    assert(result.status === 0, `Expected safe apply_patch target to pass, got ${result.status}: ${result.stderr}`);
+  });
 
   test('external-action-gate blocks redirect append to .env', () => {
     const result = runBashGate('echo X >> .env');

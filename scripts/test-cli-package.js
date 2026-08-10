@@ -114,14 +114,28 @@ function captureIo() {
 }
 
 const manifest = require('../package.json');
+assert.equal(manifest.private, true, 'root package must not claim an unowned public npm namespace');
 assert.deepEqual(manifest.bin, { citadel: 'bin/citadel.js' });
 assert(manifest.files.includes('bin/'));
-assert(manifest.files.includes('core/'));
+assert(manifest.files.includes('core/cli/'));
 assert(manifest.files.includes('.planning/_templates/'));
 assert(!manifest.files.includes('.planning/'), 'operational planning state must not be published wholesale');
-for (const ignoreFile of ['docs/.npmignore', 'skills/.npmignore', 'packages/.npmignore']) {
-  assert(fs.existsSync(path.join(ROOT, ignoreFile)), `package profile missing ${ignoreFile}`);
+for (const forbidden of ['core/', 'dashboard/', 'mcp-servers/', 'packages/', 'packs/', 'scripts/', 'workflows/']) {
+  assert(!manifest.files.includes(forbidden), `package must not publish ${forbidden} wholesale`);
 }
+assert(!manifest.files.includes('commands/'), 'package allowlist must not contain the removed commands/ surface');
+for (const entry of manifest.files) {
+  if (entry.startsWith('!')) continue;
+  assert(fs.existsSync(path.join(ROOT, entry)), `package allowlist entry does not exist: ${entry}`);
+}
+assert(Object.keys(manifest.scripts).length >= 180, 'source package must preserve maintainer command surface');
+for (const required of ['test', 'release:dry-run', 'daemon:local', 'control-plane:stdio', 'benchmark:validate']) {
+  assert(manifest.scripts[required], `source package lost maintainer command ${required}`);
+}
+assert(!manifest.maintainerScripts, 'source maintainer commands must remain executable npm scripts');
+const contractsManifest = require('../packages/contracts/package.json');
+assert.equal(contractsManifest.private, true, 'nested contracts package must not claim an unowned public namespace');
+assert(!contractsManifest.publishConfig, 'nested contracts package must not retain public publish configuration');
 
 const markerFreeFs = { existsSync: () => false };
 assert.deepEqual(cli.detectRuntime(['--runtime', 'claude']), { runtime: 'claude', source: 'argument' });
@@ -136,28 +150,13 @@ assert.deepEqual(cli.detectRuntime(['--project-root', markerRoot], { env: {}, pr
 
 const help = invoke(['--help']);
 assert.equal(help.status, 0, help.stderr);
-for (const command of [
-  'install', 'doctor', 'update', 'rollback', 'uninstall', 'pack', 'journey',
-  'receipt', 'fork', 'adopt', 'config', 'governance',
-  'control-plane', 'trial',
-  'memory', 'operation',
-]) {
+for (const command of ['install', 'doctor', 'update', 'rollback', 'uninstall']) {
   assert(help.stdout.includes(command), `root help missing ${command}`);
 }
-
-const packList = invoke(['pack', 'list', '--json']);
-assert.equal(packList.status, 0, packList.stderr);
-assert.equal(JSON.parse(packList.stdout).packs.length, 3);
-assert.equal(invoke(['receipt', '--help']).status, 0);
-assert.equal(invoke(['journey', '--help']).status, 0);
-assert.equal(invoke(['fork', '--help']).status, 0);
-assert.equal(invoke(['adopt', '--help']).status, 0);
-assert.equal(invoke(['config', '--help']).status, 0);
-assert.equal(invoke(['governance', '--help']).status, 0);
-assert.equal(invoke(['control-plane', '--help']).status, 0);
-assert.equal(invoke(['trial', '--help']).status, 0);
-assert.equal(invoke(['memory', '--help']).status, 0);
-assert.equal(invoke(['operation', '--help']).status, 0);
+for (const command of ['pack', 'journey', 'receipt', 'fork', 'adopt', 'config', 'governance', 'control-plane', 'trial', 'memory', 'operation']) {
+  assert(new RegExp(`\\n  ${command}\\s`).test(help.stdout), `source help lost maintainer command ${command}`);
+  assert.equal(invoke([command, '--help']).status, 0, `source command help failed for ${command}`);
+}
 
 const installRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-install & literal-'));
 const install = invoke(['install', '--runtime', 'codex', '--project-root', installRoot, '--plugin-only', '--dry-run', '--json']);
@@ -200,8 +199,8 @@ const doctor = cli.doctorReport(['--runtime', 'codex'], { env: {}, probe: () => 
 assert(doctor.checks.some((check) => check.name === 'runtime-selection' && check.pass && check.runtime === 'codex'));
 assert(doctor.checks.some((check) => check.name === 'runtime-command' && !check.pass));
 assert.equal(doctor.pass, false);
-assert.equal(cli.main(['pack', 'list', '--json'], { io: doctorCapture.io, cwd: ROOT }), cli.EXIT.OK);
-assert.equal(JSON.parse(doctorCapture.output.stdout).packs.length, 3);
+assert.equal(cli.main(['pack', '--help'], { io: doctorCapture.io, cwd: ROOT }), cli.EXIT.OK);
+assert.match(doctorCapture.output.stdout, /Usage: citadel pack/);
 
 const packRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-npm-pack-'));
 const npmCli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
@@ -220,17 +219,7 @@ const entries = tarEntries(zlib.gunzipSync(fs.readFileSync(archive)));
 const names = new Set(entries.map((entry) => entry.name));
 for (const required of [
   'package/bin/citadel.js', 'package/core/cli/package-cli.js', 'package/scripts/install.js',
-  'package/core/forks/index.js', 'package/scripts/operation-fork.js',
   'package/core/adoption/index.js', 'package/scripts/adopt.js',
-  'package/core/config/index.js', 'package/scripts/citadel-config.js',
-  'package/core/governance/index.js', 'package/scripts/governance-gate.js',
-  'package/core/control-plane/index.js', 'package/scripts/control-plane-stdio.js',
-  'package/core/memory/repository-store.js', 'package/scripts/repository-memory.js',
-  'package/core/product-proof/index.js', 'package/scripts/product-proof-trial.js',
-  'package/core/operation-controller/index.js', 'package/scripts/operation.js',
-  'package/scripts/operation-runtime-adapter.js',
-  'package/examples/operation-control/request.json',
-  'package/schemas/harness-config-v2.schema.json',
   'package/skills/unharness/SKILL.md',
   'package/skills/do/SKILL.md', 'package/.planning/_templates/campaign.md',
 ]) assert(names.has(required), `packed archive missing ${required}`);
@@ -238,6 +227,11 @@ for (const forbidden of [
   'package/.github/workflows/release.yml',
   'package/.planning/campaigns/citadel-product-proof.md',
   'package/.planning/research/twelve-month-unlocks/product-growth-audit.md',
+  'package/mcp-servers/codebase-memory/index.js',
+  'package/packages/contracts/index.js',
+  'package/packs/code-review/pack.json',
+  'package/scripts/control-plane-stdio.js',
+  'package/workflows/verify-change.yml',
 ]) assert(!names.has(forbidden), `packed archive leaked ${forbidden}`);
 for (const entry of entries) {
   const packedPath = entry.name.replace(/^package\//, '');
@@ -248,7 +242,15 @@ for (const entry of entries) {
   assert(!packedPath.startsWith('packages/runtime-claude-code/'), `packed archive leaked private Claude runtime workspace ${packedPath}`);
   assert(!packedPath.endsWith('.npmignore'), `packed archive leaked ignore control ${packedPath}`);
 }
-for (const requiredTest of [
+for (const sourceOnlyProofProgram of [
+  'experiment-contracts.js',
+  'experiment-deploy-steward.js',
+  'experiment-fleet-ablation.js',
+  'experiment-judge-eval.js',
+  'experiment-operation-recovery.js',
+  'experiment-package-bloat.js',
+  'experiment-safety-gates.js',
+  'live-github-steward-ab-proof.js',
   'test-experiment-contracts.js',
   'test-experiment-operation-recovery.js',
   'test-experiment-safety-gates.js',
@@ -257,7 +259,8 @@ for (const requiredTest of [
   'test-experiment-deploy-steward.js',
   'test-experiment-package-bloat.js',
 ]) {
-  assert(names.has(`package/scripts/${requiredTest}`), `packed archive lost experiment regression test ${requiredTest}`);
+  assert(fs.existsSync(path.join(ROOT, 'scripts', sourceOnlyProofProgram)), `source checkout lost proof program ${sourceOnlyProofProgram}`);
+  assert(!names.has(`package/scripts/${sourceOnlyProofProgram}`), `private npm pack leaked source-only proof program ${sourceOnlyProofProgram}`);
 }
 const binEntry = entries.find((entry) => entry.name === 'package/bin/citadel.js');
 assert(binEntry.size > 0, 'npm tarball CLI entrypoint must contain executable code');

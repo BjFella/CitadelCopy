@@ -263,7 +263,7 @@ function restoreRepositoryMemory() {
     }
     if (Array.isArray(result.conflicts) && result.conflicts.length > 0) {
       process.stdout.write(
-        `[citadel] cross-clone memory left ${result.conflicts.length} divergent local file(s) unchanged; run citadel memory restore to inspect\n`
+        `[citadel] cross-clone memory left ${result.conflicts.length} divergent local file(s) unchanged; run node .citadel/scripts/repository-memory.js restore --project-root . to inspect\n`
       );
     }
   } catch { /* optional, best-effort, and never blocks session start */ }

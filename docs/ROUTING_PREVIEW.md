@@ -1,115 +1,112 @@
 # Routing Preview
 
-Citadel's `/do` router should choose the lightest workflow that can safely handle
-the request. A routing preview is the explanation layer before heavier work
-starts: it compares likely routes, shows why one route wins, and names the
-approval or verification boundary.
+`scripts/route-preview.js` is a static preflight for Citadel's `/do` entry
+point. It can resolve a small exact-command contract and show generated
+built-in skill candidates. It does not run the full `/do` router.
 
-Use this guide when a task could plausibly route to more than one level, such as
-a single skill, Marshal, Archon, or Fleet.
-
-Run it locally with:
+Run it from an extracted Citadel release:
 
 ```bash
 node scripts/route-preview.js -- "audit the auth module and fix the highest-risk issue"
 ```
 
-## Preview Contract
+## What the preview does
 
-A useful preview answers:
+The preview shares two deterministic inputs with `/do`:
 
-- what the user asked for
-- which route Citadel would choose
-- which alternatives were considered
-- why the selected route is proportional
-- what state or files the route may touch
-- whether the route can run now
-- which verification command or report should prove the result
+- fully anchored exact-command definitions from `core/skills/routing.js`; and
+- the generated built-in skill catalog in `core/skills/routing-table.json`.
 
-The preview should not start broad automation by itself. It should either choose
-a safe direct route or stop at an approval boundary.
+It reports the normalized request, exact resolution or candidate evidence,
+alternatives, a boundary, and a suggested verification profile. Keyword
+evidence never becomes execution authority.
 
-## Route Comparison
+The preview does **not**:
 
-| Route | Best for | Signals | Avoid when |
-|---|---|---|---|
-| Direct edit | tiny, obvious changes | one file, typo, rename, formatting | behavior or architecture is uncertain |
-| Skill | known domain workflow | review, tests, docs, refactor, setup, research | multiple domains or unclear ownership |
-| Marshal | multi-step single-session work | several files, one owner area, needs sequencing | requires persistence across sessions |
-| Archon | campaign work | phases, durable state, acceptance criteria, recovery | work is clearly independent and parallel |
-| Fleet | independent parallel streams | separate scopes, low file overlap, multiple agents useful | one file, one subsystem, unclear merge path |
+- inspect active campaign or Fleet state (runtime Tier 1);
+- discover custom project skills;
+- run the runtime LLM semantic classifier (Tier 3); or
+- invoke a command, skill, agent, or orchestrator.
 
-## Suggested Output Shape
+This is intentionally narrower than the live `/do` protocol.
 
-```text
-Routing preview
-Input: /do audit the auth module and fix the highest-risk issue
+## Decision contract
 
-Selected: /marshal
-Why: multi-step work in one domain; needs review, likely edit, and verification,
-but does not require a persistent campaign yet.
+An exact command can be final. Its normalized text must equal the entire
+request. `status page feature`, `continue implementing auth`, and `build a
+caching layer` are therefore semantic requests, not `status`, `continue`, or
+`build` commands.
 
-Alternatives:
-- /review: useful first pass, but does not cover the requested fix.
-- /archon: too heavy unless the audit finds cross-session implementation work.
-- /fleet: not appropriate because the scope is one module.
+The exact `test`, `build`, and `typecheck` requests have an additional target
+capability check. They resolve to `npm run <name>` only when the selected target
+project has a non-empty `package.json#scripts.<name>` entry. Without that
+evidence they remain non-final and non-executable.
 
-Boundary: can run after worktree review.
-Verify: npm run test, or the project's selected auth/test profile.
+Every non-final result has this safety shape:
+
+```json
+{
+  "final": false,
+  "selected": null,
+  "suggestedRoute": "/review",
+  "command": null,
+  "canRunNow": false,
+  "boundary": "semantic-classification-required"
+}
 ```
 
-The machine-readable version is:
+`suggestedRoute` is evidence for the runtime classifier, not a selected route.
+When parallel keywords match, the canonical built-in candidate is
+`/fleet --quick`.
+
+Use `--project-root` to make target capability and worktree checks explicit:
 
 ```bash
-node scripts/route-preview.js --json -- "review src/auth.ts"
+node scripts/route-preview.js --project-root /path/to/project --json -- "test"
 ```
 
-## Proportionality Checks
+## Explicit override
 
-Before launching Archon or Fleet, verify:
+An operator who already knows the destination can supply a validated override:
 
-- the task has more than one phase or independent scope
-- the expected changed files are not concentrated in one small area
-- the merge or review path is clear
-- the user has not asked for a quick read-only answer
-- the task has enough detail to support campaign or parallel decomposition
+```bash
+node scripts/route-preview.js --project-root /path/to/project \
+  --route /test-gen -- "generate tests for the changed files"
+```
 
-If those checks fail, choose a smaller route and state why.
+Only an installed built-in route is accepted. Aliases are canonicalized, so a
+Fleet override becomes `/fleet --quick`. An override selects a route, but it
+does not bypass product-bundle activation, dirty-worktree review, campaign or
+parallel approval, or the selected workflow's verification contract. An
+unknown override exits non-zero.
 
-## Side-by-Side Review Questions
+## Reading the result
 
-Ask these before accepting the selected route:
+For a natural-language request, expect a non-executable suggestion:
 
-- Would a single existing skill produce the same value with less state?
-- Is Marshal enough to sequence this in one session?
-- Does Archon add useful persistence, or just ceremony?
-- Are Fleet scopes genuinely independent?
-- What verification would make the route choice look correct afterward?
+```text
+Routing Preview
+Input: review src/auth.ts
+Suggested route: /review
+Command: (none; preview is non-executable)
+Boundary: semantic-classification-required
+```
 
-## Good Failure Modes
+The live `/do` agent must then inspect runtime state and project skills,
+semantically classify the request, enforce activation, and announce its final
+route before it runs work.
 
-A routing preview should be willing to stop.
+For an exact project command, check both `final` and `capability.verified`.
+Never execute a non-final result or infer a command from `suggestedRoute`.
 
-Good stops:
+## Public demo boundary
 
-- "No active campaign or fleet session found. Nothing to continue."
-- "Single-file scope does not warrant Fleet."
-- "This needs human approval before running a destructive command."
-- "The current worktree is dirty; inspect changes before routing new work."
+The hosted page is a candidate visualization generated from the same exact
+definitions and built-in catalog. Because a browser page has no target-project
+context, `test`, `build`, and `typecheck` remain non-final there. The page also
+does not perform active-state, custom-skill, semantic, activation, or execution
+steps.
 
-Bad stops:
-
-- vague "routing failed" messages
-- escalating to Fleet because the request sounds important
-- hiding approval or verification requirements
-- using generated prose without naming the selected command
-
-## Where This Shows Up
-
-- `/do next` and `node scripts/operator-console.js` show the next action,
-  boundary, risk, and verification profile.
-- The public router demo visualizes tier selection.
-- `node scripts/route-preview.js` provides a local preflight for route choice.
-- PR bodies should describe route choice when a branch adds or changes an
-  operator workflow.
-- Future dry-run routing features should preserve the same preview contract.
+The release architecture and lifecycle boundaries are summarized in
+[Architecture](ARCHITECTURE.md). Release acquisition and integrity verification
+are documented in [Releases](RELEASES.md).

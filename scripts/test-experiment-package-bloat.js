@@ -16,6 +16,7 @@ const {
   inventoryForExclusions,
   matchesExclusion,
   normalizeHistory,
+  validateHistoricalResult,
   validatePackageManifest,
   validatePackagingProfile,
   validateResult,
@@ -96,12 +97,18 @@ test('manifest validation rejects unapproved or reordered package negations', ()
   assert.throws(() => validatePackageManifest(manifest([...EXCLUSIONS.map((entry) => entry.pattern)].reverse())), /only approved ordered/);
 });
 
-test('final scoped ignore profile preserves the frozen package source binding', () => {
+test('frozen npm profile is historical under the current GitHub Release boundary', () => {
   const root = path.resolve(__dirname, '..');
-  const profile = validatePackagingProfile(root, JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')), { requireAll: true });
-  assert.equal(profile.mechanism, 'scoped-npmignore');
-  assert.equal(profile.signed_package_source_preserved, true);
-  assert.equal(profile.ignore_files.length, 3);
+  const currentManifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(currentManifest.private, true);
+  assert(!currentManifest.files.includes('docs/'));
+  assert.throws(() => validatePackagingProfile(root, currentManifest, { requireAll: true }), /runtime allowlist must retain docs\//);
+  for (const relative of ['docs/.npmignore', 'skills/.npmignore', 'packages/.npmignore']) {
+    assert(!fs.existsSync(path.join(root, relative)), `current package policy retained obsolete ${relative}`);
+  }
+  const recorded = validateHistoricalResult(JSON.parse(fs.readFileSync(path.join(root, '.planning', 'research', 'citadel-proof-experiments', 'package-bloat-results.json'), 'utf8')));
+  assert.equal(recorded.final.source_head, '9bebf1a0bb3ae4136a6f502dc8169c3ae28561e5');
+  assert.equal(recorded.final.runtime.packed_bytes, 9123375);
 });
 
 test('source-only inventory is content-hashed and leaves application assets out', () => {

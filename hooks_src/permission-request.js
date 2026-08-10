@@ -3,9 +3,9 @@
 /**
  * permission-request.js — PermissionRequest hook
  *
- * Fires when the permission dialog appears. Auto-approves known-safe
- * Citadel operations (telemetry writes, campaign state updates, planning
- * directory writes) to avoid interrupting autonomous work for routine ops.
+ * Fires when the permission dialog appears. Auto-approves only non-executable
+ * planning-state writes; shell commands and executable/config projections
+ * always defer to the runtime's native permission flow.
  *
  * Design:
  *   - Allowlist-only: only auto-approves patterns explicitly listed as safe
@@ -13,11 +13,7 @@
  *   - Telemetry: all permission requests logged regardless of outcome
  *
  * Known-safe patterns (auto-approve):
- *   - Bash: node .citadel/scripts/*.js (telemetry delegates)
- *   - Bash: repo-local verification commands
- *   - Write/Edit: .planning/**  (campaign and fleet state)
- *   - Write/Edit: .citadel/**   (harness scaffolding)
- *   - Write/Edit: .codex/**, .agents/**, hooks/** (generated harness artifacts)
+ *   - Write/Edit: non-executable text/state files under .planning/**
  *
  * Exit codes:
  *   0 = always (decision communicated via JSON stdout, not exit code)
@@ -53,35 +49,62 @@ function logPermissionEvent(eventName, tool, target, decision) {
   } catch { /* telemetry must never break the hook */ }
 }
 
-// Patterns that are always safe to auto-approve
-const SAFE_BASH_PATTERNS = [
-  /^node\s+\.citadel\/scripts\//,
-  /^node\s+"[^"]*\.citadel[/\\]scripts[/\\]/,
-  /^npm\s+run\s+(test|lint|typecheck|docs:check|design:gate|codex:verify|verify:visual)(?:\s|$)/,
-  /^node\s+scripts\/(?:test[-\w]*|verify-hooks|integration-test|skill-lint)\.js(?:\s|$)/,
-  /^node\s+hooks_src\/smoke-test\.js(?:\s|$)/,
-  /^git\s+(status|diff)(?:\s|$)/,
-];
+const SAFE_STATE_EXTENSIONS = new Set([
+  '.csv', '.json', '.jsonl', '.log', '.md', '.toml', '.txt', '.yaml', '.yml',
+]);
+
+/**
+ * Resolve symlinks in the longest existing ancestor, then append any missing
+ * tail. Permission requests commonly target files that do not exist yet, so
+ * plain realpathSync() is insufficient.
+ */
+function canonicalizePath(filePath) {
+  let resolved = path.resolve(PROJECT_ROOT, filePath);
+  const missing = [];
+
+  while (!fs.existsSync(resolved)) {
+    const parent = path.dirname(resolved);
+    if (parent === resolved) break;
+    missing.unshift(path.basename(resolved));
+    resolved = parent;
+  }
+
+  const realpath = fs.realpathSync.native || fs.realpathSync;
+  const canonicalBase = realpath(resolved);
+  return path.resolve(canonicalBase, ...missing);
+}
+
+function isContainedPath(candidate, root) {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (
+    relative !== '..'
+    && !relative.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(relative)
+  );
+}
+
+const CANONICAL_PROJECT_ROOT = canonicalizePath(PROJECT_ROOT);
 
 const SAFE_FILE_PREFIXES = [
-  path.join(PROJECT_ROOT, '.planning').replace(/\\/g, '/'),
-  path.join(PROJECT_ROOT, '.citadel').replace(/\\/g, '/'),
-  path.join(PROJECT_ROOT, '.codex').replace(/\\/g, '/'),
-  path.join(PROJECT_ROOT, '.Codex').replace(/\\/g, '/'),
-  path.join(PROJECT_ROOT, '.agents').replace(/\\/g, '/'),
-  path.join(PROJECT_ROOT, 'hooks').replace(/\\/g, '/'),
-];
+  '.planning',
+]
+  .map((relativePath) => canonicalizePath(relativePath))
+  .filter((prefix) => isContainedPath(prefix, CANONICAL_PROJECT_ROOT));
 
 function isSafeBashCommand(command) {
-  if (!command) return false;
-  const normalized = String(command).replace(/\\/g, '/');
-  return SAFE_BASH_PATTERNS.some(p => p.test(normalized));
+  return false;
 }
 
 function isSafeFilePath(filePath) {
-  if (!filePath) return false;
-  const normalized = String(filePath).replace(/\\/g, '/');
-  return SAFE_FILE_PREFIXES.some(prefix => normalized === prefix || normalized.startsWith(prefix + '/'));
+  if (typeof filePath !== 'string' || !filePath.trim()) return false;
+  try {
+    const canonical = canonicalizePath(filePath);
+    const extension = path.extname(canonical).toLowerCase();
+    return SAFE_STATE_EXTENSIONS.has(extension)
+      && SAFE_FILE_PREFIXES.some((prefix) => isContainedPath(canonical, prefix));
+  } catch {
+    return false;
+  }
 }
 
 function main() {

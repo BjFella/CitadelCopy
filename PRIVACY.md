@@ -13,25 +13,6 @@ any data.
   additional services, accounts, or network calls.
 - The interactive demo site is static and sets no cookies.
 
-## Optional cross-clone memory
-
-On Node.js 22.13+, `citadel memory enable` creates a local user-level SQLite
-database so durable lessons can survive deletion of a clone. It is disabled by
-default and never makes a network request.
-
-- Only completed campaigns, postmortems, research, discoveries, backlog
-  Markdown, and `.citadel/project.md` are eligible.
-- Active campaigns, worktree and fleet state, telemetry, consent, runtime
-  configuration, credentials, and hook settings are excluded.
-- The database stores a SHA-256 repository key, relative paths, content, content
-  digests, timestamps, and preserved versions. It does not store the raw remote
-  URL or clone path as identity metadata. Because eligible documents are stored
-  verbatim, their text may itself contain paths, URLs, or other private context.
-- `citadel memory disable` stops sync and restore without deleting history.
-  `citadel memory purge --confirm PURGE` deletes the current repository's rows.
-
-See [Cross-clone repository memory](docs/REPOSITORY_MEMORY.md).
-
 ## Real User Proof v2
 
 The v2 trial store is local under `.planning/product-proof/v2/` and is ignored

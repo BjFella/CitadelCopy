@@ -323,6 +323,7 @@ function createPluginMarketplace(options = {}) {
       pass: pluginPath.startsWith('./') && !pluginPath.includes('..'),
       detail: pluginPath,
     },
+    ...pluginAssetChecks(pluginRoot, pluginManifest),
   ];
 
   const result = {
@@ -348,6 +349,37 @@ function createPluginMarketplace(options = {}) {
     writeJson(marketplacePath, marketplace);
   }
   return result;
+}
+
+function pluginAssetChecks(pluginRoot, pluginManifest) {
+  const metadata = pluginManifest?.interface || {};
+  const references = [...new Set([
+    metadata.composerIcon,
+    metadata.logo,
+    ...(metadata.screenshots || []),
+  ].filter(Boolean))];
+  const resolvedRoot = path.resolve(pluginRoot);
+  const checks = [{
+    id: 'plugin-assets-declared',
+    pass: references.length > 0,
+    detail: references.length > 0 ? references.join(', ') : 'no interface assets declared',
+  }];
+
+  for (const reference of references) {
+    const resolved = path.resolve(resolvedRoot, reference);
+    const relative = path.relative(resolvedRoot, resolved);
+    const contained = reference.startsWith('./')
+      && relative !== ''
+      && !relative.startsWith(`..${path.sep}`)
+      && !path.isAbsolute(relative);
+    checks.push({
+      id: `plugin-asset:${reference}`,
+      pass: contained && fs.existsSync(resolved),
+      detail: contained ? resolved : `outside plugin root: ${reference}`,
+    });
+  }
+
+  return checks;
 }
 
 function buildGitHubReviewFetchCommands(options = {}) {
@@ -836,6 +868,9 @@ function checkCodexReadiness(options = {}) {
     add('plugin-skills-path', skillsPath && fs.existsSync(skillsPath), skillsPath || 'missing', 'Skills are loaded from a real plugin path.');
     add('plugin-hooks-path', hooksPath && fs.existsSync(hooksPath), hooksPath || 'missing', 'Lifecycle safety hooks are bundled with the plugin.');
     add('plugin-mcp-path', mcpPath && fs.existsSync(mcpPath), mcpPath || 'missing', 'Codex can load Citadel state through MCP.');
+    for (const check of pluginAssetChecks(projectRoot, manifest)) {
+      add(check.id, check.pass, check.detail, 'Every declared plugin interface asset resolves inside the installed plugin root.');
+    }
   }
 
   const configPath = path.join(projectRoot, '.codex', 'config.toml');

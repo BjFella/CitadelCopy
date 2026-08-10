@@ -224,7 +224,7 @@ function buildPostApprovalRunbook(status, ordered) {
   const steps = [
     {
       step: 'Reconfirm stack state',
-      gate: 'npm run stack:plan reports approval-needed with zero blocked items.',
+      gate: 'node scripts/stack-plan.js reports approval-needed with zero blocked items.',
       action: 'Read .planning/stack-readiness/latest.md and .planning/approval-capsules/latest.md.',
     },
   ];
@@ -239,7 +239,7 @@ function buildPostApprovalRunbook(status, ordered) {
   steps.push({
     step: 'Verify landed main',
     gate: 'Main contains the final stack head and the selected verification command passes.',
-    action: 'Run npm run test, then run npm run stack:plan to confirm no stale readiness remains.',
+    action: 'Run npm run test, then run node scripts/stack-plan.js to confirm no stale readiness remains.',
   });
   return steps;
 }
@@ -274,7 +274,7 @@ function buildStackApprovalCapsule(projectRoot, stack) {
       })),
     },
     verification: [
-      'Run `npm run stack:plan` and confirm the landing order matches the intended stack.',
+      'Run `node scripts/stack-plan.js` and confirm the landing order matches the intended stack.',
       'Confirm each listed PR readiness report is current and has no blocked gates.',
       'After approval, mark or merge PRs in the listed order only.',
     ],

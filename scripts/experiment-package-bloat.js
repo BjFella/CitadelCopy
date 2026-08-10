@@ -574,6 +574,13 @@ function validateResult(result, options = {}) {
   return result;
 }
 
+function validateHistoricalResult(result) {
+  const recorded = validateResult(result, { checkCurrent: false });
+  assert.equal(recorded.final.packaging_profile.mechanism, 'scoped-npmignore', 'historical package result lost its measured profile');
+  assert(recorded.final.source_head, 'historical package result is missing its measured source commit');
+  return recorded;
+}
+
 function parseOptions(argv) {
   const options = {};
   for (let index = 1; index < argv.length; index += 1) {
@@ -610,21 +617,23 @@ function runCli(argv = process.argv.slice(2)) {
     return result;
   }
   if (command === 'metric') {
-    const result = validateResult(readJson(RESULT_PATH));
+    const result = validateHistoricalResult(readJson(RESULT_PATH));
+    process.stderr.write(`Historical npm-pack metric from ${result.final.source_head}; not a current GitHub Release measurement.\n`);
     process.stdout.write(`${result.final.runtime.packed_bytes}\n`);
     return result.final.runtime.packed_bytes;
   }
   if (command === 'verify') {
-    const recorded = validateResult(readJson(RESULT_PATH));
-    const observed = measureProfile({ requireAll: true, skipEvidenceReplay: true });
-    for (const key of ['packed_bytes', 'unpacked_bytes', 'file_count', 'sha256', 'sha512_integrity', 'npm_shasum', 'file_manifest_sha256']) {
-      assert.equal(observed.runtime[key], recorded.final.runtime[key], `runtime ${key} differs from recorded result`);
-    }
-    assert.equal(observed.source_only.manifest_sha256, recorded.final.source_only.manifest_sha256, 'source-only manifest changed');
-    assert(guardrailsPass(observed, { allowDeferredEvidence: true }), 'verification rerun failed a runtime guardrail');
+    const recorded = validateHistoricalResult(readJson(RESULT_PATH));
     assert.equal(recorded.final.evidence_replay.status, 'passed', 'recorded final offline evidence replay did not pass');
-    process.stdout.write(`${JSON.stringify({ outcome: 'verified', runtime: observed.runtime, guardrails: observed.guardrails, result_sha256: recorded.result_sha256 }, null, 2)}\n`);
-    return observed;
+    process.stdout.write(`${JSON.stringify({
+      outcome: 'historical-record-verified',
+      measured_source_head: recorded.final.source_head,
+      current_tree_replayed: false,
+      runtime: recorded.final.runtime,
+      result_sha256: recorded.result_sha256,
+      boundary: 'The current stable acquisition is the separately gated GitHub Release artifact.',
+    }, null, 2)}\n`);
+    return recorded;
   }
   throw new Error('Usage: node scripts/experiment-package-bloat.js <measure --label ID --journal FILE|run --history FILE [--output FILE]|metric|verify>');
 }
@@ -659,6 +668,7 @@ module.exports = Object.freeze({
   stable,
   validatePackageManifest,
   validatePackagingProfile,
+  validateHistoricalResult,
   validateResult,
   verifyPackedFilePolicy,
 });

@@ -2,10 +2,16 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const { MANIFEST_NAME, sha256 } = require('./release-package');
+
+const MANIFEST_NAME = '.citadel-release.json';
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
 
 function arg(name, fallback = null) {
   const inline = process.argv.find((value) => value.startsWith(`${name}=`));

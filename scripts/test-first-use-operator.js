@@ -58,7 +58,7 @@ withTempProject((projectRoot) => {
   const output = renderConsole(consoleState);
 
   assert.equal(consoleState.status, 'idle');
-  assert.equal(consoleState.summary.command, 'npm run dashboard');
+  assert.equal(consoleState.summary.command, 'node scripts/dashboard.js');
   assert.equal(consoleState.summary.boundary, 'none');
   assert.equal(consoleState.summary.risk, 'low');
   assert.equal(consoleState.summary.pending.docSync, 0);
