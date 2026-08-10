@@ -36,12 +36,48 @@ const FULL_RUNTIME = Object.freeze({
 
 let failures = 0;
 
+const WATCHER_OBSERVE_TIMEOUT_MS = 5000;
+const WATCHER_OBSERVE_INTERVAL_MS = 10;
+
 function check(label, ok, detail) {
   if (ok) {
     console.log(`PASS ${label}`);
   } else {
     failures += 1;
     console.error(`FAIL ${label}${detail ? `: ${detail}` : ''}`);
+  }
+}
+
+async function waitForCondition(predicate, options = {}) {
+  const timeoutMs = options.timeoutMs || WATCHER_OBSERVE_TIMEOUT_MS;
+  const intervalMs = options.intervalMs || WATCHER_OBSERVE_INTERVAL_MS;
+  const startedAt = Date.now();
+  let checks = 0;
+
+  while (true) {
+    checks += 1;
+    let observed = false;
+    try {
+      observed = Boolean(predicate());
+    } catch (error) {
+      return {
+        ok: false,
+        detail: `condition threw after ${checks} checks: ${error.message}`,
+      };
+    }
+    if (observed) {
+      return { ok: true, elapsedMs: Date.now() - startedAt, checks };
+    }
+
+    const elapsedMs = Date.now() - startedAt;
+    if (elapsedMs >= timeoutMs) {
+      const state = typeof options.describe === 'function' ? options.describe() : '';
+      return {
+        ok: false,
+        detail: `state transition not observed within ${timeoutMs}ms after ${checks} checks${state ? ` (${state})` : ''}`,
+      };
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(intervalMs, timeoutMs - elapsedMs)));
   }
 }
 
@@ -95,16 +131,20 @@ async function main() {
   const fallbackRoot = makeFixture('watcher-fallback');
   write(fallbackRoot, '.planning/campaigns/active.md', 'before');
   let fallbackChanged = false;
+  const fallbackPollMs = 20;
+  const fallbackDebounceMs = 5;
   const stopFallback = startWatcher(fallbackRoot, () => { fallbackChanged = true; }, {
     watchImpl: () => { throw new Error('recursive watch unsupported'); },
-    pollMs: 20,
-    debounceMs: 5,
+    pollMs: fallbackPollMs,
+    debounceMs: fallbackDebounceMs,
   });
   await new Promise((resolve) => setTimeout(resolve, 25));
   write(fallbackRoot, '.planning/campaigns/active.md', 'after-content-is-different');
-  await new Promise((resolve) => setTimeout(resolve, 70));
+  const fallbackObserved = await waitForCondition(() => fallbackChanged, {
+    describe: () => `changed=${fallbackChanged}, poll=${fallbackPollMs}ms, debounce=${fallbackDebounceMs}ms`,
+  });
   stopFallback();
-  check('watcher: polling fallback observes nested file edits', fallbackChanged);
+  check('watcher: polling fallback observes nested file edits', fallbackObserved.ok, fallbackObserved.detail);
   cleanup(fallbackRoot);
 
   const errorRoot = makeFixture('watcher-error');
@@ -112,17 +152,23 @@ async function main() {
   const fakeWatcher = new EventEmitter();
   fakeWatcher.close = () => {};
   let errorFallbackChanged = false;
+  const errorPollMs = 20;
+  // Deliberately longer than the old fixed 70ms settle. The verifier must
+  // observe the transition rather than assume a host-independent delay.
+  const errorDebounceMs = 120;
   const stopErrorFallback = startWatcher(errorRoot, () => { errorFallbackChanged = true; }, {
     watchImpl: () => fakeWatcher,
-    pollMs: 20,
-    debounceMs: 5,
+    pollMs: errorPollMs,
+    debounceMs: errorDebounceMs,
   });
   fakeWatcher.emit('error', new Error('watcher failed'));
   await new Promise((resolve) => setTimeout(resolve, 25));
   write(errorRoot, '.planning/campaigns/active.md', 'after-content-is-different');
-  await new Promise((resolve) => setTimeout(resolve, 70));
+  const errorFallbackObserved = await waitForCondition(() => errorFallbackChanged, {
+    describe: () => `changed=${errorFallbackChanged}, poll=${errorPollMs}ms, debounce=${errorDebounceMs}ms`,
+  });
   stopErrorFallback();
-  check('watcher: runtime errors transition to nested polling', errorFallbackChanged);
+  check('watcher: runtime errors transition to nested polling', errorFallbackObserved.ok, errorFallbackObserved.detail);
   cleanup(errorRoot);
 
   // Pure policy coverage works even when the host cannot create symlinks.
