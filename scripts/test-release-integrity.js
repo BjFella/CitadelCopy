@@ -590,6 +590,8 @@ try {
   assert.deepEqual(releaseMetadata.interoperability, { remote_registry_verification: 'not-claimed' });
   const releaseCodexManifest = JSON.parse(fs.readFileSync(path.join(productRoot, '.codex-plugin', 'plugin.json'), 'utf8'));
   assert(!/\b49 skills\b|PR triage/i.test(JSON.stringify(releaseCodexManifest)), 'release Codex metadata overstates excluded surfaces');
+  assert.deepEqual(releaseCodexManifest.interface?.screenshots, ['./assets/terminal-demo.svg'],
+    'release Codex metadata must expose the shipped terminal demo screenshot');
 
   const publicMarkdown = [...productPaths].filter((relative) => (
     relative === 'README.md' || relative === 'INSTALL.md' || relative === 'CHANGELOG.md'
@@ -796,7 +798,12 @@ try {
   }
 
   const codexManifest = JSON.parse(fs.readFileSync(path.join(productRoot, '.codex-plugin', 'plugin.json'), 'utf8'));
-  for (const asset of [codexManifest.interface?.composerIcon, codexManifest.interface?.logo].filter(Boolean)) {
+  const interfaceAssets = [
+    codexManifest.interface?.composerIcon,
+    codexManifest.interface?.logo,
+    ...(codexManifest.interface?.screenshots || []),
+  ].filter(Boolean);
+  for (const asset of interfaceAssets) {
     const relative = asset.replace(/^\.\//, '');
     assert(fs.existsSync(path.join(productRoot, ...relative.split('/'))), `Codex plugin references omitted asset ${asset}`);
   }

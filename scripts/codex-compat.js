@@ -361,6 +361,9 @@ function generatePluginManifest() {
   const skillCount = countSkills();
   const pluginInCitadelRoot = path.resolve(PROJECT_ROOT) === CITADEL_ROOT;
   const rootIconPath = pluginInCitadelRoot ? './assets/icon.svg' : './.agents/assets/icon.svg';
+  const rootScreenshotPath = pluginInCitadelRoot
+    ? './assets/terminal-demo.svg'
+    : './.agents/assets/terminal-demo.svg';
 
   const manifest = {
     name: pkg.name || 'citadel',
@@ -381,6 +384,7 @@ function generatePluginManifest() {
       displayName: 'Citadel Harness',
       composerIcon: rootIconPath,
       logo: rootIconPath,
+      screenshots: [rootScreenshotPath],
       websiteURL: 'https://sethgammon.github.io/Citadel/',
       privacyPolicyURL: 'https://github.com/SethGammon/Citadel/blob/main/PRIVACY.md',
       termsOfServiceURL: 'https://github.com/SethGammon/Citadel/blob/main/LICENSE',
@@ -416,6 +420,7 @@ function generatePluginManifest() {
       ...manifest.interface,
       composerIcon: './assets/icon.svg',
       logo: './assets/icon.svg',
+      screenshots: ['./assets/terminal-demo.svg'],
     },
   };
   delete projectedManifest.hooks;
@@ -432,6 +437,10 @@ function syncPluginAssets() {
   copyFile(
     path.join(CITADEL_ROOT, 'assets', 'icon.svg'),
     path.join(PROJECT_ROOT, '.agents', 'assets', 'icon.svg')
+  );
+  copyFile(
+    path.join(CITADEL_ROOT, 'assets', 'terminal-demo.svg'),
+    path.join(PROJECT_ROOT, '.agents', 'assets', 'terminal-demo.svg')
   );
 }
 
