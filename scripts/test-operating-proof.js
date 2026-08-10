@@ -43,7 +43,23 @@ withTempProject((projectRoot) => {
   assert.equal(proof.summary.setup, 'partial');
   assert.equal(proof.summary.route, 'pass');
   assert.equal(proof.summary.verify, 'pass');
+  const route = proof.checks.find((check) => check.id === 'route');
+  assert.equal(route.preview.selected, null);
+  assert.equal(route.preview.command, null);
+  assert.equal(route.preview.suggestedRoute, '/review');
+  assert.equal(route.preview.canRunNow, false);
+  assert.equal(route.preview.boundary, 'semantic-classification-required');
+  assert.match(route.detail, /candidate; runtime semantic classification required/);
+  assert(route.evidence.includes('final=false'));
   assert(proof.checks.find((check) => check.id === 'setup').detail.includes('/do setup --express'));
+
+  const exactProof = buildProof(projectRoot, { routeRequest: 'run tests' });
+  const exactRoute = exactProof.checks.find((check) => check.id === 'route');
+  assert.equal(exactRoute.status, 'pass');
+  assert.equal(exactRoute.preview.final, true);
+  assert.equal(exactRoute.preview.selected, 'direct-command');
+  assert.equal(exactRoute.preview.command, 'npm run test');
+  assert(exactRoute.evidence.includes('final=true'));
 
   const reportPath = writeProof(projectRoot, proof);
   assert.equal(reportPath, '.planning/operating-proof/latest.md');
