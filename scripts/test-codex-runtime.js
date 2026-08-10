@@ -17,19 +17,21 @@ assert.equal(typeof codexRuntime.projectCodexSkills, 'function', 'Codex runtime 
 assert.equal(typeof codexRuntime.projectCodexAgents, 'function', 'Codex runtime should expose agent projection');
 
 const adapterPath = path.join(__dirname, '..', 'hooks_src', 'codex-adapter.js');
+const projectRoot = path.join(__dirname, '..');
 const payload = {
   hook_event_name: 'PreToolUse',
+  cwd: projectRoot,
   tool_name: 'Read',
   tool_input: { file_path: '.env' },
 };
 const result = spawnSync(process.execPath, [adapterPath, 'protect-files'], {
-  cwd: path.join(__dirname, '..'),
+  cwd: projectRoot,
   input: JSON.stringify(payload),
   encoding: 'utf8',
 });
 
 assert.equal(result.status, 2, 'Codex adapter should propagate hook exit status');
-assert(result.stdout.includes('.env'), 'Codex adapter should surface underlying hook output');
+assert(result.stderr.includes('.env'), 'Codex adapter should surface the hook block reason on stderr');
 
 const tmpProject = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-codex-runtime-'));
 try {
