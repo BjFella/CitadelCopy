@@ -130,6 +130,7 @@ const UNLOCK_TESTS = Object.freeze([
   ['GitHub verification Action', 'test-github-action.js'],
   ['External milestone gates', 'test-milestone-readiness.js'],
   ['Activation Discussion collector', 'test-activation-cohort-collect.js'],
+  ['Context compress MCP confinement', 'test-context-compress.js'],
   ['Typed state MCP', 'test-citadel-state-mcp.js'],
   ['Mission Control interactions', 'test-dashboard-interactions.js'],
   ['Team platform', 'test-team-platform.js'],
