@@ -291,6 +291,23 @@ try {
     'scripts/check-sentient-grant-form.js', 'scripts/github-traffic-snapshot.js',
     'scripts/render-sentient-grant-packet.py', 'scripts/capture-application-media.js',
   ]) assert(!productPaths.has(forbidden), `release leaked lab or maintainer-only content: ${forbidden}`);
+  for (const sourceOnlyProofPath of [
+    'docs/CASE_STUDY_DEPLOY_STEWARD.md',
+    'docs/EXPERIMENTS.md',
+    'docs/EXTERNAL_OWNER_TRIAL.md',
+    'benchmarks/citadel-proof-experiments/experiment-manifest.json',
+    'scripts/experiment-contracts.js',
+    'scripts/experiment-deploy-steward.js',
+    'scripts/experiment-fleet-ablation.js',
+    'scripts/experiment-judge-eval.js',
+    'scripts/experiment-operation-recovery.js',
+    'scripts/experiment-package-bloat.js',
+    'scripts/experiment-safety-gates.js',
+    'scripts/live-github-steward-ab-proof.js',
+  ]) {
+    assert(fs.existsSync(path.join(ROOT, ...sourceOnlyProofPath.split('/'))), `source checkout lost proof path ${sourceOnlyProofPath}`);
+    assert(!productPaths.has(sourceOnlyProofPath), `release leaked source-only proof path ${sourceOnlyProofPath}`);
+  }
   assert(![...productPaths].some((relative) => relative.startsWith('.planning/rubrics/')), 'release leaked maintainer-only rubrics');
   assert.equal(verifyRelease(product.archivePath, { version: '1.3.0', ref: product.manifest.ref }).files, productPaths.size);
 
@@ -497,6 +514,12 @@ try {
     const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
     assert.doesNotMatch(content, /Delivery remains off|enable delivery\b/i, `${relative} promises unavailable Delivery activation`);
   }
+  const sourceReadme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+  const releaseReadme = fs.readFileSync(path.join(productRoot, 'README.md'), 'utf8');
+  assert.match(sourceReadme, /### Source-only proof program/, 'source README must retain the maintainer proof boundary');
+  assert.match(sourceReadme, /docs\/EXPERIMENTS\.md/, 'source README must link the detailed proof record');
+  assert.doesNotMatch(releaseReadme, /### Source-only proof program|npm run grant:verify|docs\/EXPERIMENTS\.md/, 'release README leaked source-only proof instructions');
+  assert.match(releaseReadme, /v1 experiment does not support a savings claim/i, 'release README lost the bounded public evidence summary');
   const releaseBundleIds = require(path.join(productRoot, 'core', 'config', 'contract.js')).BUNDLE_IDS;
   const releaseBundleCatalog = require(path.join(productRoot, 'core', 'config', 'bundle-catalog.js')).BUNDLE_CATALOG;
   assert.deepEqual(releaseBundleIds, ['core', 'persistence', 'parallel', 'operations', 'delivery']);

@@ -19,6 +19,45 @@ function invoke(args, cwd = ROOT) {
   });
 }
 
+function invokeInstalled(packageRoot, args, cwd) {
+  return spawnSync(process.execPath, [path.join(packageRoot, 'bin', 'citadel.js'), ...args], {
+    cwd, encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: 30000,
+  });
+}
+
+function installedRuntimeSmoke(packageRoot, scratchRoot) {
+  const installedManifest = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'));
+  const run = (args) => invokeInstalled(packageRoot, args, scratchRoot);
+  const help = run(['--help']);
+  assert.equal(help.status, 0, help.stderr);
+  assert(help.stdout.includes('Citadel'));
+
+  const version = run(['--version']);
+  assert.equal(version.status, 0, version.stderr);
+  assert.equal(version.stdout.trim(), installedManifest.version);
+
+  return {
+    surfaces: ['root-help', 'version'],
+    controlPlaneChecks: 0,
+    boundary: 'The private source npm pack is not the supported GitHub Release artifact.',
+  };
+}
+
+const installedPackageFlag = process.argv.indexOf('--installed-package-root');
+if (installedPackageFlag >= 0) {
+  try {
+    const packageRoot = path.resolve(process.argv[installedPackageFlag + 1] || '');
+    const scratchRoot = path.resolve(process.argv[installedPackageFlag + 2] || process.cwd());
+    const report = installedRuntimeSmoke(packageRoot, scratchRoot);
+    process.stdout.write(`${JSON.stringify({ status: 'passed', ...report })}\n`);
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`Installed CLI package smoke failed: ${error.stack || error.message}\n`);
+    process.exit(1);
+  }
+}
+
 function tarEntries(buffer) {
   const result = [];
   for (let offset = 0; offset + 512 <= buffer.length;) {
@@ -165,6 +204,35 @@ for (const forbidden of [
   'package/scripts/control-plane-stdio.js',
   'package/workflows/verify-change.yml',
 ]) assert(!names.has(forbidden), `packed archive leaked ${forbidden}`);
+for (const entry of entries) {
+  const packedPath = entry.name.replace(/^package\//, '');
+  assert(!packedPath.startsWith('docs/images/'), `packed archive leaked site screenshot ${packedPath}`);
+  assert(!/^skills\/[^/]+\/__benchmarks__\//.test(packedPath), `packed archive leaked skill benchmark ${packedPath}`);
+  assert(!packedPath.startsWith('packages/client/'), `packed archive leaked private client workspace ${packedPath}`);
+  assert(!packedPath.startsWith('packages/runtime-openai/'), `packed archive leaked private OpenAI runtime workspace ${packedPath}`);
+  assert(!packedPath.startsWith('packages/runtime-claude-code/'), `packed archive leaked private Claude runtime workspace ${packedPath}`);
+  assert(!packedPath.endsWith('.npmignore'), `packed archive leaked ignore control ${packedPath}`);
+}
+for (const sourceOnlyProofProgram of [
+  'experiment-contracts.js',
+  'experiment-deploy-steward.js',
+  'experiment-fleet-ablation.js',
+  'experiment-judge-eval.js',
+  'experiment-operation-recovery.js',
+  'experiment-package-bloat.js',
+  'experiment-safety-gates.js',
+  'live-github-steward-ab-proof.js',
+  'test-experiment-contracts.js',
+  'test-experiment-operation-recovery.js',
+  'test-experiment-safety-gates.js',
+  'test-experiment-judge-eval.js',
+  'test-experiment-fleet-ablation.js',
+  'test-experiment-deploy-steward.js',
+  'test-experiment-package-bloat.js',
+]) {
+  assert(fs.existsSync(path.join(ROOT, 'scripts', sourceOnlyProofProgram)), `source checkout lost proof program ${sourceOnlyProofProgram}`);
+  assert(!names.has(`package/scripts/${sourceOnlyProofProgram}`), `private npm pack leaked source-only proof program ${sourceOnlyProofProgram}`);
+}
 const binEntry = entries.find((entry) => entry.name === 'package/bin/citadel.js');
 assert(binEntry.size > 0, 'npm tarball CLI entrypoint must contain executable code');
 
@@ -181,11 +249,9 @@ const installedBin = path.join(installedRoot, 'node_modules', 'citadel', 'bin', 
 const shim = path.join(installedRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'citadel.cmd' : 'citadel');
 assert(fs.existsSync(shim), 'package install must create the citadel executable shim');
 if (process.platform !== 'win32') assert(fs.statSync(shim).mode & 0o111, 'installed citadel shim must be executable');
-const packedHelp = spawnSync(process.execPath, [installedBin, '--help'], {
-  cwd: packRoot, encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
-});
-assert.equal(packedHelp.status, 0, packedHelp.stderr);
-assert(packedHelp.stdout.includes('Citadel'));
+assert(fs.existsSync(installedBin), 'installed Citadel package root must contain the CLI entrypoint');
+const installedSmoke = installedRuntimeSmoke(path.dirname(path.dirname(installedBin)), packRoot);
+assert.deepEqual(installedSmoke.surfaces, ['root-help', 'version']);
 
 for (const directory of [markerRoot, installRoot, autoRoot, uninstallRoot, packRoot]) {
   fs.rmSync(directory, { recursive: true, force: true });

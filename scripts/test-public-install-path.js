@@ -6,9 +6,11 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { projectReleaseReadme } = require('./release-package');
 
 const ROOT = path.resolve(__dirname, '..');
 const README = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+const RELEASE_README = projectReleaseReadme(README);
 const INSTALL = fs.readFileSync(path.join(ROOT, 'INSTALL.md'), 'utf8');
 const CLI = fs.readFileSync(path.join(ROOT, 'docs', 'CLI.md'), 'utf8');
 const LIFECYCLE = fs.readFileSync(path.join(ROOT, 'docs', 'GOVERNED_LIFECYCLE.md'), 'utf8');
@@ -81,7 +83,7 @@ const releaseFiles = new Set([
   'assets/terminal-demo.svg',
 ]);
 const shippedDocs = [
-  ['README.md', README],
+  ['README.md', RELEASE_README],
   ['INSTALL.md', INSTALL],
   ['PRIVACY.md', PRIVACY],
   ['SECURITY.md', SECURITY],
@@ -90,6 +92,9 @@ const shippedDocs = [
   ['docs/ARCHITECTURE.md', ARCHITECTURE],
   ['docs/RELEASES.md', RELEASES],
 ];
+assert.match(README, /\[Evaluator start here\]\(docs\/grants\/EVALUATOR_START_HERE\.md\)/, 'source README must retain its maintainer proof entry point');
+assert.doesNotMatch(RELEASE_README, /### Source-only proof program|docs\/grants\/EVALUATOR_START_HERE\.md/, 'release README leaked source-only proof instructions');
+assert.match(RELEASE_README, /## Trust boundary/, 'release README projection lost the public trust boundary');
 for (const [name, document] of shippedDocs) {
   for (const match of document.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
     const target = match[1];

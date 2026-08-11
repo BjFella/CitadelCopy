@@ -160,7 +160,7 @@ Citadel is most useful when coding-agent work extends beyond one prompt:
 For a short one-off edit, your coding agent may already be enough. Citadel does
 not replace `CLAUDE.md`, `AGENTS.md`, branch protection, or human review.
 
-## Evidence status
+## What Citadel can prove
 
 Citadel publishes positive and negative outcomes from the same evidence
 contract. Its v1 experiment does not support a savings claim: one matched
@@ -170,6 +170,34 @@ verified rate but used more measured GPU energy. A representative fixture
 shakedown reached 6/12 verified cells with zero false passes, but missed its
 frozen energy gate. The [research site](https://sethgammon.github.io/Citadel/research.html)
 publishes the bounded results and limitations together.
+
+### Source-only proof program
+
+The full source checkout retains a broader, reproducible proof program. These
+maintainer instruments and their detailed artifacts are not included in the
+slim GitHub Release.
+
+| Evidence | Result | Boundary |
+|---|---|---|
+| Outside-authored public holdout | 24 distinct repositories, sealed routes, and 32 official verdicts. The controller verified 3/16 tasks versus 2/16 for direct Claude at 1.26% lower comparison cost. | Direct Claude verified only 12.5%, so the baseline was invalid. This is a diagnostic, not proof of reliability or savings. |
+| Bounded hybrid pilot | Both policies verified 12/12 synthetic tasks. A local Qwen 3B support route used 38.7% less comparison cost than always-Claude. | One model pair, one machine, and author-selected tasks. Actual subscription cash and production generalization remain unknown. |
+| Offline evidence replay | In a full source checkout, `npm run grant:verify` checks signed artifacts, source bindings, receipt chains, reports, and public claims without calling a model. | This maintainer command is source-only. Artifact integrity does not prove that an agent produced good work. |
+| Deterministic recovery and safety comparisons | Journaled recovery produced 0 duplicate effects versus 3 for naive restart across six injected boundaries. Safety gates achieved 100% malicious recall and 0% benign false positives across 12 matched decisions. | Local deterministic fixtures only. No process-kill, power-loss, real exploit, or cross-OS claim. |
+| Leased deploy-steward state machine | Across three 15-PR batches per arm, independent loops produced 315 stale-head race attempts; the leased steward produced 0. | Fake provider only. This is not GitHub, Actions, branch protection, or real-deployment evidence. |
+| Protected GitHub deploy-steward comparison | Across three valid matched public runs, both policies merged 45/45 PRs through strict Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. Independent loops incurred 106 failed merge races, 315 stale updates, and 421 interventions; the steward incurred 0 of each. | Six disposable public repositories under one account, plus one disclosed invalid run. Deployments are GitHub API records, not production releases. No speed, cost, human-utility, or broad reliability claim. |
+| Historical npm-pack profile | At source commit `9bebf1a`, the private source package measured 9,123,375 packed bytes and 1,888 files, 5.7385% and 66 files below its frozen baseline. | GitHub Releases are the only supported stable acquisition channel. This frozen source-only measurement is not a current release-size or public-package claim. |
+
+The public claim is deliberately narrow: Citadel can make agent evaluations
+inspectable, reproducible, and fail-honest. Comparative real-user utility
+remains open.
+
+- [Evaluator start here](docs/grants/EVALUATOR_START_HERE.md)
+- [Generated evidence manifest](docs/EVIDENCE_MANIFEST.md)
+- [Experiment results, boundaries, and reproduction commands](docs/EXPERIMENTS.md)
+- [Deploy-steward public case study](docs/CASE_STUDY_DEPLOY_STEWARD.md)
+- [Public deploy control](https://github.com/SethGammon/citadel-steward-proof-20260804-control) and [steward treatment](https://github.com/SethGammon/citadel-steward-proof-20260804-treatment)
+- [Outside-authored holdout](benchmarks/public-holdout-pilot/REPORT.md)
+- [Bounded hybrid pilot](benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md)
 
 ## Trust boundary
 
@@ -198,7 +226,7 @@ The stable release intentionally ships a small public documentation surface:
 | Use package commands and supported flags | [CLI reference](docs/CLI.md) |
 | Review shipped changes | [Changelog](CHANGELOG.md) |
 
-The extracted release includes <!-- GENERATED: skill-count -->49<!-- /GENERATED --> skills and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. They are an internal catalog, not a prerequisite checklist.
+The extracted release includes <!-- GENERATED: skill-count -->48<!-- /GENERATED --> skills and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. They are an internal catalog, not a prerequisite checklist.
 
 Citadel keeps operational state separate from application code:
 

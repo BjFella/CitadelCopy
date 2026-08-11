@@ -22,8 +22,7 @@ const { buildSkillCatalog } = require('../core/skills/catalog');
 const { DETERMINISTIC_COMMANDS } = require('../core/skills/routing');
 
 // The router cannot route to itself.
-// research-fleet: deprecated alias stub, no keywords (merged into /research --parallel).
-const EXCLUDED_SKILLS = ['do', 'research-fleet'];
+const EXCLUDED_SKILLS = ['do'];
 
 // Route labels that differ from a plain /{name} invocation.
 const ROUTE_LABELS = { fleet: '/fleet --quick' };
