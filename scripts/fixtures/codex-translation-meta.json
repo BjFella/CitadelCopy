@@ -1,6 +1,6 @@
 {
-  "installedCount": 19,
-  "skippedCount": 19,
+  "installedCount": 20,
+  "skippedCount": 18,
   "installed": [
     "PermissionRequest:permission-request",
     "PostCompact:post-compact",
@@ -14,13 +14,14 @@
     "PreToolUse:governance",
     "PreToolUse:protect-files",
     "PreToolUse:protect-files",
+    "SessionEnd:session-end",
     "SessionStart:init-project",
     "SessionStart:intake-scanner",
     "SessionStart:restore-compact",
     "Stop:quality-gate",
-    "Stop:session-end",
     "SubagentStart:subagent-start",
-    "SubagentStop:subagent-stop"
+    "SubagentStop:subagent-stop",
+    "UserPromptSubmit:user-prompt-submit"
   ],
   "skipped": [
     "ConfigChange:config-change",
@@ -39,7 +40,6 @@
     "TaskCreated:task-events",
     "TeammateIdle:teammate-idle",
     "UserPromptExpansion:user-prompt-expansion",
-    "UserPromptSubmit:user-prompt-submit",
     "WorktreeCreate:worktree-setup",
     "WorktreeRemove:worktree-remove"
   ],
@@ -49,9 +49,11 @@
     "PostToolUse",
     "PreCompact",
     "PreToolUse",
+    "SessionEnd",
     "SessionStart",
     "Stop",
     "SubagentStart",
-    "SubagentStop"
+    "SubagentStop",
+    "UserPromptSubmit"
   ]
 }

@@ -25,8 +25,8 @@ const manifest = JSON.parse(
 );
 assert.equal(manifest.name, '@citadel/contracts');
 assert.equal(manifest.version, '0.1.0');
-assert.notEqual(manifest.private, true);
-assert.equal(manifest.publishConfig.access, 'public');
+assert.equal(manifest.private, true);
+assert.equal(manifest.publishConfig, undefined);
 assert(manifest.files.includes('vendor/'));
 
 function filesUnder(directory) {

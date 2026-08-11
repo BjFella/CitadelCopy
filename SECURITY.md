@@ -15,21 +15,21 @@ Please avoid posting exploit details, secret values, private project paths, or u
 
 | Version | Supported |
 |---|---|
-| Latest release on `main` | Yes |
+| Latest tagged GitHub Release | Yes |
 | Older tags | Best effort; upgrade first, then reproduce |
 
 ## What Citadel is, security-wise
 
 Citadel is a local agent orchestration harness. Installing it gives Claude Code or OpenAI Codex project-specific instructions, hooks, scripts, skills, and state files that help an agent operate on a repository. That is useful, but it is also **privileged local automation**: treat an installed Citadel project like any other developer tool that can read project files, run commands, create branches, and write local state.
 
-For the detailed trust-boundary map, see [THREAT_MODEL.md](THREAT_MODEL.md).
+This document describes the stable release trust boundary. Development-source
+experiments are not automatically part of the supported package surface.
 
 ### Supported usage
 
 - Local use inside a repository you control.
 - Claude Code and OpenAI Codex sessions with normal tool approval boundaries.
 - Project-local state under `.planning/`, `.citadel/`, `.codex/`, `.claude/`, and generated runtime configuration files.
-- Optional user-level cross-clone memory explicitly enabled with `citadel memory enable`.
 - Reviewable pull-request workflows for publishing harness changes.
 
 ### Not supported
@@ -51,16 +51,15 @@ For the detailed trust-boundary map, see [THREAT_MODEL.md](THREAT_MODEL.md).
 | Prompt injection | Repo docs, issues, PRs, web pages, or generated artifacts can contain hostile instructions | Instruction hierarchy, explicit trust boundaries, review before automation |
 | Unattended automation drift | Long-running agents can make broad changes if scope is unclear | Campaign state, handoffs, approval capsules, PR readiness checks |
 | Public artifact leakage | `.planning/` can contain decisions, costs, logs, screenshots, or research | `.gitignore` coverage, private-state guidance, review before sharing |
-| Cross-clone memory disclosure | The optional SQLite store contains durable project notes outside the clone | Disabled by default, repository-key hashing, strict content allowlist, user-only file mode where supported, explicit disable and purge |
 
 ## Defensive hooks and checks
 
-- Path traversal and protected-file checks in [`hooks_src/protect-files.js`](hooks_src/protect-files.js).
-- External action and consent checks in [`hooks_src/external-action-gate.js`](hooks_src/external-action-gate.js).
-- Governance and policy checks in [`hooks_src/governance.js`](hooks_src/governance.js).
-- Post-edit tracking and quality checks in [`hooks_src/post-edit.js`](hooks_src/post-edit.js) and related lifecycle hooks.
+- Path traversal and protected-file checks in `hooks_src/protect-files.js`.
+- External action and consent checks in `hooks_src/external-action-gate.js`.
+- Governance and policy checks in `hooks_src/governance.js`.
+- Post-edit tracking and quality checks in `hooks_src/post-edit.js` and related lifecycle hooks.
 - Tamper-evident telemetry and audit records under `.planning/telemetry/`.
-- Security regression tests in [`scripts/test-security.js`](scripts/test-security.js).
+- Security regression tests in the development source suite.
 
 Run the security checks directly, or the full suite:
 
@@ -89,14 +88,6 @@ Write boundaries:
 
 Review these paths before committing, sharing logs, recording demos, or opening support issues: `.planning/`, `.citadel/`, `.codex/`, `.claude/`, `.mcp.json`, plus screenshots, browser captures, telemetry logs, research notes, and handoff files.
 
-If cross-clone memory is enabled, also protect the user-level
-`repository-memory.sqlite3` database documented in
-[Cross-clone repository memory](docs/REPOSITORY_MEMORY.md). It is plaintext local
-storage and can contain the full text of completed campaigns, postmortems,
-research, discoveries, backlog items, and project context. Citadel attempts a
-user-only file mode where the operating system supports it; disk encryption and
-account security remain the user's responsibility.
-
 ## Security checklist for harness changes
 
 Before shipping changes to hooks, runtime adapters, installers, MCP surfaces, or unattended automation:
@@ -107,7 +98,7 @@ Before shipping changes to hooks, runtime adapters, installers, MCP surfaces, or
 - [ ] Keep destructive, networked, publish, credential, and cross-repository actions behind explicit approval.
 - [ ] Add or update focused tests for the changed boundary.
 - [ ] Run `npm test`.
-- [ ] Update [THREAT_MODEL.md](THREAT_MODEL.md) when capabilities or boundaries change.
+- [ ] Update the source threat model when capabilities or boundaries change.
 
 ## Operation Fork boundary
 

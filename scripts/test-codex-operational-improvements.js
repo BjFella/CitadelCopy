@@ -49,7 +49,33 @@ function snapshotSourcePluginArtifacts() {
   }));
 }
 
+function assertPluginAssetsExist(pluginRoot, manifest, expectedScreenshots) {
+  const interfaceMetadata = manifest.interface || {};
+  assert.deepEqual(interfaceMetadata.screenshots, expectedScreenshots,
+    'plugin manifest must expose the shipped terminal demo screenshot');
+  const references = [
+    interfaceMetadata.composerIcon,
+    interfaceMetadata.logo,
+    ...(interfaceMetadata.screenshots || []),
+  ].filter(Boolean);
+
+  assert(references.length > 0, 'generated plugin manifest should expose at least one interface asset');
+  assert(!references.some((reference) => /social-preview\.png$/i.test(reference)),
+    'generated plugin manifest must not reference the excluded social preview');
+  for (const reference of references) {
+    assert(reference.startsWith('./'), `plugin asset reference must be plugin-relative: ${reference}`);
+    assert(fs.existsSync(path.resolve(pluginRoot, reference)),
+      `generated plugin asset must exist: ${reference}`);
+  }
+}
+
 function testReadinessCheck() {
+  const repositoryManifest = JSON.parse(fs.readFileSync(
+    path.join(CITADEL_ROOT, '.codex-plugin', 'plugin.json'),
+    'utf8'
+  ));
+  assertPluginAssetsExist(CITADEL_ROOT, repositoryManifest, ['./assets/terminal-demo.svg']);
+
   const tmp = tempProject('citadel-readiness-');
   try {
     fs.writeFileSync(path.join(tmp, 'AGENTS.md'), '# Test\n\n## Review guidelines\n\n- Focus on P0/P1 issues.\n', 'utf8');
@@ -63,9 +89,21 @@ function testReadinessCheck() {
     const report = checkCodexReadiness({ projectRoot: tmp, write: true });
     assert(report.pass, JSON.stringify(report.checks.filter((check) => !check.pass), null, 2));
     assert(fs.existsSync(path.join(tmp, '.planning', 'verification', 'codex-readiness.json')));
-    const manifest = fs.readFileSync(path.join(tmp, '.codex-plugin', 'plugin.json'), 'utf8');
-    assert.doesNotThrow(() => JSON.parse(manifest), 'target-project plugin manifest must be strict JSON');
-    assert(manifest.includes('./.agents/skills/'), 'target-project plugin manifest should point at generated skills');
+    const manifestText = fs.readFileSync(path.join(tmp, '.codex-plugin', 'plugin.json'), 'utf8');
+    assert.doesNotThrow(() => JSON.parse(manifestText), 'target-project plugin manifest must be strict JSON');
+    assert(manifestText.includes('./.agents/skills/'), 'target-project plugin manifest should point at generated skills');
+    const manifest = JSON.parse(manifestText);
+    assertPluginAssetsExist(tmp, manifest, ['./.agents/assets/terminal-demo.svg']);
+    const projectedManifest = JSON.parse(fs.readFileSync(
+      path.join(tmp, '.agents', '.codex-plugin', 'plugin.json'),
+      'utf8'
+    ));
+    assertPluginAssetsExist(path.join(tmp, '.agents'), projectedManifest, ['./assets/terminal-demo.svg']);
+    fs.rmSync(path.join(tmp, '.agents', 'assets', 'icon.svg'));
+    const missingAssetReport = checkCodexReadiness({ projectRoot: tmp });
+    assert(!missingAssetReport.pass, 'readiness must fail when a declared plugin asset is missing');
+    assert(missingAssetReport.checks.some((check) => check.id.startsWith('plugin-asset:') && !check.pass),
+      'readiness must identify the missing plugin asset');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -89,6 +127,7 @@ function testPluginMarketplaceSmoke() {
     assert.equal(report.marketplace.plugins[0].version, generatedManifest.version);
     assert.equal(report.marketplace.plugins[0].description, generatedManifest.description);
     assert.equal(report.marketplace.plugins[0].repository, generatedManifest.repository);
+    assertPluginAssetsExist(path.join(tmp, '.agents'), generatedManifest, ['./assets/terminal-demo.svg']);
     assert(report.codexCliCommands.some((command) => command.includes('codex plugin marketplace add')));
 
     const smoke = execFileSync(process.execPath, [
@@ -104,6 +143,11 @@ function testPluginMarketplaceSmoke() {
     });
     const smokeReport = JSON.parse(smoke);
     assert(smokeReport.pass, JSON.stringify(smokeReport, null, 2));
+    fs.rmSync(path.join(tmp, '.agents', 'assets', 'icon.svg'));
+    const missingAssetMarketplace = createPluginMarketplace({ projectRoot: tmp });
+    assert(!missingAssetMarketplace.pass, 'plugin smoke must fail when a declared interface asset is missing');
+    assert(missingAssetMarketplace.checks.some((check) => check.id.startsWith('plugin-asset:') && !check.pass),
+      'plugin smoke must identify the missing interface asset');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

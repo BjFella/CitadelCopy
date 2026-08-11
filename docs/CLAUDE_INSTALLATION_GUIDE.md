@@ -4,12 +4,33 @@ Install Citadel as a Claude Code plugin, verify the marketplace, write project h
 
 Sources: Claude Code's current plugin docs support marketplace discovery, local paths, GitHub sources, install scopes, and non-interactive `claude plugin marketplace` / `claude plugin install` commands. See [Discover and install plugins](https://code.claude.com/docs/en/discover-plugins), [Create and distribute marketplaces](https://code.claude.com/docs/en/plugin-marketplaces), and [Plugins reference](https://code.claude.com/docs/en/plugins-reference).
 
-## Fast Path: Local Project Install
+## Stable Release Install (Recommended)
 
-From the project where you want Citadel enabled:
+Citadel's supported stable acquisition path is the complete asset trio from a
+single [GitHub Release](https://github.com/SethGammon/Citadel/releases/latest):
+
+- `citadel-vX.Y.Z.tar.gz`
+- `citadel-vX.Y.Z.tar.gz.manifest.json`
+- `citadel-vX.Y.Z.tar.gz.sha256`
+
+Download all three files for the same version, verify them using the
+[release verification instructions](RELEASES.md#consumer-verification), and
+extract the archive into a standalone Citadel directory. For example:
 
 ```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+mkdir -p ~/Citadel
+tar -xzf /path/to/citadel-vX.Y.Z.tar.gz -C ~/Citadel --strip-components=1
+```
+
+Do not substitute an npm package or `npx` command. This project publishes
+stable builds only through GitHub Releases.
+
+## Fast Path: Local Project Enablement
+
+After extracting the verified release, run from the project where you want
+Citadel enabled:
+
+```bash
 cd /path/to/your-project
 node ~/Citadel/scripts/claude-install.js --install --scope local
 claude
@@ -69,16 +90,26 @@ cd /path/to/your-project
 claude --plugin-dir /path/to/Citadel
 ```
 
-## GitHub Marketplace Install
+## Development-Only Source Install
 
-If you want Claude Code to fetch Citadel from GitHub instead of a local clone:
+The GitHub repository marketplace source follows repository development rather
+than the verified release trio. Use it only when intentionally testing current
+source-main behavior:
 
 ```bash
 claude plugin marketplace add SethGammon/Citadel --scope local
 claude plugin install citadel@citadel-local --scope local
 ```
 
-You still need to run `/do setup --express` in the target project so Citadel can detect the stack, initialize state, and refresh hooks.
+Likewise, a direct clone follows development source and is not the stable
+installation path:
+
+```bash
+git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+```
+
+For either development-only path, run `/do setup --express` in the target
+project so Citadel can detect the stack, initialize state, and refresh hooks.
 
 ## Verify
 

@@ -30,7 +30,7 @@ This file is the Codex-facing projection of the canonical Citadel project spec. 
 ## Verification
 
 - Use the narrowest command that proves the changed behavior.
-- Run `node scripts/test-all.js` after modifying hooks, skills, runtime adapters, or shared architecture code.
+- Run the target project's declared full verification command after modifying hooks, skills, runtime adapters, or shared architecture code.
 - Run targeted tests first when the change is scoped to one script, hook, or generator.
 
 ## Review Guidelines

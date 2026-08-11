@@ -7,6 +7,7 @@
  *
  * Three tiers:
  *   SECRETS - Always blocked. Reading or writing .env files via Bash.
+ *   INVARIANT - Always blocked and non-configurable (P-001, P-004).
  *   HARD    - Always blocked per-action. Irreversible by default (merge, close,
  *             delete, release, fork). Configurable via policy.externalActions.hard.
  *   SOFT    - Governed by consent preference. Empty by default; teams can opt
@@ -28,6 +29,8 @@
  *   2 = blocked - message written to stderr so Claude Code surfaces it to the agent
  */
 
+const fs = require('fs');
+const path = require('path');
 const health = require('./harness-health-util');
 const {
   detectExternalAction,
@@ -53,6 +56,32 @@ function hookOutput(hookName, action, message, data = {}) {
   }
 }
 
+function failClosed(reason, error) {
+  const detail = error?.message || String(error || reason);
+  try {
+    health.logBlock('external-action-gate', reason, detail.slice(0, 200));
+  } catch { /* best effort only */ }
+  hookOutput(
+    'external-action-gate',
+    'error',
+    `[Citadel] External-action policy check failed closed (${reason}).\n` +
+    `The command was not run. Repair the hook input or policy configuration before retrying.\n`,
+    { reason }
+  );
+  process.exit(2);
+}
+
+function readGatePolicy() {
+  const sourcePath = path.join(health.PROJECT_ROOT, '.claude', 'harness.json');
+  if (fs.existsSync(sourcePath)) {
+    const raw = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+    // Validate the source policy even if activation later falls back to an
+    // effective/default receipt. A malformed safety policy must not disappear.
+    readExternalActionPolicy(raw);
+  }
+  return readExternalActionPolicy(health.readConfig());
+}
+
 function main() {
   let input = '';
   process.stdin.setEncoding('utf8');
@@ -60,8 +89,8 @@ function main() {
   process.stdin.on('end', () => {
     try {
       run(input);
-    } catch {
-      process.exit(0);
+    } catch (error) {
+      failClosed('runtime-failure', error);
     }
   });
 }
@@ -70,26 +99,53 @@ function run(input) {
   let event;
   try {
     event = JSON.parse(input);
-  } catch {
-    process.exit(0);
+  } catch (error) {
+    failClosed('parse-failure', error);
   }
 
-  if ((event.tool_name || '') !== 'Bash') process.exit(0);
+  if (!event || typeof event !== 'object' || Array.isArray(event)) {
+    failClosed('invalid-input', new TypeError('hook input must be an object'));
+  }
 
-  const command = event.tool_input?.command || '';
-  if (!command) process.exit(0);
+  if (typeof event.tool_name !== 'string' || !event.tool_name) {
+    failClosed('invalid-input', new TypeError('tool_name must be a non-empty string'));
+  }
 
-  const policy = readExternalActionPolicy(health.readConfig());
+  if (event.tool_name !== 'Bash') process.exit(0);
+
+  if (!event.tool_input || typeof event.tool_input !== 'object' || Array.isArray(event.tool_input)) {
+    failClosed('invalid-input', new TypeError('Bash tool_input must be an object'));
+  }
+  const command = event.tool_input.command;
+  if (typeof command !== 'string' || !command.trim()) {
+    failClosed('invalid-input', new TypeError('Bash command must be a non-empty string'));
+  }
+
+  const policy = readGatePolicy();
   const action = detectExternalAction(command, policy);
 
   if (!action) process.exit(0);
+
+  if (action.kind === 'invariant') {
+    health.logBlock('external-action-gate', 'blocked-invariant', `${action.label}: ${command.slice(0, 200)}`);
+    hookOutput(
+      'external-action-gate',
+      'blocked',
+      `[Citadel] Blocked: constitutional invariant ${action.rule}\n` +
+      `Command: ${command.slice(0, 200)}\n\n` +
+      `${action.label} is a deterministic, non-configurable safety rule. ` +
+      `Change the command before retrying.\n`,
+      { label: action.label, rule: action.rule, tier: action.tier }
+    );
+    process.exit(2);
+  }
 
   if (action.kind === 'secret') {
     health.logBlock('external-action-gate', 'blocked', `${action.label}: ${command.slice(0, 200)}`);
     hookOutput(
       'external-action-gate',
       'blocked',
-      `[Citadel] Blocked — secrets access: "${action.label}"\n` +
+      `[Citadel] Blocked: secrets access: "${action.label}"\n` +
       (action.label.includes('secrets write')
         ? `Writing .env files via Bash is always blocked. Template files ending in .example, .sample, or .template are allowed.\n`
         : `Reading .env files and credentials is always blocked.\n`),
@@ -103,7 +159,7 @@ function run(input) {
     hookOutput(
       'external-action-gate',
       'blocked',
-      `[Citadel] Blocked — protected branch: "${action.branch}"\n` +
+      `[Citadel] Blocked: protected branch: "${action.branch}"\n` +
       `This branch is configured as protected in harness.json and cannot be deleted.\n` +
       `To unprotect it, remove it from policy.externalActions.protectedBranches.\n`,
       { label: action.label, tier: action.tier }

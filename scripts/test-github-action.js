@@ -12,7 +12,8 @@ const operations = require('../core/operations');
 const ROOT = path.resolve(__dirname, '..');
 const actionYaml = fs.readFileSync(path.join(ROOT, 'action.yml'), 'utf8');
 const testsYaml = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'tests.yml'), 'utf8');
-const publishYaml = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'npm-publish.yml'), 'utf8');
+const releaseYaml = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'release.yml'), 'utf8');
+const npmPublishPath = path.join(ROOT, '.github', 'workflows', 'npm-publish.yml');
 
 for (const input of ['workflow', 'evidence-path', 'strict', 'working-directory']) {
   assert.match(actionYaml, new RegExp(`^  ${input}:`, 'm'), `action input missing ${input}`);
@@ -38,24 +39,24 @@ for (const match of testsYaml.matchAll(/^\s*- uses:\s*(\S+)/gm)) {
   assert.match(target, /@[a-f0-9]{40}(?:\s|$)/, `third-party action is not SHA pinned: ${target}`);
 }
 
-const triggerBlock = publishYaml.slice(publishYaml.indexOf('on:'), publishYaml.indexOf('\npermissions:'));
-assert.match(triggerBlock, /workflow_dispatch:/);
-assert.doesNotMatch(triggerBlock, /^\s+(push|pull_request|schedule|workflow_run):/m);
-assert.match(triggerBlock, /type: boolean/);
-assert.match(triggerBlock, /default: false/);
-assert.match(publishYaml, /^permissions:\n  contents: read/m);
-assert.match(publishYaml, /environment: npm-publish/);
-assert.match(publishYaml, /permissions:\n      contents: read\n      id-token: write/);
-assert.equal((publishYaml.match(/id-token: write/g) || []).length, 1, 'OIDC permission must exist only on publish job');
-assert.match(publishYaml, /if: \$\{\{ inputs\.publish == true \}\}/);
-assert.match(publishYaml, /node scripts\/test-all\.js --strict/);
-assert.match(publishYaml, /node scripts\/test-cli-package\.js/);
-assert.equal((publishYaml.match(/npm install --global npm@11\.5\.1/g) || []).length, 2);
-assert.match(publishYaml, /run: mkdir -p dist\/npm/);
-assert.match(publishYaml, /npm publish dist\/npm\/\*\.tgz --access public --provenance/);
-assert.doesNotMatch(publishYaml, /NPM_TOKEN|secrets\.|npm_[A-Za-z]*token/i);
-for (const match of publishYaml.matchAll(/^\s*- uses:\s*(\S+)/gm)) {
-  assert.match(match[1], /@[a-f0-9]{40}(?:\s|$)/, `publish action is not SHA pinned: ${match[1]}`);
+assert(!fs.existsSync(npmPublishPath), 'unowned npm namespace must not have an executable publish workflow');
+for (const file of fs.readdirSync(path.join(ROOT, '.github', 'workflows')).filter((name) => /\.ya?ml$/.test(name))) {
+  const workflow = fs.readFileSync(path.join(ROOT, '.github', 'workflows', file), 'utf8');
+  assert.doesNotMatch(workflow, /\bnpm\s+publish\b/, `workflow must not publish to npm: ${file}`);
+}
+
+const packageBlock = releaseYaml.slice(releaseYaml.indexOf('  package:'), releaseYaml.length);
+assert.match(packageBlock, /permissions:\n      contents: write\n      id-token: write\n      attestations: write/);
+assert.equal((releaseYaml.match(/id-token: write/g) || []).length, 1, 'OIDC permission must exist only on release package job');
+assert.equal((releaseYaml.match(/attestations: write/g) || []).length, 1, 'attestation permission must exist only on release package job');
+assert(!releaseYaml.includes('artifact-metadata: write'), 'binary subject-path attestation must not request registry-only artifact metadata permission');
+assert.doesNotMatch(packageBlock, /packages: write/, 'release job must not receive package-registry permission');
+assert.match(packageBlock, /uses: actions\/attest@1e69f48acb82d1966a394da916b4c1698aa569d6\s+# v4\.2\.2/);
+assert.match(packageBlock, /subject-path: \|\n\s+dist\/release\/citadel-\$\{\{ github\.ref_name \}\}\.tar\.gz\n\s+dist\/release\/citadel-\$\{\{ github\.ref_name \}\}\.tar\.gz\.manifest\.json\n\s+dist\/release\/citadel-\$\{\{ github\.ref_name \}\}\.tar\.gz\.sha256/);
+assert(packageBlock.indexOf('actions/attest@') > packageBlock.indexOf('Verify tagged artifact'), 'attestation must follow artifact verification');
+assert(packageBlock.indexOf('gh release create') > packageBlock.indexOf('actions/attest@'), 'release publication must follow attestation');
+for (const match of releaseYaml.matchAll(/^\s*- uses:\s*(\S+)/gm)) {
+  assert.match(match[1], /@[a-f0-9]{40}(?:\s|$)/, `release action is not SHA pinned: ${match[1]}`);
 }
 
 for (const invalid of [

@@ -53,10 +53,10 @@ withTempProject((projectRoot) => {
   const output = renderConsole(consoleState);
 
   assert.equal(consoleState.status, 'repair-ready');
-  assert.equal(consoleState.nextAction.command, '/learn --doc-sync');
+  assert.equal(consoleState.nextAction.command, 'node hooks_src/doc-sync.js --project-root .');
   assert.equal(consoleState.nextAction.canRunNow, true);
   assert.equal(consoleState.summary.status, 'repair-ready');
-  assert.equal(consoleState.summary.command, '/learn --doc-sync');
+  assert.equal(consoleState.summary.command, 'node hooks_src/doc-sync.js --project-root .');
   assert.equal(consoleState.summary.canRunNow, true);
   assert.equal(consoleState.summary.boundary, 'local-repair');
   assert.equal(consoleState.summary.risk, 'low');
@@ -178,7 +178,7 @@ withTempProject((projectRoot) => {
   const consoleState = applyStackDecision({
     mode: 'inspect',
     status: 'idle',
-    nextAction: { label: 'No urgent Citadel action detected', command: 'npm run dashboard', canRunNow: false },
+    nextAction: { label: 'No urgent Citadel action detected', command: 'node scripts/dashboard.js', canRunNow: false },
     boundary: { kind: 'none', risk: 'low', request: 'No approval required.', verification: [] },
   }, {
     status: 'blocked',
@@ -258,7 +258,7 @@ withTempProject((projectRoot) => {
   const payload = JSON.parse(output);
   assert.equal(payload.status, 'idle');
   assert.equal(payload.mode, 'inspect');
-  assert.equal(payload.command, 'npm run dashboard');
+  assert.equal(payload.command, 'node scripts/dashboard.js');
   assert.equal(payload.canRunNow, false);
   assert.equal(payload.boundary, 'none');
   assert.equal(payload.risk, 'low');

@@ -2,6 +2,34 @@
 
 Install Citadel into a project you use with Codex, then verify that Codex can see the plugin, hooks, skills, MCP state, and project guidance.
 
+## Stable Release Install (Recommended)
+
+Citadel's supported stable acquisition path is the complete asset trio from a
+single [GitHub Release](https://github.com/SethGammon/Citadel/releases/latest):
+
+- `citadel-vX.Y.Z.tar.gz`
+- `citadel-vX.Y.Z.tar.gz.manifest.json`
+- `citadel-vX.Y.Z.tar.gz.sha256`
+
+Download all three files for the same version, verify them using the
+[release verification instructions](RELEASES.md#consumer-verification), and
+extract the archive into a standalone Citadel directory. Do not substitute an
+npm package or `npx` command.
+
+On macOS or Linux:
+
+```bash
+mkdir -p ~/Citadel
+tar -xzf /path/to/citadel-vX.Y.Z.tar.gz -C ~/Citadel --strip-components=1
+```
+
+On Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\Citadel" | Out-Null
+tar -xzf C:\path\to\citadel-vX.Y.Z.tar.gz -C "$HOME\Citadel" --strip-components=1
+```
+
 ## Fast Path: One Command, Then Add to Codex
 
 Codex plugins can bundle skills, app integrations, hooks, and MCP servers, and Codex can install plugins from local or repo marketplace files. The [official Codex plugin docs](https://developers.openai.com/codex/plugins) describe the app flow as opening Plugins and selecting **Add to Codex** or the CLI flow as running `/plugins`; the [plugin authoring docs](https://developers.openai.com/codex/plugins/build) describe repo and personal marketplace files.
@@ -9,7 +37,6 @@ Codex plugins can bundle skills, app integrations, hooks, and MCP servers, and C
 Citadel's installer gets everything ready for that final install click:
 
 ```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
 cd /path/to/your-project
 node ~/Citadel/scripts/codex-install.js --add-marketplace
 codex
@@ -24,7 +51,6 @@ node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
 On Windows PowerShell:
 
 ```powershell
-git clone https://github.com/SethGammon/Citadel.git $HOME\Citadel
 Set-Location C:\path\to\your-project
 node $HOME\Citadel\scripts\codex-install.js --add-marketplace
 codex
@@ -43,14 +69,23 @@ Once enabled, run:
 
 `--add-marketplace` asks Codex CLI to register the local marketplace. Omit it when you only want the script to prepare files and print the app/CLI steps. Use `--plugin-only` when you want to prepare the Citadel plugin package without generating target-project fallback artifacts.
 
-If you only want to install the published repo marketplace and do not need local project fallback artifacts, Codex CLI can add the marketplace source directly:
+## Development-Only Repository Marketplace
+
+The GitHub repository marketplace source follows repository development rather
+than the verified release trio. Use it only when intentionally testing current
+source-main behavior and you do not need local project fallback artifacts:
 
 ```bash
 codex plugin marketplace add SethGammon/Citadel
 codex
 ```
 
-Then use `/plugins` or the Codex app plugin directory to install **Citadel Harness**. The local installer remains the safer onboarding path because it also verifies the target project and records readiness evidence.
+Then use `/plugins` or the Codex app plugin directory to install **Citadel
+Harness**. This is a GitHub source install, not an npm package-install claim.
+It is not the stable release path. A direct `git clone` of the repository has
+the same development-only boundary. Stable users should register the local
+marketplace from an extracted, verified GitHub Release. The local installer
+also verifies the target project and records readiness evidence.
 
 ## What The Installer Does
 
@@ -58,7 +93,7 @@ Then use `/plugins` or the Codex app plugin directory to install **Citadel Harne
 
 - `.codex-plugin/plugin.json` describes Citadel as a Codex-native harness.
 - `skills/` provides the installed skill set.
-- `runtimes/codex/hooks.json` bundles translated Codex hook commands outside Claude Code's conventional auto-discovery path.
+- `runtimes/codex/hooks.json` bundles translated Codex hook commands outside Claude Code's conventional auto-discovery path. These hooks are guardrails on covered local tool paths, not a universal sandbox.
 - `.mcp.json` exposes the `citadel-state` MCP server.
 - `.agents/plugins/marketplace.json` exposes the local marketplace Codex can browse.
 - Target-project `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, `.codex-plugin/plugin.json`, and `runtimes/codex/hooks.json` are generated as a verified fallback for projects where plugin install is not available yet.
@@ -136,7 +171,8 @@ AGENTS.md
 .citadel/
 ```
 
-Then run the readiness verifier, or use the npm alias from the Citadel clone:
+Then run the readiness verifier, or use the local package-script alias from the
+Citadel source checkout:
 
 ```bash
 node /path/to/Citadel/scripts/codex-readiness-check.js --write
@@ -155,7 +191,7 @@ Then in Codex:
 ## Native Codex Surfaces Citadel Uses
 
 - **Skills and plugins:** Citadel loads as reusable Codex workflows instead of one-off copied prompts.
-- **Hooks:** Citadel maps safety and telemetry hooks to current Codex lifecycle events.
+- **Hooks:** Citadel maps blocking guardrails and telemetry hooks to supported Codex lifecycle events. The adapter projects covered `apply_patch` targets for protected-file checks; specialized tool paths can remain outside the local function-hook path.
 - **MCP:** `citadel-state` exposes campaign/fleet/telemetry/artifact state as structured tools and resources.
 - **Subagents and worktrees:** projected `.codex/agents/` files let Codex run specialized agents while Citadel keeps coordination state.
 - **Automations:** `scripts/codex-automation.js` generates Codex Automation prompts for schedule, daemon, and PR-watch workflows.

@@ -75,19 +75,21 @@ adapter and missing host support; it is never silently described as full.
 The adoption CLI treats every mutation as a checked transaction:
 
 ```bash
-node scripts/adopt.js plan path/to/Citadel --target . --out citadel-adoption.plan.json --json
-node scripts/adopt.js apply citadel-adoption.plan.json --confirm <plan-token> --json
+node scripts/adopt.js plan path/to/Citadel --target . --out ../citadel-adoption.plan.json --json
+node scripts/adopt.js apply ../citadel-adoption.plan.json --confirm <plan-token> --json
 node scripts/adopt.js doctor --target . --json
-node scripts/adopt.js update plan path/to/Citadel-v2 --migration migration.json --target . --out citadel-update.plan.json --json
-node scripts/adopt.js rollback plan --target . --out citadel-rollback.plan.json --json
-node scripts/adopt.js leave plan --target . --out citadel-leave.plan.json --json
-node scripts/adopt.js leave apply citadel-leave.plan.json --confirm <plan-token> --json
+node scripts/adopt.js update plan path/to/Citadel-v2 --migration migration.json --target . --out ../citadel-update.plan.json --json
+node scripts/adopt.js rollback plan --target . --out ../citadel-rollback.plan.json --json
+node scripts/adopt.js leave plan --target . --out ../citadel-leave.plan.json --json
+node scripts/adopt.js leave apply ../citadel-leave.plan.json --confirm <plan-token> --json
 ```
 
 A plan records source and target identity, proposed effects, pre-images,
 footprint ownership, verification, rollback, and a canonical digest. Planning
-does not write target state. Apply rejects source, plan, or target drift and
-records a write-ahead journal plus observed receipt.
+does not write target state. Save the plan outside the target repository;
+creating it inside the target changes the preflight snapshot and causes apply
+to reject `TARGET_DRIFT`. Apply rejects source, plan, or target drift and records
+a write-ahead journal plus observed receipt.
 
 Leave removes only unchanged receipt-owned artifacts and Citadel-owned members
 of shared files. Modified, user-owned, or ambiguous material is retained with

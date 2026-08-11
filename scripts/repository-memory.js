@@ -8,14 +8,14 @@ const memory = require('../core/memory/repository-store');
 const HELP = `Citadel cross-clone memory
 
 Usage:
-  citadel memory status [--project-root PATH] [--json]
-  citadel memory enable [--project-root PATH] [--json]
-  citadel memory sync [--project-root PATH] [--json]
-  citadel memory restore [--project-root PATH] [--force] [--json]
-  citadel memory versions [--project-root PATH] [--path RELATIVE] [--json]
-  citadel memory restore-version --path RELATIVE --sha256 DIGEST [--force] [--json]
-  citadel memory disable [--project-root PATH] [--json]
-  citadel memory purge [--project-root PATH] --confirm PURGE [--json]
+  node scripts/repository-memory.js status [--project-root PATH] [--json]
+  node scripts/repository-memory.js enable [--project-root PATH] [--json]
+  node scripts/repository-memory.js sync [--project-root PATH] [--json]
+  node scripts/repository-memory.js restore [--project-root PATH] [--force] [--json]
+  node scripts/repository-memory.js versions [--project-root PATH] [--path RELATIVE] [--json]
+  node scripts/repository-memory.js restore-version --path RELATIVE --sha256 DIGEST [--force] [--json]
+  node scripts/repository-memory.js disable [--project-root PATH] [--json]
+  node scripts/repository-memory.js purge [--project-root PATH] --confirm PURGE [--json]
 
 The opt-in store keeps durable Citadel knowledge in a user-level SQLite database.
 It never stores active campaigns, worktree state, telemetry, consent, or runtime
@@ -116,7 +116,7 @@ if (require.main === module) {
     const json = process.argv.includes('--json');
     const payload = { status: 'error', code: error.code || 'CITADEL_MEMORY_FAILED', message: error.message };
     if (json) process.stderr.write(`${JSON.stringify(payload)}\n`);
-    else process.stderr.write(`citadel memory: ${error.message}\n`);
+    else process.stderr.write(`repository-memory: ${error.message}\n`);
     process.exitCode = error.code === 'CITADEL_MEMORY_USAGE'
       ? 64
       : error.code === 'CITADEL_SQLITE_UNAVAILABLE' ? 78 : 1;

@@ -8,58 +8,140 @@ const os = require('os');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const CLONES = Object.freeze([
-  'git clone https://github.com/SethGammon/Citadel.git "$env:USERPROFILE\\Citadel"',
-  'git clone https://github.com/SethGammon/Citadel.git "$HOME/Citadel"',
-]);
-const COMMANDS = Object.freeze([
-  {
-    runtime: 'claude',
-    powershell: 'node "$env:USERPROFILE\\Citadel\\scripts\\install.js" --runtime claude --install --scope local',
-    shell: 'node "$HOME/Citadel/scripts/install.js" --runtime claude --install --scope local',
-  },
-  {
-    runtime: 'codex',
-    powershell: 'node "$env:USERPROFILE\\Citadel\\scripts\\install.js" --runtime codex --add-marketplace',
-    shell: 'node "$HOME/Citadel/scripts/install.js" --runtime codex --add-marketplace',
-  },
+const README = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+const INSTALL = fs.readFileSync(path.join(ROOT, 'INSTALL.md'), 'utf8');
+const CLI = fs.readFileSync(path.join(ROOT, 'docs', 'CLI.md'), 'utf8');
+const LIFECYCLE = fs.readFileSync(path.join(ROOT, 'docs', 'GOVERNED_LIFECYCLE.md'), 'utf8');
+const PRIVACY = fs.readFileSync(path.join(ROOT, 'PRIVACY.md'), 'utf8');
+const SECURITY = fs.readFileSync(path.join(ROOT, 'SECURITY.md'), 'utf8');
+const ROUTING = fs.readFileSync(path.join(ROOT, 'docs', 'ROUTING_PREVIEW.md'), 'utf8');
+const ARCHITECTURE = fs.readFileSync(path.join(ROOT, 'docs', 'ARCHITECTURE.md'), 'utf8');
+const RELEASES = fs.readFileSync(path.join(ROOT, 'docs', 'RELEASES.md'), 'utf8');
+
+const TRIO = Object.freeze([
+  'citadel-vX.Y.Z.tar.gz',
+  'citadel-vX.Y.Z.tar.gz.manifest.json',
+  'citadel-vX.Y.Z.tar.gz.sha256',
 ]);
 
-const page = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
-for (const clone of CLONES) assert(page.includes(clone), `homepage missing platform clone command: ${clone}`);
-assert(page.indexOf(CLONES[0]) < page.indexOf(COMMANDS[0].powershell), 'homepage clone command must precede installer command');
-assert(page.includes('href="CLAUDE_INSTALLATION_GUIDE.md"'), 'homepage missing Claude Code install guide');
-assert(page.includes('href="CODEX_INSTALLATION_GUIDE.md"'), 'homepage missing Codex install guide');
+for (const [name, document] of [['README.md', README], ['INSTALL.md', INSTALL]]) {
+  for (const asset of TRIO) assert(document.includes(asset), `${name} missing stable release asset ${asset}`);
+  assert(document.includes('floating main'), `${name} must label floating main as development-only`);
+  assert(document.includes('Do not use npm') || document.includes('unsupported acquisition paths'), `${name} must reject npm acquisition`);
+}
+
+function fencedTextContaining(document, needle) {
+  const normalized = document.replace(/\r\n/g, '\n');
+  const blocks = [...normalized.matchAll(/```text\s*\n([\s\S]*?)\n```/g)].map((match) => match[1].trim());
+  return blocks.find((block) => block.includes(needle)) || null;
+}
+
+const promptNeedle = 'Install Citadel in this repository from a tagged GitHub Release';
+assert.equal(
+  fencedTextContaining(README, promptNeedle),
+  fencedTextContaining(INSTALL, promptNeedle),
+  'README and INSTALL agent-paste prompts must remain verbatim',
+);
+
+const WINDOWS_SNIPPETS = Object.freeze([
+  'tar -xzf "$citadelArchive"',
+  '$env:CITADEL_ROOT = (Resolve-Path',
+  'node "$env:CITADEL_ROOT\\scripts\\release-verify.js"',
+  'node "$env:CITADEL_ROOT\\scripts\\adopt.js"',
+  'node "$env:CITADEL_ROOT\\scripts\\install.js" --runtime codex --add-marketplace',
+]);
+for (const snippet of WINDOWS_SNIPPETS) {
+  assert(INSTALL.includes(snippet), `INSTALL.md missing quoted PowerShell stable path: ${snippet}`);
+}
+assert(INSTALL.includes('node "$CITADEL_ROOT/scripts/release-verify.js"'), 'INSTALL.md missing Linux/macOS release verifier path');
+assert(README.includes('Windows users should use the'), 'README must identify its compact manual block as Linux/macOS syntax');
+
+for (const [name, document] of [
+  ['README.md', README],
+  ['INSTALL.md', INSTALL],
+  ['docs/CLI.md', CLI],
+  ['docs/GOVERNED_LIFECYCLE.md', LIFECYCLE],
+]) {
+  const inTargetPlan = /--out\s+(?!\.\.[\\/])citadel-(?:adoption|update|rollback|leave)\.plan\.json/g;
+  assert(!inTargetPlan.test(document), `${name} writes a governed plan inside the target`);
+}
+
+const releaseFiles = new Set([
+  'README.md',
+  'INSTALL.md',
+  'LICENSE',
+  'SECURITY.md',
+  'PRIVACY.md',
+  'CHANGELOG.md',
+  'docs/CLI.md',
+  'docs/RELEASES.md',
+  'docs/ROUTING_PREVIEW.md',
+  'docs/ARCHITECTURE.md',
+  'assets/icon.svg',
+  'assets/terminal-demo.svg',
+]);
+const shippedDocs = [
+  ['README.md', README],
+  ['INSTALL.md', INSTALL],
+  ['PRIVACY.md', PRIVACY],
+  ['SECURITY.md', SECURITY],
+  ['docs/CLI.md', CLI],
+  ['docs/ROUTING_PREVIEW.md', ROUTING],
+  ['docs/ARCHITECTURE.md', ARCHITECTURE],
+  ['docs/RELEASES.md', RELEASES],
+];
+for (const [name, document] of shippedDocs) {
+  for (const match of document.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+    const target = match[1];
+    if (/^(?:https?:|#)/.test(target)) continue;
+    const withoutAnchor = target.split('#')[0];
+    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(name), withoutAnchor));
+    assert(releaseFiles.has(resolved), `${name} links to non-release surface ${target}`);
+    assert(fs.existsSync(path.join(ROOT, resolved)), `${name} has broken local link ${target}`);
+  }
+}
+assert(README.includes('src="assets/terminal-demo.svg"'), 'README must retain the shipped terminal demo');
+assert(!/src="assets\/(?!terminal-demo\.svg|icon\.svg)/.test(README), 'README references an asset outside the release');
+
+const cliHelp = childProcess.execFileSync(process.execPath, [path.join(ROOT, 'bin', 'citadel.js'), '--help'], { encoding: 'utf8' });
+const stableCommands = new Set(['install', 'doctor', 'update', 'rollback', 'uninstall']);
+for (const command of stableCommands) {
+  assert(new RegExp(`^  ${command}\\b`, 'm').test(cliHelp), `release CLI help missing documented command ${command}`);
+}
+const documentedCommands = new Set();
+for (const document of [README, INSTALL, CLI, PRIVACY, SECURITY]) {
+  for (const match of document.matchAll(/\bcitadel\s+([a-z][a-z0-9-]*)/g)) documentedCommands.add(match[1]);
+  for (const match of document.matchAll(/bin[\\/]citadel\.js["']?\s+([a-z][a-z0-9-]*)/g)) documentedCommands.add(match[1]);
+}
+for (const command of documentedCommands) {
+  assert(stableCommands.has(command), `shipped docs advertise command absent from release CLI: citadel ${command}`);
+}
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-public-install-'));
 try {
-  const fakeHome = path.join(temporary, 'home');
   const target = path.join(temporary, 'target');
-  fs.mkdirSync(fakeHome, { recursive: true });
   fs.mkdirSync(target, { recursive: true });
-  fs.symlinkSync(ROOT, path.join(fakeHome, 'Citadel'), process.platform === 'win32' ? 'junction' : 'dir');
   childProcess.execFileSync('git', ['init', '--quiet'], { cwd: target, windowsHide: true });
-  for (const item of COMMANDS) {
-    assert(page.includes(item.powershell), `homepage missing ${item.runtime} PowerShell installer command`);
-    assert(page.includes(item.shell), `homepage missing ${item.runtime} macOS/Linux installer command`);
-    const command = `${process.platform === 'win32' ? item.powershell : item.shell} --dry-run --json`;
-    const executable = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
-    const args = process.platform === 'win32' ? ['-NoProfile', '-Command', command] : ['-c', command];
-    const result = childProcess.spawnSync(executable, args, {
-      cwd: target,
-      encoding: 'utf8',
-      shell: false,
-      windowsHide: true,
-      timeout: 30000,
-      env: { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome },
-    });
-    assert.strictEqual(result.status, 0, `${item.runtime} displayed installer dry-run failed: ${result.stderr || result.stdout}`);
-    const output = JSON.parse(result.stdout);
-    assert.strictEqual(output.pass, true, `${item.runtime} installer did not return a passing dry-run plan`);
-    assert.strictEqual(output.dryRun, true, `${item.runtime} installer did not preserve dry-run mode`);
-  }
+
+  const command = process.platform === 'win32'
+    ? 'node "$env:CITADEL_ROOT\\scripts\\install.js" --runtime codex --add-marketplace --dry-run --json'
+    : 'node "$CITADEL_ROOT/scripts/install.js" --runtime codex --add-marketplace --dry-run --json';
+  const executable = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
+  const args = process.platform === 'win32' ? ['-NoProfile', '-Command', command] : ['-c', command];
+  const result = childProcess.spawnSync(executable, args, {
+    cwd: target,
+    encoding: 'utf8',
+    shell: false,
+    windowsHide: true,
+    timeout: 30000,
+    env: { ...process.env, CITADEL_ROOT: ROOT },
+  });
+  assert.strictEqual(result.status, 0, `documented installer path failed: ${result.stderr || result.stdout}`);
+  const output = JSON.parse(result.stdout);
+  assert.strictEqual(output.pass, true, 'documented installer did not return a passing dry-run plan');
+  assert.strictEqual(output.dryRun, true, 'documented installer did not preserve dry-run mode');
 } finally {
   fs.rmSync(temporary, { recursive: true, force: true });
 }
 
-process.stdout.write(`public install path passed: both platform paths are explicit and displayed ${process.platform === 'win32' ? 'PowerShell' : 'shell'} commands execute\n`);
+process.stdout.write(`public install path passed: immutable release trio, CLI help parity, outside-target plans, release-only links, and ${process.platform === 'win32' ? 'PowerShell' : 'shell'} installer path\n`);

@@ -1,79 +1,147 @@
 # Citadel releases
 
-Citadel releases are versioned, reproducible archives intended for GitHub Releases. The
-planned milestone version is `1.2.0`; Node 18 and 20 are tested on Linux, macOS, and
-Windows for both Claude and Codex runtime surfaces.
+GitHub Releases are Citadel's sole supported release channel:
+<https://github.com/SethGammon/Citadel/releases>.
 
-## Build and verify
+Every published version has exactly three downloadable release assets:
 
-From a clean checkout at the release tag:
+- `citadel-vX.Y.Z.tar.gz`, a deterministic source/runtime archive with one
+  `citadel-X.Y.Z/` root and an embedded `.citadel-release.json` manifest;
+- `citadel-vX.Y.Z.tar.gz.manifest.json`, which records the exact peeled source
+  commit, compatibility matrix, file list, byte counts, and file hashes;
+- `citadel-vX.Y.Z.tar.gz.sha256`, the archive SHA-256 sidecar.
+
+GitHub Actions also generates signed SLSA build provenance for all three files.
+The attestation is stored by GitHub and is not a fourth release asset.
+
+The root npm package is private. The public unscoped `citadel` namespace is not
+owned by this project, so `npm install citadel`, `npx citadel`, and npm registry
+tarballs are not supported Citadel acquisition paths. `npm pack` is used only
+as a local package-boundary and CLI smoke test.
+
+At this source snapshot, `1.3.0` remains unreleased. The `1.2.0` source
+milestone was never tagged or published. A version is released only when its
+exact tag and GitHub Release exist.
+
+## Release contents
+
+`release-files.json` is the committed release allowlist. A path not selected by
+that policy is not shipped. The policy retains the package CLI, runtime
+adapters, installers, governed adoption, update, rollback, uninstall, hooks,
+skills, agents, MCP servers, schemas, templates, and product documentation. It
+excludes benchmark corpora, research and grant material, site media,
+screenshots, test programs, compatibility fixtures, and maintainer-only
+instrumentation.
+
+The builder rejects a missing or malformed allowlist entry. It also rejects any
+release ref other than the exact `v<package.version>` tag. Annotated tags are
+peeled so the manifest's `commit` field identifies the source commit, not the
+tag object.
+
+## Maintainer build and verification
+
+From a clean checkout of the intended release commit, first run the untagged
+reproducibility check:
 
 ```sh
 node scripts/test-all.js --strict
-node scripts/release-package.js --ref v1.2.0 --dry-run --verify-reproducible
-node scripts/release-package.js --ref v1.2.0 --output-dir dist/release --verify-reproducible
-node scripts/release-verify.js dist/release/citadel-v1.2.0.tar.gz --ref v1.2.0 --version 1.2.0
+node scripts/release-package.js --dry-run --verify-reproducible
 ```
 
-The package command creates:
+Creating and pushing a tag is a separate maintainer action. Before the first
+public release, enable a repository ruleset that prevents updates or deletion
+of `refs/tags/v*`. Once the source and all version manifests are ready, the
+release tag must exactly match the package version. For example:
 
-- `citadel-v1.2.0.tar.gz`, with one `citadel-1.2.0/` root and an embedded
-  `.citadel-release.json`;
-- `citadel-v1.2.0.tar.gz.manifest.json`, which records version, ref, commit,
-  compatibility, file hashes, and the artifact hash;
-- `citadel-v1.2.0.tar.gz.sha256`, the standard SHA-256 sidecar.
+```sh
+TAG=v1.3.0
+node scripts/release-package.js --ref "$TAG" --dry-run --verify-reproducible
+node scripts/release-package.js --ref "$TAG" --output-dir dist/release --verify-reproducible
+node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" --version 1.3.0
+```
 
-`--dry-run` writes only to an operating-system temporary directory and removes it. With
-`--verify-reproducible`, two independent builds must produce identical archive and manifest
-bytes. A `v*` tag runs the same strict matrix before the release workflow packages and
-publishes anything. Creating or pushing that tag is a separate maintainer approval step.
+A pushed `v*` tag runs the same strict and reproducibility checks on Node 18 and
+20 across Linux, macOS, and Windows. The packaging job then rebuilds and
+verifies the trio and creates GitHub-native provenance with least privilege. The
+packaging job alone receives `contents: write`, `id-token: write`, and
+`attestations: write`; it receives no package-registry or registry-linked
+artifact-metadata permission. It then
+publishes only the three named files. If any gate fails, no GitHub Release is
+created.
+
+## Consumer verification
+
+Download the complete trio from the GitHub Release. From a trusted Citadel
+checkout, verify the archive's offline integrity and internal manifest consistency:
+
+```sh
+node scripts/release-verify.js /path/to/citadel-v1.3.0.tar.gz \
+  --ref v1.3.0 --version 1.3.0
+```
+
+This offline check proves that the archive, checksum sidecar, embedded manifest,
+external manifest, and expected version/ref strings agree. It does not by itself
+authenticate the publisher or resolve a trusted Git tag. After the tagged GitHub
+workflow publishes the release, use `gh attestation verify` against this repository
+for authenticated build provenance. See [GitHub's artifact-attestation guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
+
+When online, independently verify GitHub's signed build provenance:
+
+```sh
+gh attestation verify /path/to/citadel-v1.3.0.tar.gz -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.3.0.tar.gz.manifest.json -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.3.0.tar.gz.sha256 -R SethGammon/Citadel
+```
+
+The archive, sidecar, external manifest, embedded manifest, GitHub asset digest,
+and attestation subjects must agree. Treat a missing file, digest mismatch,
+source-commit mismatch, or failed attestation as a blocked release.
 
 ## Update safely
 
-Download all three release files into the same directory. Point the updater at a standalone
-Citadel installation, not at a target project using Citadel:
+Point the updater at a standalone Citadel installation, not at a target project
+that Citadel manages. The default command is a read-only plan:
 
 ```sh
-node scripts/update.js --archive /path/to/citadel-v1.2.0.tar.gz --target /path/to/Citadel
+node scripts/update.js --archive /path/to/citadel-v1.3.0.tar.gz --target /path/to/Citadel
 ```
 
-This is a read-only plan. It verifies the archive and prints the exact backup directory and
-rollback command. Nothing changes without explicit application:
+After reviewing the verified source, backup path, and rollback command, apply it
+explicitly:
 
 ```sh
-node scripts/update.js --archive /path/to/citadel-v1.2.0.tar.gz --target /path/to/Citadel --apply
+node scripts/update.js --archive /path/to/citadel-v1.3.0.tar.gz --target /path/to/Citadel --apply
 ```
 
-The updater preserves `.git/` and `.planning/`, backs up the installed release code beside
-the target under `.citadel-backups/`, then replaces release files. It never fetches from the
-network; artifact acquisition remains an explicit operator action.
+The updater preserves `.git/` and `.planning/`, creates a backup beside the
+target under `.citadel-backups/`, and replaces only release files. It does not
+fetch from the network.
 
 ## Roll back
 
-Use the exact rollback target printed by the update plan or apply result. Rollback is also
-plan-first:
+Use the exact backup path printed by the update operation. Rollback validates
+the backup receipt's target binding and content digest, rejecting a different
+directory or modified backup. It is also plan-first:
 
 ```sh
-node scripts/update.js --rollback /path/to/.citadel-backups/Citadel-1.1.0-before-1.2.0-<commit> --target /path/to/Citadel
-node scripts/update.js --rollback /path/to/.citadel-backups/Citadel-1.1.0-before-1.2.0-<commit> --target /path/to/Citadel --apply
+node scripts/update.js --rollback /path/to/.citadel-backups/Citadel-previous --target /path/to/Citadel
+node scripts/update.js --rollback /path/to/.citadel-backups/Citadel-previous --target /path/to/Citadel --apply
 ```
 
-Never delete the backup until the updated installation has passed its normal setup and
+Keep the backup until the updated installation passes its normal setup and
 runtime verification.
 
 ## Release invariants
 
-- `package.json`, both Claude manifests, and the Codex manifest must have one version.
-- A `vX.Y.Z` ref must match package version `X.Y.Z`.
-- Every archived file must be declared with its byte count and SHA-256 hash.
-- The archive SHA-256 must match both sidecar and external manifest.
-- Release automation must not use force operations, verification bypasses, or literal
-  credentials.
-
-## npm trusted publishing
-
-The `Publish npm package` workflow is manual only. A maintainer must explicitly dispatch it with the `publish` boolean enabled, then approve the protected `npm-publish` environment. The workflow does not run on pushes, pull requests, tags, schedules, or other workflow completion.
-
-The verification job runs the full strict suite, checks the package allowlist through the packed-tarball smoke test, and uploads the resulting tarball for one day. Only the publish job receives `id-token: write`; every job otherwise has `contents: read`.
-
-Publication uses `npm publish --provenance` through npm trusted publishing. No npm token is stored or passed. The npm package owner must configure the repository and workflow as a trusted publisher before npm will accept a release. Adding the workflow does not publish, reserve a package name, create a tag, or configure that external trust relationship.
+- `package.json`, both Claude manifests, the Claude marketplace entry, the
+  Codex manifest, metadata, tag, and changelog agree on one version.
+- A release ref is exactly `v<package.version>` and resolves to the manifest's
+  peeled source commit.
+- Every archived file is selected by `release-files.json` and declared with its
+  byte count and SHA-256 hash.
+- Benchmark, research, grant, site-media, screenshot, test, fixture, and
+  maintainer-only instrumentation paths are absent.
+- The archive hash matches the sidecar, external manifest, GitHub asset digest,
+  and SLSA attestation subject.
+- Release automation uses SHA-pinned actions, least permissions, no force
+  operations, no verification bypasses, and no npm publication path.

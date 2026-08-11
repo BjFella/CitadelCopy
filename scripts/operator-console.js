@@ -152,7 +152,7 @@ function boundaryForStack(stack) {
       risk: 'medium',
       request: 'Resolve blocked PR readiness reports before requesting stack approval.',
       verification: [
-        'Run `npm run stack:plan` and confirm blocked PR readiness reports are identified.',
+        'Run `node scripts/stack-plan.js` and confirm blocked PR readiness reports are identified.',
         'Rerun `node scripts/pr-ready.js --pr <pull-request-url> --run-verification` for each blocked PR.',
       ],
     };
@@ -162,7 +162,7 @@ function boundaryForStack(stack) {
     risk: 'medium-high',
     request: `Approve landing stack in order: ${stack.nextAction.command}`,
     verification: [
-      'Run `npm run stack:plan` and confirm the landing order matches the intended stack.',
+      'Run `node scripts/stack-plan.js` and confirm the landing order matches the intended stack.',
       'Confirm each listed PR readiness report is current before marking drafts ready or merging.',
     ],
   };

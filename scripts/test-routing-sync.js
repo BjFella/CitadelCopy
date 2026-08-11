@@ -10,6 +10,7 @@
  *   (c) every user-invocable skill appears in the table (minus documented exclusions)
  *   (d) keywords are non-empty arrays of non-empty strings
  *   (e) the checker's pure comparison detects a tampered in-memory copy
+ *   (f) exact Tier 0 commands have one generated shared contract
  *
  * Run: node scripts/test-routing-sync.js
  */
@@ -20,10 +21,14 @@ const fs = require('fs');
 const path = require('path');
 
 const { buildSkillCatalog } = require('../core/skills/catalog');
+const { DETERMINISTIC_COMMANDS, normalizeRoutingInput } = require('../core/skills/routing');
 const {
   EXCLUDED_SKILLS,
   buildRoutingTable,
   diffTexts,
+  renderDemoExactData,
+  renderDemoData,
+  renderExactCommandTable,
   renderJson,
 } = require('./generate-routing');
 
@@ -106,6 +111,31 @@ for (const skill of table.skills) {
     null,
     'a CRLF checkout of routing-table.json must compare clean against a CRLF render'
   );
+}
+
+// (f) exact commands are unique and project into both /do and the browser demo
+{
+  const phrases = DETERMINISTIC_COMMANDS.flatMap((entry) => entry.phrases.map(normalizeRoutingInput));
+  assert.equal(new Set(phrases).size, phrases.length, 'exact command phrases must be unique after normalization');
+  const skillProjection = renderExactCommandTable().join('\n');
+  const demoProjection = renderDemoExactData().join('\n');
+  for (const entry of DETERMINISTIC_COMMANDS) {
+    for (const phrase of entry.phrases) {
+      assert(skillProjection.includes(`"${phrase}"`), `missing exact command in /do projection: ${phrase}`);
+      assert(demoProjection.includes(JSON.stringify(phrase)), `missing exact command in demo projection: ${phrase}`);
+    }
+  }
+
+  for (const id of ['test', 'build', 'typecheck']) {
+    const entry = DETERMINISTIC_COMMANDS.find((item) => item.id === id);
+    assert.equal(entry.command, null, `${id} must not hard-code an unverified project command`);
+    assert.equal(entry.projectScript, id, `${id} must name the package script capability it requires`);
+  }
+
+  const demoCandidates = renderDemoData(buildRoutingTable(PROJECT_ROOT)).join('\n');
+  assert(demoCandidates.includes('skill: "/fleet --quick"'), 'demo Fleet candidate must use /fleet --quick');
+  assert(demoCandidates.includes('@citadel'), 'demo projection must retain the @citadel trigger');
+  assert(demoCandidates.includes('(?:^|[^\\w])'), 'demo keyword matching must support non-word-prefixed triggers');
 }
 
 console.log('routing sync tests passed');

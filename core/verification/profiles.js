@@ -76,7 +76,7 @@ function changedFilesFromGit(projectRoot) {
 
 function defaultCommand(scripts) {
   if (scripts.test) return 'npm run test';
-  return 'node scripts/test-all.js';
+  return 'git diff --check';
 }
 
 function hasAny(files, predicate) {

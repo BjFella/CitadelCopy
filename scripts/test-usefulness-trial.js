@@ -46,6 +46,10 @@ withTempProject((projectRoot) => {
   assert.equal(trial.decision, 'setup-needed');
   assert.equal(trial.score.label, '4/5');
   assert.equal(trial.criteria.find((item) => item.id === 'setup-path').status, 'pass');
+  const routing = trial.criteria.find((item) => item.id === 'plain-language-routing');
+  assert.equal(routing.status, 'pass');
+  assert.match(routing.detail, /candidate; runtime semantic classification required/);
+  assert(routing.evidence.includes('boundary=semantic-classification-required'));
   assert.equal(trial.criteria.find((item) => item.id === 'durable-evidence').status, 'partial');
   assert(trial.nextAction.includes('/do setup --express'));
 
