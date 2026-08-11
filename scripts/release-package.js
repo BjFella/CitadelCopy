@@ -945,6 +945,14 @@ function replaceRequiredInstruction(source, entryName, rule) {
   return projected;
 }
 
+function projectReleaseReadme(source) {
+  const sourceOnlyProof = /### Source-only proof program\r?\n[\s\S]*?(?=## Trust boundary)/;
+  if (!sourceOnlyProof.test(source)) {
+    throw new Error('Release README projection cannot find the source-only proof boundary');
+  }
+  return source.replace(sourceOnlyProof, '');
+}
+
 function sanitizeReleaseInstructions(entries, knownSkillNames) {
   const releaseVersion = jsonFromEntries(entries, 'package.json').version;
   const shippedSkillNames = new Set(entries
@@ -986,9 +994,7 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
       );
     }
     if (entry.name === 'README.md') {
-      const sourceOnlyProof = /### Source-only proof program\r?\n[\s\S]*?(?=## Trust boundary)/;
-      if (!sourceOnlyProof.test(source)) throw new Error('Release README projection cannot find the source-only proof boundary');
-      source = source.replace(sourceOnlyProof, '');
+      source = projectReleaseReadme(source);
     }
     if (entry.name === 'SECURITY.md') {
       const directChecks = /Run the security checks directly, or the full suite:\r?\n\r?\n```bash\r?\nnode scripts\/test-security\.js\r?\nnpm test\r?\n```/;
@@ -1332,6 +1338,7 @@ module.exports = {
   RELEASE_FILES_NAME,
   applyReleasePolicy,
   buildRelease,
+  projectReleaseReadme,
   sanitizeReleaseInstructions,
   sha256,
 };
