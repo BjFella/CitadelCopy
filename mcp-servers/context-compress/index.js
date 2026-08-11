@@ -34,6 +34,133 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const SECRET_BASENAMES = new Set([
+  '.git-credentials',
+  '.netrc',
+  '.npmrc',
+  '.pypirc',
+  '.vault-token',
+  'credentials',
+  'credentials.json',
+  'id_ed25519',
+  'id_rsa',
+  'service-account.json',
+]);
+const SECRET_EXTENSIONS = new Set(['.kdbx', '.key', '.p12', '.pem', '.pfx']);
+const SECRET_DIRECTORIES = new Set(['.git', '.gnupg', '.ssh']);
+const SECRET_RELATIVE_PATHS = new Set([
+  '.aws/credentials',
+  '.azure/accesstokens.json',
+  '.claude/compact-state.json',
+  '.claude/harness.json',
+  '.claude/settings.local.json',
+  '.codex/auth.json',
+  '.config/gcloud/application_default_credentials.json',
+  '.docker/config.json',
+  '.kube/config',
+]);
+
+function realpath(filePath) {
+  return fs.realpathSync.native
+    ? fs.realpathSync.native(filePath)
+    : fs.realpathSync(filePath);
+}
+
+function isWithin(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (
+    relative !== '..'
+    && !relative.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(relative)
+  );
+}
+
+function configureProjectRoot(env = process.env) {
+  const configured = env.CITADEL_PROJECT_ROOT;
+  if (typeof configured !== 'string' || configured.trim() === '') {
+    return {
+      error: 'Project root is not configured. Set CITADEL_PROJECT_ROOT to an absolute, existing directory.',
+    };
+  }
+  if (!path.isAbsolute(configured)) {
+    return { error: 'CITADEL_PROJECT_ROOT must be an absolute path.' };
+  }
+
+  const resolved = path.resolve(configured);
+  try {
+    const canonical = realpath(resolved);
+    if (!fs.statSync(canonical).isDirectory()) {
+      return { error: 'CITADEL_PROJECT_ROOT must identify an existing directory.' };
+    }
+    return { configured: resolved, canonical };
+  } catch (_) {
+    return { error: 'CITADEL_PROJECT_ROOT must identify an existing directory.' };
+  }
+}
+
+const PROJECT_ROOT = configureProjectRoot();
+
+function relativePolicyPath(root, candidate) {
+  return path.relative(root, candidate).split(path.sep).join('/').toLowerCase();
+}
+
+function secretLikeReason(root, candidate) {
+  const relative = relativePolicyPath(root, candidate);
+  const segments = relative.split('/').filter(Boolean);
+  const basename = segments.at(-1) || '';
+
+  // Native Read protection blocks every .env* variant, including templates.
+  if (segments.some((segment) => segment.startsWith('.env'))) return 'dotenv files are protected';
+  if (process.platform === 'win32' && segments.some((segment) => segment.includes(':'))) {
+    return 'alternate data streams are protected';
+  }
+  if (segments.some((segment) => SECRET_DIRECTORIES.has(segment))) return 'private credential state is protected';
+  if (SECRET_BASENAMES.has(basename)) return 'credential files are protected';
+  if (SECRET_EXTENSIONS.has(path.extname(basename))) return 'key and credential files are protected';
+  if (SECRET_RELATIVE_PATHS.has(relative)) return 'private runtime state is protected';
+  if (/^\.claude\/(?:consent-(?:session|onetime)-[^/]+\.json|remote[-_]?attachments)(?:\/|$)/.test(relative)) {
+    return 'private runtime state is protected';
+  }
+  return null;
+}
+
+function resolveReadPath(filePath) {
+  if (PROJECT_ROOT.error) return { error: PROJECT_ROOT.error };
+  if (typeof filePath !== 'string' || filePath.trim() === '' || filePath.includes('\0')) {
+    return { error: 'A non-empty file path is required.' };
+  }
+
+  const candidate = path.isAbsolute(filePath)
+    ? path.resolve(filePath)
+    : path.resolve(PROJECT_ROOT.canonical, filePath);
+  const lexicalRoot = isWithin(PROJECT_ROOT.canonical, candidate)
+    ? PROJECT_ROOT.canonical
+    : (isWithin(PROJECT_ROOT.configured, candidate) ? PROJECT_ROOT.configured : null);
+
+  if (!lexicalRoot) return { error: 'Refusing to read outside the configured project root.' };
+
+  const requestedSecret = secretLikeReason(lexicalRoot, candidate);
+  if (requestedSecret) return { error: `Refusing to read this path: ${requestedSecret}.` };
+
+  let canonical;
+  try {
+    canonical = realpath(candidate);
+  } catch (_) {
+    return { error: 'File not found inside the configured project root.' };
+  }
+
+  // realpath resolves POSIX symlinks plus Windows symlinks and junctions. The
+  // second boundary check prevents an in-project link from escaping the root.
+  if (!isWithin(PROJECT_ROOT.canonical, canonical)) {
+    return { error: 'Refusing to read outside the configured project root.' };
+  }
+
+  const canonicalSecret = secretLikeReason(PROJECT_ROOT.canonical, canonical);
+  if (canonicalSecret) return { error: `Refusing to read this path: ${canonicalSecret}.` };
+
+  return { path: canonical };
+}
+
 // ── MCP JSON-RPC server ───────────────────────────────────────────────────────
 
 const TOOL_DEFS = [
@@ -47,10 +174,15 @@ const TOOL_DEFS = [
     ].join(' '),
     inputSchema: {
       type: 'object',
+      additionalProperties: false,
       properties: {
         path: {
           type: 'string',
-          description: 'Absolute or relative path to the file.',
+          description: [
+            'Path to a file inside the configured CITADEL_PROJECT_ROOT.',
+            'Relative paths resolve against that root; absolute in-project paths are accepted.',
+            'Dotenv and common credential/key files are always refused.',
+          ].join(' '),
         },
         hint: {
           type: 'string',
@@ -128,23 +260,36 @@ function extractStructuralIndex(lines) {
 }
 
 function smartRead(filePath, hint) {
-  const abs = path.resolve(filePath);
+  const resolved = resolveReadPath(filePath);
+  if (resolved.error) return resolved;
+  const abs = resolved.path;
 
-  if (!fs.existsSync(abs)) {
-    return { error: `File not found: ${abs}` };
+  let stat;
+  try {
+    stat = fs.statSync(abs);
+  } catch (e) {
+    return { error: `Cannot inspect file: ${e.message}` };
   }
-
-  const stat = fs.statSync(abs);
   if (stat.isDirectory()) {
-    const entries = fs.readdirSync(abs).slice(0, 50).join('\n');
+    const entries = fs.readdirSync(abs)
+      .filter((entry) => !secretLikeReason(PROJECT_ROOT.canonical, path.join(abs, entry)))
+      .slice(0, 50)
+      .join('\n');
     return { content: `Directory listing (${abs}):\n${entries}` };
   }
+  if (!stat.isFile()) return { error: 'Refusing to read a non-regular file.' };
 
   let raw;
+  let descriptor;
   try {
-    raw = fs.readFileSync(abs, 'utf8');
+    const noFollow = fs.constants.O_NOFOLLOW || 0;
+    descriptor = fs.openSync(abs, fs.constants.O_RDONLY | noFollow);
+    if (!fs.fstatSync(descriptor).isFile()) return { error: 'Refusing to read a non-regular file.' };
+    raw = fs.readFileSync(descriptor, 'utf8');
   } catch (e) {
     return { error: `Cannot read file: ${e.message}` };
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
   }
 
   const lines = raw.split('\n');
@@ -316,7 +461,7 @@ function handleRequest(req) {
     respond(id, {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'context-compress', version: '1.0.0' },
+      serverInfo: { name: 'context-compress', version: '1.0.1' },
     });
     return;
   }
