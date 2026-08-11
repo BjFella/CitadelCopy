@@ -107,4 +107,3 @@ approves the frozen plan, and supplies the owner-verdict evidence. Until then:
 - `utility_claim` remains `false`;
 - external selection, owner acceptance, and D7 retention remain unknown;
 - the recruitment copy above remains unsent.
-
