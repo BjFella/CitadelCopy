@@ -44,9 +44,11 @@ function testClaudeDryRun() {
     assert(report.steps.some((step) => step.name === 'Validate Claude Code plugin marketplace'));
     assert(report.steps.some((step) => step.name === 'Register Citadel marketplace with Claude Code'));
     assert(report.steps.some((step) => step.name === 'Install Citadel Harness plugin'));
-    assert(report.steps.some((step) => step.name === 'Install resolved Citadel hooks'));
+    assert(!report.steps.some((step) => step.name === 'Install resolved Citadel hooks'),
+      'native Claude install must not silently write shared project hook settings');
     assert(report.steps.every((step) => step.skipped));
-    assert(report.nextSteps.claudeCode.some((step) => step.includes('/do --list')));
+    assert(report.nextSteps.claudeCode.some((step) => step.includes('/reload-plugins')));
+    assert(report.nextSteps.claudeCode.some((step) => step.includes('/do review README.md')));
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -92,6 +94,14 @@ function testClaudeMarketplaceManifest() {
   const plugin = JSON.parse(fs.readFileSync(pluginPath, 'utf8'));
   assert.equal(marketplace.plugins[0].version, plugin.version, 'Claude marketplace version should match plugin.json');
   assert(!marketplace.plugins[0].description.includes('â'), 'Claude marketplace description should not contain mojibake');
+}
+
+function testCodexMarketplaceTargetsPluginRoot() {
+  const marketplace = JSON.parse(fs.readFileSync(
+    path.join(CITADEL_ROOT, '.agents', 'plugins', 'marketplace.json'), 'utf8',
+  ));
+  assert.equal(marketplace.plugins[0].source.path, './',
+    'Codex marketplace source must be the directory containing .codex-plugin/plugin.json');
 }
 
 function testUnifiedDispatcherRecordsSuccessfulInstall() {
@@ -177,6 +187,7 @@ function testUnifiedDispatcherRespectsNonInstallModesAndOptOut() {
 testClaudeDryRun();
 testUnifiedDispatcherDryRun();
 testClaudeMarketplaceManifest();
+testCodexMarketplaceTargetsPluginRoot();
 testUnifiedDispatcherRecordsSuccessfulInstall();
 testUnifiedDispatcherRecordsFailureWithoutChangingExit();
 testUnifiedDispatcherRespectsNonInstallModesAndOptOut();

@@ -53,6 +53,7 @@ function activationAuthority() {
   return {
     allowed: ['enabled', 'degraded'].includes(decision.status),
     decision,
+    runtime: runtime.id,
     bundles: context.receipt?.bundles?.effective || [],
   };
 }
@@ -75,7 +76,14 @@ function shouldSyncScripts() {
     if (!fs.existsSync(versionFile)) return true;
 
     const installedVersion = fs.readFileSync(versionFile, 'utf8').trim();
-    return installedVersion !== pluginVersion;
+    if (installedVersion !== pluginVersion) return true;
+
+    const pluginScripts = path.join(PLUGIN_ROOT, 'scripts');
+    const projectScripts = path.join(PROJECT_ROOT, '.citadel', 'scripts');
+    if (!fs.existsSync(pluginScripts) || !fs.existsSync(projectScripts)) return true;
+    return fs.readdirSync(pluginScripts)
+      .filter((file) => file.endsWith('.js') || file.endsWith('.cjs'))
+      .some((file) => !fs.existsSync(path.join(projectScripts, file)));
   } catch {
     return true; // on any error, sync to be safe
   }
@@ -86,7 +94,7 @@ function writeVersionFile(pluginRoot, projectRoot) {
     const pkgPath = path.join(pluginRoot, 'package.json');
     if (!fs.existsSync(pkgPath)) return;
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-    fs.writeFileSync(path.join(projectRoot, '.citadel', 'version.txt'), pkg.version || '0.0.0');
+    fs.writeFileSync(path.join(projectRoot, '.citadel', 'version.txt'), `${pkg.version || '0.0.0'}\n`);
   } catch { /* non-fatal */ }
 }
 
@@ -213,12 +221,12 @@ function main() {
       writeVersionFile(PLUGIN_ROOT, PROJECT_ROOT);
     }
 
-    // 5. Copy agent-context template if missing.
-    // Source lives in templates/agent-context/ (runtime-neutral).
-    // Destination is .claude/agent-context/ for Claude sessions.
-    // Codex equivalent would go to .codex/agent-context/ when that runtime is added.
+    // 5. Copy the runtime-neutral delegated-agent context into the active
+    // runtime's project namespace. Never create another runtime's marker: it
+    // makes later runtime detection ambiguous.
     const pluginAgentContext = path.join(PLUGIN_ROOT, 'templates', 'agent-context');
-    const agentContext = path.join(PROJECT_ROOT, '.claude', 'agent-context');
+    const runtimeDirectory = authority.runtime === 'codex' ? '.codex' : '.claude';
+    const agentContext = path.join(PROJECT_ROOT, runtimeDirectory, 'agent-context');
     if (!fs.existsSync(agentContext) && fs.existsSync(pluginAgentContext)) {
       copyDirRecursive(pluginAgentContext, agentContext);
     }
@@ -228,7 +236,7 @@ function main() {
     ensureDir(citadelDir);
     fs.writeFileSync(
       path.join(citadelDir, 'plugin-root.txt'),
-      PLUGIN_ROOT
+      `${PLUGIN_ROOT}\n`
     );
 
     // 6a. Restore opted-in durable knowledge from the user-level repository

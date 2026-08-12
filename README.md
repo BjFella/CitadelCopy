@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/SethGammon/Citadel/actions/workflows/tests.yml/badge.svg)](https://github.com/SethGammon/Citadel/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)
+![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-green.svg)
 [![Interactive demo](https://img.shields.io/badge/Interactive_demo-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
 # Citadel
@@ -19,44 +19,66 @@ and handoffs around the coding agent you already use.
 
 ## Install
 
-**Requires:** Claude Code or OpenAI Codex, Node.js 18+, and a git repository.
+**Requires:** Claude Code or OpenAI Codex, Node.js 22+, and a git repository.
 
-GitHub Releases are the only supported stable acquisition channel. Choose an
-explicit version and use its complete archive, external manifest, and SHA-256
-sidecar. The public npm package named `citadel` is unrelated to this project,
-and floating `main` is development source rather than a stable install.
+Citadel is installed through the plugin marketplace already built into your
+coding agent. The commands below pin the complete `v1.3.0` release; if that tag
+is not present on [GitHub Releases](https://github.com/SethGammon/Citadel/releases),
+do not substitute floating `main`.
 
-Open the repository you want Citadel to manage, then paste this into your
-coding agent:
+**Verified release · Project-local activation · Removable · No npm package**
 
-```text
-Install Citadel in this repository from a tagged GitHub Release at
-https://github.com/SethGammon/Citadel/releases.
+### OpenAI Codex
 
-Choose an explicit vX.Y.Z release. Download all three matching assets:
-citadel-vX.Y.Z.tar.gz, citadel-vX.Y.Z.tar.gz.manifest.json, and
-citadel-vX.Y.Z.tar.gz.sha256. Verify that the archive SHA-256 agrees with both
-the sidecar and external manifest before extracting it. Do not use npm and do
-not install from floating main.
+Run these commands from the repository you want Citadel to manage:
 
-Detect whether this session is running in OpenAI Codex or Claude Code. Use the
-extracted citadel-X.Y.Z directory as the source and this repository as the
-target. Create a governed adoption plan for that runtime. Show me the exact
-footprint, unknown external registrations, plan digest, and confirmation token
-before applying anything. After I approve the saved plan, apply it and run
-adoption doctor.
-
-After adoption is healthy and Citadel is enabled in a fresh thread, run:
-
-/do setup --express
+```bash
+codex plugin marketplace add SethGammon/Citadel --ref v1.3.0
+codex plugin add citadel@citadel-local
 ```
 
-The agent must stop at the saved adoption plan until you approve its exact
-confirmation token. Follow any external plugin-enable step still reported as
-unknown, start a fresh session if prompted, then run `/do setup --express`.
+Start a new Codex task, review Citadel through `/hooks`, then give it a real
+request such as `/do review README.md`.
+
+### Claude Code
+
+Run these commands from the repository you want Citadel to manage:
+
+```bash
+claude plugin marketplace add SethGammon/Citadel@v1.3.0 --scope local
+claude plugin install citadel@citadel-local --scope local
+```
+
+Run `/reload-plugins` if Claude Code is already open, then give Citadel a real
+request such as `/do review README.md`.
+
+### Prefer to have your agent install it?
+
+Paste this into Claude Code or Codex. It explains both what Citadel is and the
+boundary the installer must preserve:
+
+```text
+Citadel is an open-source operating layer for Claude Code and OpenAI Codex. It
+adds one /do entry point, repository-local state that survives sessions,
+guarded multi-step workflows, and reviewable evidence with explicit Needs You
+and Resume boundaries.
+
+Install Citadel v1.3.0 from https://github.com/SethGammon/Citadel using this
+runtime's native plugin marketplace, then enable it for this repository. Use
+project-local defaults and preserve removal evidence for every change. Do not clone main or change shared
+configuration, sandbox settings, permissions, or user-wide settings without
+asking me.
+
+Only interrupt me for a platform-required trust or reload action, or for a real
+configuration conflict. Verify the result, then tell me the single next action.
+```
+
+The platform owns plugin acquisition and executable-code trust. Citadel owns
+bounded project state and recovery. Plans, digests, receipts, and doctor checks
+remain available as evidence, but are not user chores on the normal path.
 
 <details>
-<summary><strong>Manual stable installation</strong></summary>
+<summary><strong>Manual, offline, and high-assurance installation</strong></summary>
 
 <br>
 
@@ -185,7 +207,7 @@ slim GitHub Release.
 | Deterministic recovery and safety comparisons | Journaled recovery produced 0 duplicate effects versus 3 for naive restart across six injected boundaries. Safety gates achieved 100% malicious recall and 0% benign false positives across 12 matched decisions. | Local deterministic fixtures only. No process-kill, power-loss, real exploit, or cross-OS claim. |
 | Leased deploy-steward state machine | Across three 15-PR batches per arm, independent loops produced 315 stale-head race attempts; the leased steward produced 0. | Fake provider only. This is not GitHub, Actions, branch protection, or real-deployment evidence. |
 | Protected GitHub deploy-steward comparison | Across three valid matched public runs, both policies merged 45/45 PRs through strict Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. Independent loops incurred 106 failed merge races, 315 stale updates, and 421 interventions; the steward incurred 0 of each. | Six disposable public repositories under one account, plus one disclosed invalid run. Deployments are GitHub API records, not production releases. No speed, cost, human-utility, or broad reliability claim. |
-| Historical npm-pack profile | At source commit `9bebf1a`, the private source package measured 9,123,375 packed bytes and 1,888 files, 5.7385% and 66 files below its frozen baseline. | GitHub Releases are the only supported stable acquisition channel. This frozen source-only measurement is not a current release-size or public-package claim. |
+| Historical npm-pack profile | At source commit `9bebf1a`, the private source package measured 9,123,375 packed bytes and 1,888 files, 5.7385% and 66 files below its frozen baseline. | Native marketplaces consume an exact GitHub release tag; the release trio remains the manual and offline assurance path. This frozen source-only measurement is not a current release-size or public-package claim. |
 
 The public claim is deliberately narrow: Citadel can make agent evaluations
 inspectable, reproducible, and fail-honest. Comparative real-user utility

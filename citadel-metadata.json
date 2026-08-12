@@ -6,7 +6,7 @@
   "license": "MIT",
   "source_repository": "https://github.com/SethGammon/Citadel",
   "runtime_support": {
-    "node": ">=18",
+    "node": ">=22",
     "claude_code": {
       "manifest": ".claude-plugin/plugin.json",
       "marketplace": ".claude-plugin/marketplace.json",

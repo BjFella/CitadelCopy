@@ -10,6 +10,8 @@ const { spawnSync } = require('child_process');
 const {
   applyPlan, createAdoptionPlan, createLeavePlan, doctor,
 } = require('../core/adoption');
+const configControl = require('../core/config');
+const packageCli = require('../core/cli/package-cli');
 const { ACTIVE_RECEIPT, LOCK_PATH } = require('../core/adoption/footprint');
 const { __test: { publishPlanOutput } } = require('./adopt');
 
@@ -373,6 +375,46 @@ try {
     applyPlan(leave, { confirm: leave.confirmation.token });
     assert(fs.existsSync(path.join(root, ...modified.path.split('/'))));
     assert.strictEqual(doctor(root).status, 'not_adopted');
+  });
+
+  test('first Codex session preserves adoption health and runtime identity', () => {
+    const root = target(path.join(suite, 'codex-first-session'));
+    const plan = createAdoptionPlan({
+      source: path.resolve(__dirname, '..'),
+      target: root,
+      runtime: 'codex',
+      allowDirtySource: true,
+    });
+    assert.notStrictEqual(plan.status, 'blocked', JSON.stringify(plan.blockers));
+    applyPlan(plan, { confirm: plan.confirmation.token });
+    assert.strictEqual(doctor(root).status, 'healthy');
+
+    const init = spawnSync(process.execPath, [path.resolve(__dirname, '..', 'hooks_src', 'init-project.js')], {
+      cwd: root,
+      encoding: 'utf8',
+      shell: false,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        CITADEL_RUNTIME: 'codex',
+        CLAUDE_PROJECT_DIR: root,
+      },
+    });
+    assert.strictEqual(init.status, 0, init.stderr);
+    assert.strictEqual(doctor(root).status, 'healthy');
+    assert(fs.existsSync(path.join(root, '.citadel', 'scripts', 'dashboard.js')),
+      'first session must materialize project delegates even when adoption pre-created version.txt');
+    assert(fs.existsSync(path.join(root, '.codex', 'agent-context')),
+      'Codex sessions must receive delegated-agent context in the Codex namespace');
+    assert(!fs.existsSync(path.join(root, '.claude')),
+      'Codex initialization must not create a Claude runtime marker');
+    assert.strictEqual(configControl.detectRuntimeContract(root).id, 'codex');
+    assert.deepStrictEqual(packageCli.detectRuntime([], {
+      cwd: root,
+      env: {},
+      fsImpl: fs,
+      probe: () => false,
+    }), { runtime: 'codex', source: 'project-marker' });
   });
 
   test('source drift rejects a previously saved plan', () => {

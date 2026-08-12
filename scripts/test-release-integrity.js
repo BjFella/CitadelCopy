@@ -19,7 +19,7 @@ function writeJson(filePath, value) {
 }
 
 function makeSource(root, version = '1.1.0') {
-  writeJson(path.join(root, 'package.json'), { name: 'citadel', version, engines: { node: '>=18' } });
+  writeJson(path.join(root, 'package.json'), { name: 'citadel', version, engines: { node: '>=22' } });
   writeJson(path.join(root, '.claude-plugin', 'plugin.json'), { name: 'citadel', version });
   writeJson(path.join(root, '.claude-plugin', 'marketplace.json'), { plugins: [{ name: 'citadel', version }] });
   writeJson(path.join(root, '.codex-plugin', 'plugin.json'), { name: 'citadel', version });
@@ -60,7 +60,7 @@ function writeOwnershipManifest(root, version, options = {}) {
     ref: `v${version}`,
     commit: options.commit || '1'.repeat(40),
     createdAt: '2026-01-01T00:00:00.000Z',
-    nodeRange: '>=18',
+    nodeRange: '>=22',
     runtimeMatrix: { operatingSystems: ['linux', 'macos', 'windows'], node: ['18', '20', '22'] },
     files: files.sort((left, right) => left.path.localeCompare(right.path)),
     rollbackCommand: 'node scripts/update.js --rollback <backup-path> --target <installation> --apply',

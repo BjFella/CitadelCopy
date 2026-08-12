@@ -86,14 +86,15 @@ function printHuman(report) {
   console.log(`Project root: ${report.projectRoot}`);
   console.log('');
   for (const step of report.steps) {
-    const status = step.pass ? 'PASS' : 'FAIL';
-    const skipped = step.skipped ? ' (dry run)' : '';
-    console.log(`[${status}] ${step.name}${skipped}`);
+    const status = step.skipped && report.dryRun ? 'PLAN' : step.pass ? 'PASS' : 'FAIL';
+    console.log(`[${status}] ${step.name}`);
     console.log(`       ${step.command}`);
     if (!step.pass && step.stderr) console.log(step.stderr.trim());
   }
   console.log('');
-  console.log(report.pass ? 'Install prep passed.' : 'Install prep failed.');
+  console.log(report.pass
+    ? report.dryRun ? 'Install plan ready; no commands were run.' : 'Citadel plugin installation completed.'
+    : 'Citadel plugin installation failed.');
   console.log('');
   console.log('Next in Codex app:');
   for (const item of report.nextSteps.codexApp) console.log(`  - ${item}`);
@@ -111,26 +112,30 @@ Options:
   --project-root PATH       Target project to prepare; defaults to current directory.
   --target-project PATH     Alias for --project-root.
   --plugin-root PATH        Citadel clone; defaults to this script's parent directory.
+  --install                 Add the marketplace and install citadel@citadel-local.
+  --install-plugin          Run: codex plugin add citadel@citadel-local.
   --plugin-only             Prepare the Citadel plugin and marketplace only.
   --skip-plugin-refresh     Do not regenerate plugin-root Codex artifacts.
   --skip-windows-check      Skip Windows-specific Codex readiness check.
-  --add-marketplace         Also run: codex plugin marketplace add <plugin-root>.
+  --add-marketplace         Run: codex plugin marketplace add <plugin-root>.
   --dry-run                 Print planned commands without writing files.
   --json                    Print machine-readable JSON only.
 
 Common use:
   cd /path/to/your-project
-  node /path/to/Citadel/scripts/codex-install.js --add-marketplace
+  node /path/to/Citadel/scripts/codex-install.js --install
 `);
   process.exit(0);
 }
 
 const dryRun = has('--dry-run');
 const jsonOnly = has('--json');
-const pluginOnly = has('--plugin-only');
+const install = has('--install');
+const pluginOnly = has('--plugin-only') || install;
 const skipPluginRefresh = has('--skip-plugin-refresh');
 const skipWindowsCheck = has('--skip-windows-check');
-const addMarketplace = has('--add-marketplace');
+const addMarketplace = install || has('--add-marketplace');
+const installPlugin = install || has('--install-plugin');
 const pluginRoot = path.resolve(arg('--plugin-root', DEFAULT_PLUGIN_ROOT));
 const projectRoot = path.resolve(arg('--project-root', arg('--target-project', process.cwd())));
 
@@ -179,7 +184,7 @@ if (!skipPluginRefresh) {
 steps.push(runStep({
   name: 'Write and validate local Codex plugin marketplace',
   command: node,
-  args: [path.join(pluginRoot, 'scripts', 'codex-plugin-smoke.js'), '--project-root', pluginRoot, '--write'],
+    args: [path.join(pluginRoot, 'scripts', 'codex-plugin-smoke.js'), '--project-root', pluginRoot, '--plugin-path', './', '--write'],
   cwd: pluginRoot,
   dryRun,
 }));
@@ -195,7 +200,18 @@ if (addMarketplace) {
   }));
 }
 
-if (!pluginOnly) {
+if (installPlugin && steps.every((step) => step.pass || !step.required)) {
+  steps.push(runStep({
+    name: 'Install Citadel Harness plugin with Codex CLI',
+    command: 'codex',
+    args: ['plugin', 'add', 'citadel@citadel-local'],
+    cwd: projectRoot,
+    dryRun,
+    timeout: 30000,
+  }));
+}
+
+if (!pluginOnly && steps.every((step) => step.pass || !step.required)) {
   steps.push(runStep({
     name: 'Generate Codex project artifacts',
     command: node,
@@ -229,21 +245,23 @@ const report = {
   projectRoot,
   mode: pluginOnly ? 'plugin-only' : 'plugin-and-project',
   dryRun,
+  install,
   addMarketplace,
+  installPlugin,
   generatedAt: new Date().toISOString(),
   steps,
   pass,
   nextSteps: {
     codexApp: [
       'Open Codex and select the target project.',
-      'Open Plugins, choose the Citadel Local Plugins marketplace, and select Add to Codex for Citadel Harness.',
-      'Start a new local thread after installing or enabling the plugin.',
-      'Run /do setup, or /do setup --express when you want the fastest project initialization.',
+      install ? 'Citadel Harness is installed; start a new local task so Codex loads it.' : 'Open Plugins, choose the Citadel Local Plugins marketplace, and select Add to Codex for Citadel Harness.',
+      'Review and trust the Citadel hooks through /hooks when Codex asks.',
+      'Run a real request such as /do review README.md; first-use state initializes automatically.',
     ],
     codexCli: [
       addMarketplace ? 'Run codex from the target project.' : `Run codex plugin marketplace add ${q(pluginRoot)} if you want CLI marketplace registration.`,
-      'Inside Codex CLI, run /plugins and install or enable Citadel Harness.',
-      'Start a new thread and run /do setup.',
+      installPlugin ? 'Citadel Harness is installed from citadel-local.' : 'Run codex plugin add citadel@citadel-local.',
+      'Start a new task, review Citadel through /hooks, then run /do review README.md.',
     ],
   },
 };

@@ -1192,7 +1192,7 @@ function assertVersions(entries, ref) {
   if (ref && ref !== `v${pkg.version}`) {
     throw new Error(`Tag ${ref} does not match manifest version ${pkg.version}`);
   }
-  return { version: pkg.version, nodeRange: pkg.engines?.node || '>=18' };
+  return { version: pkg.version, nodeRange: pkg.engines?.node || '>=22' };
 }
 
 function assertRefMatchesCheckout(sourceDir, ref) {
