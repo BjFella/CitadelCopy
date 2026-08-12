@@ -2,6 +2,21 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.3.1 - 2026-08-12
+
+### Fixed
+
+- Tagged release packaging now reads tracked media with an explicit bounded Git
+  output buffer instead of Node's 1 MiB child-process default.
+- The Fleet isolation fixture now creates real detached Git worktrees rather
+  than recursively copying a live `.git` directory.
+- Release manifests report the supported Node 22/24 matrix.
+
+### Release note
+
+- `v1.3.0` was tagged but never published because its release matrix failed.
+  `v1.3.1` is the first installable release in this series.
+
 ## 1.3.0 - 2026-08-12
 
 ### Distribution

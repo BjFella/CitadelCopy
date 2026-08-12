@@ -339,7 +339,7 @@ try {
     assert(!productPaths.has(sourceOnlyProofPath), `release leaked source-only proof path ${sourceOnlyProofPath}`);
   }
   assert(![...productPaths].some((relative) => relative.startsWith('.planning/rubrics/')), 'release leaked maintainer-only rubrics');
-  assert.equal(verifyRelease(product.archivePath, { version: '1.3.0', ref: product.manifest.ref }).files, productPaths.size);
+  assert.equal(verifyRelease(product.archivePath, { version: '1.3.1', ref: product.manifest.ref }).files, productPaths.size);
 
   const extracted = path.join(temp, 'product-extracted');
   const archiveFiles = parseTar(zlib.gunzipSync(fs.readFileSync(product.archivePath)));
