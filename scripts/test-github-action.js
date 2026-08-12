@@ -21,7 +21,7 @@ for (const input of ['workflow', 'evidence-path', 'strict', 'working-directory']
 for (const output of ['status', 'receipt-path', 'summary-path']) {
   assert.match(actionYaml, new RegExp(`^  ${output}:`, 'm'), `action output missing ${output}`);
 }
-assert.match(actionYaml, /using: node20/);
+assert.match(actionYaml, /using: node24/);
 assert.match(actionYaml, /main: scripts\/action-verify\.js/);
 
 assert.match(testsYaml, /citadel-action-consumer:/);
