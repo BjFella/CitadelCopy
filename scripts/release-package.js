@@ -12,7 +12,8 @@ const { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const MANIFEST_NAME = '.citadel-release.json';
 const RELEASE_FILES_NAME = 'release-files.json';
-const MATRIX = { operatingSystems: ['linux', 'macos', 'windows'], node: ['18', '20'], runtimes: ['claude', 'codex'] };
+const GIT_MAX_BUFFER = 256 * 1024 * 1024;
+const MATRIX = { operatingSystems: ['linux', 'macos', 'windows'], node: ['22', '24'], runtimes: ['claude', 'codex'] };
 
 function compareNames(left, right) {
   return left.name < right.name ? -1 : left.name > right.name ? 1 : 0;
@@ -30,7 +31,12 @@ function arg(name, fallback = null) {
 }
 
 function runGit(args, cwd, encoding = 'utf8') {
-  return execFileSync('git', args, { cwd, encoding, stdio: ['ignore', 'pipe', 'pipe'] });
+  return execFileSync('git', args, {
+    cwd,
+    encoding,
+    maxBuffer: GIT_MAX_BUFFER,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 }
 
 function gitValue(args, cwd, fallback) {

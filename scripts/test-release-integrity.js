@@ -12,6 +12,10 @@ const { buildRelease, sanitizeReleaseInstructions, sha256 } = require('./release
 const { parseTar, verifyRelease } = require('./release-verify');
 
 const ROOT = path.resolve(__dirname, '..');
+const LARGE_BINARY_FIXTURE = Buffer.concat([
+  Buffer.from([0x00, 0x0d, 0x0a, 0xff]),
+  Buffer.alloc((2 * 1024 * 1024) + 17, 0xa5),
+]);
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -26,7 +30,7 @@ function makeSource(root, version = '1.1.0') {
   fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
   fs.writeFileSync(path.join(root, 'scripts', 'hello.js'), "console.log('citadel');\n");
   fs.mkdirSync(path.join(root, 'assets'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'assets', 'fixture.bin'), Buffer.from([0x00, 0x0d, 0x0a, 0xff]));
+  fs.writeFileSync(path.join(root, 'assets', 'fixture.bin'), LARGE_BINARY_FIXTURE);
   writeJson(path.join(root, 'release-files.json'), {
     schema: 1,
     includeFiles: ['package.json', 'release-files.json'],
@@ -162,8 +166,13 @@ try {
   assert.equal(fs.readFileSync(first.manifestPath, 'utf8'), fs.readFileSync(second.manifestPath, 'utf8'));
   assert.equal(
     first.manifest.files.find((file) => file.path === 'assets/fixture.bin')?.sha256,
-    sha256(Buffer.from([0x00, 0x0d, 0x0a, 0xff])),
+    sha256(LARGE_BINARY_FIXTURE),
     'release text normalization must not alter binary payloads',
+  );
+  assert.deepEqual(
+    first.manifest.runtimeMatrix,
+    { operatingSystems: ['linux', 'macos', 'windows'], node: ['22', '24'], runtimes: ['claude', 'codex'] },
+    'release manifest must report the supported CI/runtime matrix',
   );
   for (const relative of [
     'package.json', 'release-files.json', '.claude-plugin/plugin.json',
