@@ -2,7 +2,7 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
-## 1.3.0 - Unreleased
+## 1.3.0 - 2026-08-12
 
 ### Distribution
 
@@ -108,7 +108,7 @@ Release, or supported package publication.
   commit, and package/plugin version agreement.
 - A plan-first local-artifact updater with explicit `--apply`, automatic backup, and an
   explicit rollback command.
-- Strict Node 18/20 verification across Linux, macOS, and Windows before tagged packaging.
+- Strict Node 22/24 verification across Linux, macOS, and Windows before tagged packaging.
 - Local activation funnel recording with strict schemas, opt-out controls, legacy migration,
   and explicitly exported redacted reports.
 - Maintainer-local GitHub traffic snapshots that preserve daily acquisition history beyond

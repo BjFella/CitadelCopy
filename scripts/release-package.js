@@ -1009,8 +1009,12 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
       );
     }
     if (entry.name === 'CHANGELOG.md') {
-      const currentHeading = `## ${releaseVersion} - Unreleased`;
-      if (!source.includes(currentHeading)) throw new Error('Release changelog projection cannot find the current version heading');
+      const escapedVersion = releaseVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const currentHeading = new RegExp(`^## ${escapedVersion} - (?:Unreleased|\\d{4}-\\d{2}-\\d{2})\\s*$`, 'gm');
+      const headingMatches = [...source.matchAll(currentHeading)];
+      if (headingMatches.length !== 1) {
+        throw new Error('Release changelog projection requires exactly one current version heading with Unreleased or an ISO date');
+      }
       source = source.replace(currentHeading, `## ${releaseVersion}`);
       const addedSection = /### Added\r?\n[\s\S]*?(?=### Verification)/;
       if (!addedSection.test(source)) throw new Error('Release changelog projection cannot find the current Added section');

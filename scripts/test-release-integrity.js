@@ -115,6 +115,27 @@ try {
     'release instruction projection must fail closed instead of deleting an unhandled mixed-purpose line',
   );
 
+  const projectedDatedChangelog = sanitizeReleaseInstructions([
+    { name: 'package.json', data: Buffer.from('{"version":"1.3.0"}') },
+    {
+      name: 'CHANGELOG.md',
+      data: Buffer.from('## 1.3.0 - 2026-08-12\n\n### Added\n\n- Release feature.\n\n### Verification\n\n- Verified.\n'),
+    },
+  ], new Set()).find((entry) => entry.name === 'CHANGELOG.md').data.toString('utf8');
+  assert(projectedDatedChangelog.startsWith('## 1.3.0\n'),
+    'release projection accepts an exact ISO-dated current changelog heading');
+  assert.throws(
+    () => sanitizeReleaseInstructions([
+      { name: 'package.json', data: Buffer.from('{"version":"1.3.0"}') },
+      {
+        name: 'CHANGELOG.md',
+        data: Buffer.from('## 1.2.0 - 2026-08-12\n\n### Added\n\n- Wrong version.\n\n### Verification\n\n- Verified.\n'),
+      },
+    ], new Set()),
+    /exactly one current version heading/,
+    'release projection rejects a dated changelog heading for a different version',
+  );
+
   const source = path.join(temp, 'source');
   makeSource(source);
   fs.mkdirSync(path.join(source, '.planning', '_templates'), { recursive: true });
