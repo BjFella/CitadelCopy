@@ -58,11 +58,11 @@ for (const snippet of WINDOWS_SNIPPETS) {
 assert(INSTALL.includes('node "$CITADEL_ROOT/scripts/release-verify.js"'), 'INSTALL.md missing Linux/macOS release verifier path');
 assert(README.includes('Windows users should use the'), 'README must identify its compact manual block as Linux/macOS syntax');
 for (const [name, document] of [['README.md', README], ['INSTALL.md', INSTALL]]) {
-  assert(document.includes('codex plugin marketplace add SethGammon/Citadel --ref v1.3.0'),
+  assert(document.includes('codex plugin marketplace add SethGammon/Citadel --ref v1.3.1'),
     `${name} missing exact Codex marketplace install`);
   assert(document.includes('codex plugin add citadel@citadel-local'),
     `${name} missing exact Codex plugin install`);
-  assert(document.includes('claude plugin marketplace add SethGammon/Citadel@v1.3.0 --scope local'),
+  assert(document.includes('claude plugin marketplace add SethGammon/Citadel@v1.3.1 --scope local'),
     `${name} missing exact Claude marketplace install`);
   assert(document.includes('claude plugin install citadel@citadel-local --scope local'),
     `${name} missing exact Claude plugin install`);
