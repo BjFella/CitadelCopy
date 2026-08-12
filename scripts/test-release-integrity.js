@@ -19,7 +19,7 @@ function writeJson(filePath, value) {
 }
 
 function makeSource(root, version = '1.1.0') {
-  writeJson(path.join(root, 'package.json'), { name: 'citadel', version, engines: { node: '>=18' } });
+  writeJson(path.join(root, 'package.json'), { name: 'citadel', version, engines: { node: '>=22' } });
   writeJson(path.join(root, '.claude-plugin', 'plugin.json'), { name: 'citadel', version });
   writeJson(path.join(root, '.claude-plugin', 'marketplace.json'), { plugins: [{ name: 'citadel', version }] });
   writeJson(path.join(root, '.codex-plugin', 'plugin.json'), { name: 'citadel', version });
@@ -60,7 +60,7 @@ function writeOwnershipManifest(root, version, options = {}) {
     ref: `v${version}`,
     commit: options.commit || '1'.repeat(40),
     createdAt: '2026-01-01T00:00:00.000Z',
-    nodeRange: '>=18',
+    nodeRange: '>=22',
     runtimeMatrix: { operatingSystems: ['linux', 'macos', 'windows'], node: ['18', '20', '22'] },
     files: files.sort((left, right) => left.path.localeCompare(right.path)),
     rollbackCommand: 'node scripts/update.js --rollback <backup-path> --target <installation> --apply',
@@ -113,6 +113,27 @@ try {
     ], new Set(['kept', 'omitted'])),
     /Unhandled release instruction references:\s+skills\/kept\/SKILL\.md:1 \/omitted/,
     'release instruction projection must fail closed instead of deleting an unhandled mixed-purpose line',
+  );
+
+  const projectedDatedChangelog = sanitizeReleaseInstructions([
+    { name: 'package.json', data: Buffer.from('{"version":"1.3.0"}') },
+    {
+      name: 'CHANGELOG.md',
+      data: Buffer.from('## 1.3.0 - 2026-08-12\n\n### Added\n\n- Release feature.\n\n### Verification\n\n- Verified.\n'),
+    },
+  ], new Set()).find((entry) => entry.name === 'CHANGELOG.md').data.toString('utf8');
+  assert(projectedDatedChangelog.startsWith('## 1.3.0\n'),
+    'release projection accepts an exact ISO-dated current changelog heading');
+  assert.throws(
+    () => sanitizeReleaseInstructions([
+      { name: 'package.json', data: Buffer.from('{"version":"1.3.0"}') },
+      {
+        name: 'CHANGELOG.md',
+        data: Buffer.from('## 1.2.0 - 2026-08-12\n\n### Added\n\n- Wrong version.\n\n### Verification\n\n- Verified.\n'),
+      },
+    ], new Set()),
+    /exactly one current version heading/,
+    'release projection rejects a dated changelog heading for a different version',
   );
 
   const source = path.join(temp, 'source');

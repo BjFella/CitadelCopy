@@ -26,10 +26,10 @@ const TRIO = Object.freeze([
   'citadel-vX.Y.Z.tar.gz.sha256',
 ]);
 
+for (const asset of TRIO) assert(INSTALL.includes(asset), `INSTALL.md missing stable release asset ${asset}`);
 for (const [name, document] of [['README.md', README], ['INSTALL.md', INSTALL]]) {
-  for (const asset of TRIO) assert(document.includes(asset), `${name} missing stable release asset ${asset}`);
-  assert(document.includes('floating main'), `${name} must label floating main as development-only`);
-  assert(document.includes('Do not use npm') || document.includes('unsupported acquisition paths'), `${name} must reject npm acquisition`);
+  assert(document.includes('floating `main`') || document.includes('floating main'), `${name} must label floating main as development-only`);
+  assert(document.includes('No npm package') || document.includes('unsupported acquisition paths'), `${name} must reject npm acquisition`);
 }
 
 function fencedTextContaining(document, needle) {
@@ -38,7 +38,7 @@ function fencedTextContaining(document, needle) {
   return blocks.find((block) => block.includes(needle)) || null;
 }
 
-const promptNeedle = 'Install Citadel in this repository from a tagged GitHub Release';
+const promptNeedle = 'Citadel is an open-source operating layer for Claude Code and OpenAI Codex';
 assert.equal(
   fencedTextContaining(README, promptNeedle),
   fencedTextContaining(INSTALL, promptNeedle),
@@ -50,13 +50,27 @@ const WINDOWS_SNIPPETS = Object.freeze([
   '$env:CITADEL_ROOT = (Resolve-Path',
   'node "$env:CITADEL_ROOT\\scripts\\release-verify.js"',
   'node "$env:CITADEL_ROOT\\scripts\\adopt.js"',
-  'node "$env:CITADEL_ROOT\\scripts\\install.js" --runtime codex --add-marketplace',
+  'node "$env:CITADEL_ROOT\\scripts\\install.js" --runtime codex --install',
 ]);
 for (const snippet of WINDOWS_SNIPPETS) {
   assert(INSTALL.includes(snippet), `INSTALL.md missing quoted PowerShell stable path: ${snippet}`);
 }
 assert(INSTALL.includes('node "$CITADEL_ROOT/scripts/release-verify.js"'), 'INSTALL.md missing Linux/macOS release verifier path');
 assert(README.includes('Windows users should use the'), 'README must identify its compact manual block as Linux/macOS syntax');
+for (const [name, document] of [['README.md', README], ['INSTALL.md', INSTALL]]) {
+  assert(document.includes('codex plugin marketplace add SethGammon/Citadel --ref v1.3.0'),
+    `${name} missing exact Codex marketplace install`);
+  assert(document.includes('codex plugin add citadel@citadel-local'),
+    `${name} missing exact Codex plugin install`);
+  assert(document.includes('claude plugin marketplace add SethGammon/Citadel@v1.3.0 --scope local'),
+    `${name} missing exact Claude marketplace install`);
+  assert(document.includes('claude plugin install citadel@citadel-local --scope local'),
+    `${name} missing exact Claude plugin install`);
+  assert(document.includes('repository-local state that survives sessions'),
+    `${name} agent prompt does not explain what Citadel is`);
+  assert(!fencedTextContaining(document, promptNeedle).includes('/do setup --express'),
+    `${name} agent prompt must not make setup a second install gate`);
+}
 
 for (const [name, document] of [
   ['README.md', README],
@@ -129,8 +143,8 @@ try {
   childProcess.execFileSync('git', ['init', '--quiet'], { cwd: target, windowsHide: true });
 
   const command = process.platform === 'win32'
-    ? 'node "$env:CITADEL_ROOT\\scripts\\install.js" --runtime codex --add-marketplace --dry-run --json'
-    : 'node "$CITADEL_ROOT/scripts/install.js" --runtime codex --add-marketplace --dry-run --json';
+    ? 'node "$env:CITADEL_ROOT\\scripts\\install.js" --runtime codex --install --dry-run --json'
+    : 'node "$CITADEL_ROOT/scripts/install.js" --runtime codex --install --dry-run --json';
   const executable = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
   const args = process.platform === 'win32' ? ['-NoProfile', '-Command', command] : ['-c', command];
   const result = childProcess.spawnSync(executable, args, {
@@ -145,6 +159,10 @@ try {
   const output = JSON.parse(result.stdout);
   assert.strictEqual(output.pass, true, 'documented installer did not return a passing dry-run plan');
   assert.strictEqual(output.dryRun, true, 'documented installer did not preserve dry-run mode');
+  assert.strictEqual(output.installPlugin, true, 'documented Codex install must include native plugin installation');
+  assert(output.steps.some((step) => step.name === 'Install Citadel Harness plugin with Codex CLI'
+    && step.command.includes('codex plugin add citadel@citadel-local')),
+  'documented Codex install did not plan the native plugin add command');
 } finally {
   fs.rmSync(temporary, { recursive: true, force: true });
 }

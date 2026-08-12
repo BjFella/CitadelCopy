@@ -200,8 +200,8 @@ function install(args, context) {
   if (detection.runtime === 'claude' && !has(forwarded, '--install') && !has(forwarded, '--add-marketplace')) {
     forwarded.push('--install', '--scope', 'local');
   }
-  if (detection.runtime === 'codex' && !has(forwarded, '--plugin-only') && !has(forwarded, '--add-marketplace')) {
-    forwarded.push('--add-marketplace');
+  if (detection.runtime === 'codex' && !has(forwarded, '--plugin-only') && !has(forwarded, '--add-marketplace') && !has(forwarded, '--install')) {
+    forwarded.push('--install');
   }
   if (!json) context.io.stdout.write(`Citadel selected ${detection.runtime} from ${detection.source}.\n`);
   try {
@@ -222,7 +222,7 @@ function doctorReport(args, context = {}) {
     pass: fsImpl.existsSync(path.join(ROOT, relative)),
   }));
   const major = Number(process.versions.node.split('.')[0]);
-  checks.unshift({ name: 'node>=18', pass: major >= 18, value: process.versions.node });
+  checks.unshift({ name: 'node>=22', pass: major >= 22, value: process.versions.node });
   let detection = null;
   let runtimeErrorCode = null;
   try {

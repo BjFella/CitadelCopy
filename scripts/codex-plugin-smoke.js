@@ -30,7 +30,7 @@ function run(command, args) {
 }
 
 if (process.argv.includes('--help')) {
-  console.log('Usage: node scripts/codex-plugin-smoke.js [--project-root PATH] [--write] [--live] [--add-marketplace]');
+  console.log('Usage: node scripts/codex-plugin-smoke.js [--project-root PATH] [--plugin-path PATH] [--write] [--live] [--add-marketplace]');
   process.exit(0);
 }
 
@@ -38,6 +38,7 @@ const projectRoot = arg('--project-root', process.cwd());
 const live = process.argv.includes('--live') || process.argv.includes('--add-marketplace');
 const marketplace = createPluginMarketplace({
   projectRoot,
+  pluginPath: arg('--plugin-path', './.agents'),
   write: process.argv.includes('--write') || process.argv.includes('--add-marketplace'),
 });
 

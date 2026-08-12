@@ -610,6 +610,7 @@ function planningSignature(planningDir) {
 function startWatcher(projectRoot, onChange, options = {}) {
   const planningDir = path.join(projectRoot, '.planning');
   const watchImpl = options.watchImpl || fs.watch.bind(fs);
+  const platform = options.platform || process.platform;
   const pollMs = options.pollMs || WATCH_POLL_FALLBACK_MS;
   const debounceMs = options.debounceMs || WATCH_DEBOUNCE_MS;
   let timer = null;
@@ -632,16 +633,24 @@ function startWatcher(projectRoot, onChange, options = {}) {
     }, pollMs);
     interval.unref?.();
   };
-  try {
-    watcher = watchImpl(planningDir, { recursive: true }, fire);
-    watcher.on('error', () => {
-      watcher?.close();
-      watcher = null;
-      startPolling();
-    });
-  } catch {
-    // Recursive watch unsupported (notably Node 18 on Linux): poll the full tree.
+  if (platform === 'win32') {
+    // A recursive Windows watcher can follow events from a junction or symlink
+    // outside the watched tree. Node 24/libuv rejects that path relationship at
+    // the native boundary. The bounded signature poll is both containment-safe
+    // and behaviorally equivalent for dashboard invalidation.
     startPolling();
+  } else {
+    try {
+      watcher = watchImpl(planningDir, { recursive: true }, fire);
+      watcher.on('error', () => {
+        watcher?.close();
+        watcher = null;
+        startPolling();
+      });
+    } catch {
+      // Recursive watch unsupported: poll the full tree.
+      startPolling();
+    }
   }
   return () => {
     stopped = true;

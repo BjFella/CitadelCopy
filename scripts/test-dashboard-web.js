@@ -134,6 +134,7 @@ async function main() {
   const fallbackPollMs = 20;
   const fallbackDebounceMs = 5;
   const stopFallback = startWatcher(fallbackRoot, () => { fallbackChanged = true; }, {
+    platform: 'linux',
     watchImpl: () => { throw new Error('recursive watch unsupported'); },
     pollMs: fallbackPollMs,
     debounceMs: fallbackDebounceMs,
@@ -147,6 +148,26 @@ async function main() {
   check('watcher: polling fallback observes nested file edits', fallbackObserved.ok, fallbackObserved.detail);
   cleanup(fallbackRoot);
 
+  const windowsRoot = makeFixture('watcher-windows');
+  write(windowsRoot, '.planning/campaigns/active.md', 'before');
+  let windowsWatchCalls = 0;
+  let windowsChanged = false;
+  const stopWindows = startWatcher(windowsRoot, () => { windowsChanged = true; }, {
+    platform: 'win32',
+    watchImpl: () => { windowsWatchCalls += 1; throw new Error('native recursive watcher must not start'); },
+    pollMs: fallbackPollMs,
+    debounceMs: fallbackDebounceMs,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  write(windowsRoot, '.planning/campaigns/active.md', 'after-content-is-different');
+  const windowsObserved = await waitForCondition(() => windowsChanged, {
+    describe: () => `changed=${windowsChanged}, native_calls=${windowsWatchCalls}`,
+  });
+  stopWindows();
+  check('watcher: Windows uses safe nested polling without native recursive watch',
+    windowsWatchCalls === 0 && windowsObserved.ok, windowsObserved.detail);
+  cleanup(windowsRoot);
+
   const errorRoot = makeFixture('watcher-error');
   write(errorRoot, '.planning/campaigns/active.md', 'before');
   const fakeWatcher = new EventEmitter();
@@ -157,6 +178,7 @@ async function main() {
   // observe the transition rather than assume a host-independent delay.
   const errorDebounceMs = 120;
   const stopErrorFallback = startWatcher(errorRoot, () => { errorFallbackChanged = true; }, {
+    platform: 'linux',
     watchImpl: () => fakeWatcher,
     pollMs: errorPollMs,
     debounceMs: errorDebounceMs,

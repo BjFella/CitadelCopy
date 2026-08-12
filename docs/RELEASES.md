@@ -60,8 +60,8 @@ node scripts/release-package.js --ref "$TAG" --output-dir dist/release --verify-
 node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" --version 1.3.0
 ```
 
-A pushed `v*` tag runs the same strict and reproducibility checks on Node 18 and
-20 across Linux, macOS, and Windows. The packaging job then rebuilds and
+A pushed `v*` tag runs the same strict and reproducibility checks on Node 22 and
+24 across Linux, macOS, and Windows. The packaging job then rebuilds and
 verifies the trio and creates GitHub-native provenance with least privilege. The
 packaging job alone receives `contents: write`, `id-token: write`, and
 `attestations: write`; it receives no package-registry or registry-linked

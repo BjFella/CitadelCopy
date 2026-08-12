@@ -29,7 +29,7 @@ outputs:
     description: Relative path to the verification summary.
 
 runs:
-  using: node20
+  using: node24
   main: scripts/action-verify.js
 
 branding:

@@ -185,6 +185,11 @@ function testCodexInstallScript() {
     assert(fs.existsSync(path.join(projectRoot, '.codex', 'config.toml')));
     assert(fs.existsSync(path.join(projectRoot, '.planning', 'verification', 'codex-readiness.json')));
     assert(fs.existsSync(path.join(pluginRoot, '.agents', 'plugins', 'marketplace.json')));
+    const rootMarketplace = JSON.parse(fs.readFileSync(
+      path.join(pluginRoot, '.agents', 'plugins', 'marketplace.json'), 'utf8',
+    ));
+    assert.equal(rootMarketplace.plugins[0].source.path, './',
+      'release marketplace must resolve to the root containing .codex-plugin/plugin.json');
     assert(report.nextSteps.codexApp.some((step) => step.includes('Add to Codex')));
 
     const noRefresh = execFileSync(process.execPath, [

@@ -14,7 +14,7 @@ Unified Citadel installer dispatcher.
 
 Examples:
   node scripts/install.js --runtime claude --install --scope local
-  node scripts/install.js --runtime codex --add-marketplace
+  node scripts/install.js --runtime codex --install
 
 Run the runtime-specific helper for all options:
   node scripts/claude-install.js --help

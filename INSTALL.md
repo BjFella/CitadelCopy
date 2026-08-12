@@ -1,52 +1,70 @@
 # Install Citadel
 
-The canonical stable installation guide. Citadel installs into the project you
-already have open in Claude Code or OpenAI Codex. GitHub Releases are the only
-supported stable acquisition channel; source `main` is development-only, and
-the public npm package named `citadel` is unrelated to this project.
+The canonical stable installation guide. Citadel installs through the native
+plugin marketplace in Claude Code or OpenAI Codex. GitHub Releases remain the
+version and high-assurance artifact boundary; source `main` is development-only,
+and the public npm package named `citadel` is unrelated to this project.
 
 ## Prerequisites
 
 - **Claude Code** or **OpenAI Codex**: the runtime Citadel extends.
-- **[Node.js 18+](https://nodejs.org/)**: required for hooks and scripts.
+- **[Node.js 22+](https://nodejs.org/)**: a supported LTS release required for hooks and scripts.
 - A git repository you want Citadel to manage.
 
 Authentication depends on the runtime you use. Citadel layers on top of the runtime you already have configured. There is no build step and no `npm install`; Citadel runs directly on Node.js.
 
-## Recommended: Paste This Into Your Agent
+## Recommended: Native Plugin Marketplace
 
-Open the repository you want Citadel to manage in Claude Code or OpenAI Codex and paste this:
+The commands below pin `v1.3.0`. If that tag is not present on
+[GitHub Releases](https://github.com/SethGammon/Citadel/releases), stop rather
+than substituting floating `main`.
 
-<!-- This prompt is copied verbatim from README.md (Quick Install). If you edit it here, make the same edit in README.md so the two never drift. -->
+### OpenAI Codex
 
-```text
-Install Citadel in this repository from a tagged GitHub Release at
-https://github.com/SethGammon/Citadel/releases.
-
-Choose an explicit vX.Y.Z release. Download all three matching assets:
-citadel-vX.Y.Z.tar.gz, citadel-vX.Y.Z.tar.gz.manifest.json, and
-citadel-vX.Y.Z.tar.gz.sha256. Verify that the archive SHA-256 agrees with both
-the sidecar and external manifest before extracting it. Do not use npm and do
-not install from floating main.
-
-Detect whether this session is running in OpenAI Codex or Claude Code. Use the
-extracted citadel-X.Y.Z directory as the source and this repository as the
-target. Create a governed adoption plan for that runtime. Show me the exact
-footprint, unknown external registrations, plan digest, and confirmation token
-before applying anything. After I approve the saved plan, apply it and run
-adoption doctor.
-
-After adoption is healthy and Citadel is enabled in a fresh thread, run:
-
-/do setup --express
+```bash
+codex plugin marketplace add SethGammon/Citadel --ref v1.3.0
+codex plugin add citadel@citadel-local
 ```
 
-That prompt is intentionally path-free. The agent should select an immutable
-release, verify the complete trio before extraction, use the repository already
-open as the target, and stop at the reviewable adoption plan. Only the saved
-plan and exact confirmation token may be applied. Follow any external
-plugin-enable step the receipt still reports as unknown, start a fresh session
-if required, then run `/do setup --express`.
+Start a new Codex task and review the installed hooks through `/hooks` when
+Codex asks. That native trust decision is intentional; Citadel must not bypass
+or duplicate it.
+
+### Claude Code
+
+```bash
+claude plugin marketplace add SethGammon/Citadel@v1.3.0 --scope local
+claude plugin install citadel@citadel-local --scope local
+```
+
+Use `/reload-plugins` if Claude Code is already open. Local scope makes the
+plugin available only for you in this repository.
+
+### Prefer to have your agent install it?
+
+Open the target repository in Claude Code or Codex and paste this:
+
+<!-- This prompt is copied verbatim from README.md. Keep the two copies identical. -->
+
+```text
+Citadel is an open-source operating layer for Claude Code and OpenAI Codex. It
+adds one /do entry point, repository-local state that survives sessions,
+guarded multi-step workflows, and reviewable evidence with explicit Needs You
+and Resume boundaries.
+
+Install Citadel v1.3.0 from https://github.com/SethGammon/Citadel using this
+runtime's native plugin marketplace, then enable it for this repository. Use
+project-local defaults and preserve removal evidence for every change. Do not clone main or change shared
+configuration, sandbox settings, permissions, or user-wide settings without
+asking me.
+
+Only interrupt me for a platform-required trust or reload action, or for a real
+configuration conflict. Verify the result, then tell me the single next action.
+```
+
+The prompt supplies the product definition, official source, exact version,
+scope, safety boundary, and completion condition. The agent should use the
+platform installer rather than recreate a package manager from prose.
 
 ## Manual Install
 
@@ -87,7 +105,7 @@ Set-Location 'C:\absolute\path\to\target-project'
 node "$env:CITADEL_ROOT\scripts\adopt.js" plan "$env:CITADEL_ROOT" --target . --project-runtime codex --out ..\citadel-adoption.plan.json --json
 node "$env:CITADEL_ROOT\scripts\adopt.js" apply ..\citadel-adoption.plan.json --confirm <plan-token> --json
 node "$env:CITADEL_ROOT\scripts\adopt.js" doctor --target . --json
-node "$env:CITADEL_ROOT\scripts\install.js" --runtime codex --add-marketplace
+node "$env:CITADEL_ROOT\scripts\install.js" --runtime codex --install
 ```
 
 Use `--project-runtime claude` plus the Claude installer flags shown below when
@@ -171,7 +189,7 @@ restore, and leave use `scripts/adopt.js`.
 runtime-specific scripts accept the same flags if you prefer to call them
 directly.
 
-### Claude Code
+### Claude Code compatibility installer
 
 From your target project root:
 
@@ -180,13 +198,10 @@ node "$CITADEL_ROOT/scripts/install.js" --runtime claude --install --scope local
 claude
 ```
 
-The installer validates the Claude marketplace, adds Citadel from the local clone, installs **Citadel Harness** into local scope, and writes resolved hook paths to the target project. `--scope local` is the safest default: it is gitignored and affects only you in this repository.
-
-In Claude Code, run:
-
-```text
-/do setup --express
-```
+The compatibility installer validates the marketplace, registers the extracted
+release, and installs **Citadel Harness** in local scope. Native plugin hooks are
+loaded by Claude Code; direct writes to `.claude/settings.json` require the
+separate advanced `--install-hooks` flag.
 
 Alternative manual install from inside Claude Code:
 
@@ -210,29 +225,19 @@ node "$CITADEL_ROOT/scripts/install.js" --runtime claude --install --dry-run --j
 The installer output names every Claude-specific external enable step and its
 observed or unknown status.
 
-### OpenAI Codex
+### OpenAI Codex compatibility installer
 
 From your target project root:
 
 ```bash
-node "$CITADEL_ROOT/scripts/install.js" --runtime codex --add-marketplace
+node "$CITADEL_ROOT/scripts/install.js" --runtime codex --install
 codex
 ```
 
-This single command refreshes Citadel's Codex plugin package, writes the local plugin marketplace entry, generates the target project's Codex fallback artifacts, and runs the readiness verifier. On Windows it also checks the Codex shell and sandbox settings. It creates Codex-facing files such as `AGENTS.md`, `.codex/config.toml`, `.codex-plugin/plugin.json`, plugin-bundled `runtimes/codex/hooks.json`, projected agents, projected skills, and Citadel MCP wiring.
-
-The `--add-marketplace` flag also runs Codex CLI marketplace registration when the CLI is installed. Omit it when you only want to prepare files and follow the printed Codex app steps.
-
-Then install or enable Citadel from Codex:
-
-- App: open **Plugins**, choose **Citadel Local Plugins**, select **Add to Codex** for **Citadel Harness**, then start a new thread.
-- CLI: run `/plugins`, install or enable **Citadel Harness**, then start a new thread.
-
-In the new thread, run:
-
-```text
-/do setup --express
-```
+This command validates the package, registers the extracted release as a local
+marketplace, and runs `codex plugin add citadel@citadel-local`. It does not
+generate fallback project files or change Codex sandbox settings. Start a new
+task and review Citadel through `/hooks`.
 
 To preview what the installer would write without changing anything:
 
@@ -247,15 +252,17 @@ observed or unknown status.
 
 ## First Run
 
-Start a fresh Claude Code or Codex thread in your project and run:
+Start a fresh Claude Code or Codex task in your project and give Citadel a real
+request:
 
 ```text
-/do setup --express
-/do next
-/do review src/main.ts
+/do review README.md
 ```
 
-`/do next` is the fastest check that Citadel sees the project state and can explain the next action, approval boundary, and verification profile. Substitute any real file in the review command.
+First-use state initializes automatically. Citadel reports `Needs You` only
+when the platform requires trust/reload or when an existing or shared setting
+would change. `/do setup` remains available later for optional profile, bundle,
+integration, and guided-tour customization; it is not an installation gate.
 
 ### Setup modes
 
@@ -291,7 +298,9 @@ In all modes, setup:
 6. **Runs a bounded live demo** in Recommended and Full Tour modes.
 
 > **Why does the runtime-specific install still matter?**
-> Claude Code and Codex load Citadel differently. Claude relies on the plugin path and hook installation into `.claude/settings.json`. Codex can load Citadel as a plugin with bundled skills/hooks/MCP and can also use generated project artifacts like `AGENTS.md`, `.codex/config.toml`, and projected agents. After moving Citadel to a new location, refresh the runtime-specific install step and then re-run `/do setup`.
+> Claude Code and Codex use different native marketplace, activation, reload,
+> and hook-trust flows. The native plugin remains the authority. Compatibility
+> project projections are advanced migration tools, not the default install.
 
 ### Route your first task
 
@@ -427,7 +436,7 @@ Re-run the runtime-specific install step from your project root, then re-run `/d
 
 ```bash
 node "$CITADEL_ROOT/scripts/install.js" --runtime claude --install --scope local
-node "$CITADEL_ROOT/scripts/install.js" --runtime codex --add-marketplace
+node "$CITADEL_ROOT/scripts/install.js" --runtime codex --install
 ```
 
 Alternatively, run the hook installer directly from your project directory:

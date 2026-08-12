@@ -204,14 +204,15 @@ function printHuman(report) {
   console.log(`Scope:        ${report.scope}`);
   console.log('');
   for (const step of report.steps) {
-    const status = step.pass ? 'PASS' : 'FAIL';
-    const skipped = step.skipped ? ' (dry run)' : '';
-    console.log(`[${status}] ${step.name}${skipped}`);
+    const status = step.skipped && report.dryRun ? 'PLAN' : step.pass ? 'PASS' : 'FAIL';
+    console.log(`[${status}] ${step.name}`);
     console.log(`       ${step.command}`);
     if (!step.pass && step.stderr) console.log(step.stderr.trim());
   }
   console.log('');
-  console.log(report.pass ? 'Install prep passed.' : 'Install prep failed.');
+  console.log(report.pass
+    ? report.dryRun ? 'Install plan ready; no commands were run.' : 'Citadel plugin installation completed.'
+    : 'Citadel plugin installation failed.');
   console.log('');
   console.log('Next in Claude Code:');
   for (const item of report.nextSteps.claudeCode) console.log(`  - ${item}`);
@@ -227,10 +228,10 @@ Options:
   --target-project PATH     Alias for --project-root.
   --plugin-root PATH        Citadel clone; defaults to this script's parent directory.
   --scope <scope>           Claude install scope: local, project, or user. Defaults to local.
-  --install                 Add marketplace, install plugin, and install hooks.
+  --install                 Add the marketplace and install the native plugin.
   --add-marketplace         Run: claude plugin marketplace add <plugin-root>.
   --install-plugin          Run: claude plugin install citadel@citadel-local.
-  --install-hooks           Install resolved Citadel hooks into the target project.
+  --install-hooks           Advanced compatibility path: write resolved hooks into the target project.
   --skip-validate           Skip claude plugin validate.
   --dry-run                 Print planned commands without writing files.
   --json                    Print machine-readable JSON only.
@@ -247,7 +248,7 @@ const jsonOnly = has('--json');
 const install = has('--install');
 const addMarketplace = install || has('--add-marketplace');
 const installPlugin = install || has('--install-plugin');
-const installHooks = install || has('--install-hooks');
+const installHooks = has('--install-hooks');
 const skipValidate = has('--skip-validate');
 const scope = arg('--scope', 'local');
 const pluginRoot = path.resolve(arg('--plugin-root', DEFAULT_PLUGIN_ROOT));
@@ -295,15 +296,15 @@ if (!skipValidate) {
   }));
 }
 
-if (addMarketplace) {
+if (addMarketplace && steps.every((step) => step.pass || !step.required)) {
   steps.push(marketplaceAddStep({ pluginRoot, projectRoot, scope, dryRun }));
 }
 
-if (installPlugin) {
+if (installPlugin && steps.every((step) => step.pass || !step.required)) {
   steps.push(pluginInstallStep({ projectRoot, scope, dryRun }));
 }
 
-if (installHooks) {
+if (installHooks && steps.every((step) => step.pass || !step.required)) {
   steps.push(runStep({
     name: 'Install resolved Citadel hooks',
     command: node,
@@ -326,9 +327,9 @@ const report = {
   nextSteps: {
     claudeCode: [
       install ? 'Run claude from the target project.' : `Run claude plugin marketplace add ${q(pluginRoot)} --scope ${scope} if you want CLI marketplace registration.`,
-      install ? 'Citadel Harness is installed for this scope; start a fresh Claude Code session if it was already open.' : 'Inside Claude Code, run /plugin and install Citadel Harness from Citadel Local Plugins.',
-      installHooks ? 'Hooks were installed directly; /do setup will still detect the stack and create project state.' : 'Run /do setup --express to install hooks and initialize project state.',
-      'Run /do --list, then /do review path/to/file to verify the first workflow.',
+      install ? 'Citadel Harness is installed for this scope; run /reload-plugins or start a fresh Claude Code session.' : 'Inside Claude Code, run /plugin and install Citadel Harness from Citadel Local Plugins.',
+      installHooks ? 'Compatibility hooks were written directly; native plugin hooks remain the preferred path.' : 'Claude Code loads Citadel hooks from the installed plugin; no separate hook-writing step is required.',
+      'Run a real request such as /do review README.md; first-use state initializes automatically.',
     ],
   },
 };

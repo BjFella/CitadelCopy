@@ -358,6 +358,6 @@
     "url": "https://github.com/SethGammon/Citadel"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }
