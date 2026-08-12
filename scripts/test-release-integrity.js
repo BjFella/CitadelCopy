@@ -165,6 +165,11 @@ try {
   assert.equal(first.sha256, second.sha256, 'same source must produce identical archives');
   assert.equal(fs.readFileSync(first.manifestPath, 'utf8'), fs.readFileSync(second.manifestPath, 'utf8'));
   assert.equal(
+    fs.readFileSync(first.archivePath)[9],
+    0xff,
+    'gzip source-OS marker must be canonical across supported builders',
+  );
+  assert.equal(
     first.manifest.files.find((file) => file.path === 'assets/fixture.bin')?.sha256,
     sha256(LARGE_BINARY_FIXTURE),
     'release text normalization must not alter binary payloads',
@@ -339,7 +344,7 @@ try {
     assert(!productPaths.has(sourceOnlyProofPath), `release leaked source-only proof path ${sourceOnlyProofPath}`);
   }
   assert(![...productPaths].some((relative) => relative.startsWith('.planning/rubrics/')), 'release leaked maintainer-only rubrics');
-  assert.equal(verifyRelease(product.archivePath, { version: '1.3.1', ref: product.manifest.ref }).files, productPaths.size);
+  assert.equal(verifyRelease(product.archivePath, { version: '1.3.2', ref: product.manifest.ref }).files, productPaths.size);
 
   const extracted = path.join(temp, 'product-extracted');
   const archiveFiles = parseTar(zlib.gunzipSync(fs.readFileSync(product.archivePath)));

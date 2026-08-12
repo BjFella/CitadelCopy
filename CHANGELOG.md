@@ -2,6 +2,13 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.3.2 - 2026-08-12
+
+### Fixed
+
+- Deterministic release archives now canonicalize the informational GZIP
+  source-OS marker, producing identical bytes on Windows, macOS, and Linux.
+
 ## 1.3.1 - 2026-08-12
 
 ### Fixed
