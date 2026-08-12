@@ -1264,6 +1264,15 @@ function makeTar(entries, prefix, mtime) {
   return Buffer.concat(chunks);
 }
 
+function makeCanonicalGzip(data) {
+  const archive = zlib.gzipSync(data, { level: 9, mtime: 0 });
+  // RFC 1952 byte 9 is an informational source-OS marker. Node writes the host
+  // OS here even when the compressed payload is identical, so normalize it to
+  // "unknown" to keep release bytes identical across supported builders.
+  archive[9] = 0xff;
+  return archive;
+}
+
 function buildRelease(options = {}) {
   const sourceDir = path.resolve(options.sourceDir || ROOT);
   const ref = options.ref || null;
@@ -1294,7 +1303,7 @@ function buildRelease(options = {}) {
   const manifestData = Buffer.from(`${JSON.stringify(internalManifest, null, 2)}\n`);
   const archiveEntries = [...entries, { name: MANIFEST_NAME, data: manifestData, mode: 0o644 }]
     .sort(compareNames);
-  const archive = zlib.gzipSync(makeTar(archiveEntries, prefix, epoch), { level: 9, mtime: 0 });
+  const archive = makeCanonicalGzip(makeTar(archiveEntries, prefix, epoch));
   const refLabel = ref ? path.basename(ref) : `v${identity.version}`;
   const archiveName = `citadel-${refLabel.replace(/[^A-Za-z0-9._-]/g, '-')}.tar.gz`;
   const archiveHash = sha256(archive);
