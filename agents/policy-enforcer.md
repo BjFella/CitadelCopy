@@ -8,7 +8,7 @@ description: >-
   operations.
 maxTurns: 10
 effort: low
-model: claude-haiku-4-5-20251001
+model: claude-haiku-4-5
 disallowedTools:
   - Bash
   - Write

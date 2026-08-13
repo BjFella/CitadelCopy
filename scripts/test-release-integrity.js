@@ -601,6 +601,39 @@ try {
   }
   assert(!fs.existsSync(path.join(releaseConfigTarget, '.claude', 'harness.json')), 'release bundle previews must not mutate the target');
 
+  const modelConfigTarget = path.join(temp, 'release-model-config-target');
+  fs.mkdirSync(modelConfigTarget, { recursive: true });
+  const configureModels = spawnSync(process.execPath, [
+    releaseConfigScript,
+    'configure-codex-agents',
+    '--project-root', modelConfigTarget,
+    '--runtime', 'codex',
+    '--agent-model', 'arbiter=gpt-5.6-sol',
+    '--agent-effort', 'arbiter=ultra',
+    '--apply',
+    '--json',
+  ], { cwd: modelConfigTarget, encoding: 'utf8' });
+  assert.equal(configureModels.status, 0, configureModels.stderr || configureModels.stdout);
+  const modelConfigReceipt = JSON.parse(configureModels.stdout);
+  const releaseAgentGenerator = path.join(productRoot, 'scripts', 'generate-agent-projections.js');
+  assert.equal(
+    modelConfigReceipt.nextCommand,
+    `node "${releaseAgentGenerator}" --project-root "${modelConfigTarget}"`,
+    'release config must return an executable, source-bound projection command',
+  );
+  const projectModels = spawnSync(process.execPath, [
+    releaseAgentGenerator,
+    '--project-root', modelConfigTarget,
+    '--agent', 'arbiter',
+  ], { cwd: modelConfigTarget, encoding: 'utf8' });
+  assert.equal(projectModels.status, 0, projectModels.stderr || projectModels.stdout);
+  const projectedArbiter = fs.readFileSync(
+    path.join(modelConfigTarget, '.codex', 'agents', 'arbiter.toml'),
+    'utf8',
+  );
+  assert.match(projectedArbiter, /model = "gpt-5\.6-sol"/);
+  assert.match(projectedArbiter, /model_reasoning_effort = "ultra"/);
+
   const releaseConfig = require(path.join(productRoot, 'core', 'config', 'index.js'));
   const existingDeliveryTarget = path.join(temp, 'release-existing-delivery-target');
   const existingDeliveryConfig = releaseConfig.createDefaultConfig();

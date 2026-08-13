@@ -71,6 +71,7 @@
     "scripts/evidence-validate.js",
     "scripts/fleet-steward.js",
     "scripts/generate-routing.js",
+    "scripts/generate-agent-projections.js",
     "scripts/grid.cjs",
     "scripts/install-hooks-codex.js",
     "scripts/install-hooks.js",

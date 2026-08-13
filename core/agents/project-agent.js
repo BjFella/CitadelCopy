@@ -5,25 +5,20 @@
 const fs = require('fs');
 const path = require('path');
 const { loadAgent } = require('./parse-agent');
+const {
+  DEFAULT_CODEX_AGENT_CONFIG,
+  resolveCodexAgentSettings,
+} = require('./model-config');
 
-const MODEL_MAP = Object.freeze({
-  opus: 'gpt-5.4',
-  sonnet: 'gpt-5.4-mini',
-  haiku: 'gpt-5.4-mini',
-});
-
-const EFFORT_MAP = Object.freeze({
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-});
-
-function renderCodexToml(parsedAgent) {
-  const model = MODEL_MAP[parsedAgent.frontmatter.model] || 'gpt-5.4';
-  const effort = EFFORT_MAP[parsedAgent.frontmatter.effort] || 'high';
+function renderCodexToml(parsedAgent, options = {}) {
+  const settings = resolveCodexAgentSettings(
+    parsedAgent,
+    options.agentConfig || DEFAULT_CODEX_AGENT_CONFIG,
+  );
+  const maxChars = options.maxChars === undefined ? 4000 : Number(options.maxChars);
   const description = (parsedAgent.frontmatter.description || '').replace(/"/g, '\\"');
-  const instructions = parsedAgent.body.length > 4000
-    ? parsedAgent.body.slice(0, 4000) + '\n\n[Truncated by Citadel projection. See canonical agent definition for full instructions.]'
+  const instructions = maxChars > 0 && parsedAgent.body.length > maxChars
+    ? parsedAgent.body.slice(0, maxChars) + '\n\n[Truncated by Citadel projection. See canonical agent definition for full instructions.]'
     : parsedAgent.body;
 
   return [
@@ -32,8 +27,8 @@ function renderCodexToml(parsedAgent) {
     '',
     `name = "${parsedAgent.frontmatter.name || parsedAgent.name}"`,
     `description = "${description}"`,
-    `model = "${model}"`,
-    `model_reasoning_effort = "${effort}"`,
+    `model = "${settings.model}"`,
+    `model_reasoning_effort = "${settings.reasoningEffort}"`,
     '',
     'developer_instructions = """',
     instructions,
@@ -54,7 +49,7 @@ function projectAgentToCodex(agentPath, targetBaseDir, options = {}) {
     throw new Error(`Agent "${parsedAgent.name}" has validation errors: ${parsedAgent.errors.join(', ')}`);
   }
   const targetPath = path.join(targetBaseDir, `${parsedAgent.frontmatter.name || parsedAgent.name}.toml`);
-  const toml = renderCodexToml(parsedAgent);
+  const toml = renderCodexToml(parsedAgent, options);
 
   if (!options.dryRun) {
     ensureDir(path.dirname(targetPath));

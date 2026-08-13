@@ -16,6 +16,18 @@ async function run() {
 
   try {
     fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, '.claude', 'harness.json'), `${JSON.stringify({
+      extensions: {
+        'citadel.codex-agents': {
+          agents: {
+            archon: {
+              model: 'gpt-5.6-sol',
+              reasoningEffort: 'ultra',
+            },
+          },
+        },
+      },
+    }, null, 2)}\n`, 'utf8');
 
     // Run codex-compat.js
     const script = path.join(__dirname, '..', 'codex-compat.js');
@@ -68,6 +80,10 @@ async function run() {
         if (!model.startsWith('gpt-')) {
           errors.push(`${expected}.toml: model "${model}" should be a gpt-* model`);
         }
+      }
+      if (expected === 'archon'
+        && !content.includes('model_reasoning_effort = "ultra"')) {
+        errors.push('archon.toml: configured ultra reasoning effort was not projected');
       }
 
       // Should have generation header

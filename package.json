@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "private": true,
   "description": "Route requests, preserve run state, enforce hooks, and record reviewable evidence",
   "author": "",
@@ -69,6 +69,7 @@
     "scripts/coordination.js",
     "scripts/dashboard.js",
     "scripts/deliver.js",
+    "scripts/generate-agent-projections.js",
     "scripts/generate-routing.js",
     "scripts/install-hooks.js",
     "scripts/install.js",

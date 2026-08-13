@@ -98,14 +98,18 @@ installed/skipped breakdown. Any change to hook coverage will be caught by
 
 When projecting agents to Codex `.toml` format or OpenAI Responses API:
 
-| Citadel Model | Codex Model | OpenAI Model |
+| Citadel model family | Default Codex model | OpenAI model |
 |---|---|---|
-| `opus` | `gpt-5.4` | `gpt-5.4` (configurable via `CITADEL_OPENAI_MODEL`) |
-| `sonnet` | `gpt-5.4-mini` | `gpt-5.4-mini` |
-| `haiku` | `gpt-5.4-mini` | `gpt-5.4-mini` |
+| `fable` / `opus` | `gpt-5.6-sol` | Runtime-configured |
+| `sonnet` | `gpt-5.6-terra` | Runtime-configured |
+| `haiku` | `gpt-5.6-luna` | Runtime-configured |
 
-Defined in `core/agents/project-agent.js`. OpenAI model mapping is configurable
-via environment variables (see `packages/runtime-openai/README.md`).
+The defaults and validation contract live in `core/agents/model-config.js`.
+Projects can override a family, one agent, or the default reasoning effort in
+the governed `extensions["citadel.codex-agents"]` config. Codex supports
+`low`, `medium`, `high`, `xhigh`, `max`, and, on capable models, `ultra`.
+Claude Code supports through `max`; Citadel does not incorrectly offer
+Codex-only `ultra` to Claude executors.
 
 ## Guidance Projection
 

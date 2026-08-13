@@ -7,7 +7,7 @@ description: >-
   Spawned by Archon after each phase and by Fleet after each wave agent.
 maxTurns: 15
 effort: low
-model: claude-haiku-4-5-20251001
+model: claude-haiku-4-5
 disallowedTools:
   - Bash
   - Write

@@ -2,6 +2,18 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.3.5 - 2026-08-13
+
+### Changed
+
+- Codex agent projection now defaults to the current GPT-5.6 Sol, Terra, and
+  Luna model families instead of deprecated GPT-5.4 variants.
+- The strongest Claude arbiter role now uses the current `fable` alias at
+  `max` effort; lightweight policy roles use the current Haiku 4.5 alias.
+- Projects can configure Codex model-family mappings, per-agent models, and
+  per-agent reasoning effort through a plan-first config command. Supported
+  Codex effort levels now include `xhigh`, `max`, and `ultra`.
+
 ## 1.3.4 - 2026-08-13
 
 ### Fixed
