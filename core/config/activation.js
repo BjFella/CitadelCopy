@@ -102,6 +102,7 @@ function createActivationPlan(receipt, bundleId) {
     : 'unknown';
   const commandOptions = `--runtime ${runtimeId}`
     + (degradedRuntimeOptInRequired ? ' --allow-degraded-runtime' : '');
+  const configCommand = 'node .citadel/scripts/citadel-config.js';
   return deepFreeze({
     contractVersion: 1,
     action: 'enable-bundle',
@@ -114,8 +115,8 @@ function createActivationPlan(receipt, bundleId) {
     degradedRuntimeOptInRequired,
     requiresExplicitApply: true,
     mutatesConfig: false,
-    previewCommand: `node scripts/citadel-config.js enable ${bundleId} ${commandOptions} --json`,
-    applyCommand: `node scripts/citadel-config.js enable ${bundleId} ${commandOptions} --apply --json`,
+    previewCommand: `${configCommand} enable ${bundleId} ${commandOptions} --json`,
+    applyCommand: `${configCommand} enable ${bundleId} ${commandOptions} --apply --json`,
     prospective,
   });
 }

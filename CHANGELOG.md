@@ -2,6 +2,14 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.3.4 - 2026-08-13
+
+### Fixed
+
+- Fleet activation recovery now executes through the project-local
+  `.citadel/scripts/citadel-config.js` delegate, so the displayed command works
+  from an installed project rather than requiring a Citadel source checkout.
+
 ## 1.3.3 - 2026-08-13
 
 ### Fixed
