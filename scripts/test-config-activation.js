@@ -253,6 +253,20 @@ test('runtime negotiation distinguishes degraded and unavailable activation', ()
     unavailableDecision.causeReasonCode,
     'DEGRADED_RUNTIME_REQUIRES_OPT_IN',
   );
+  assert.equal(unavailableDecision.plan.degradedRuntimeOptInRequired, true);
+  assert.equal(unavailableDecision.plan.prospective.unavailable.length, 0);
+  assert(unavailableDecision.plan.prospective.degraded.some((entry) => (
+    entry.id === 'parallel'
+    && entry.adapter === 'citadel-managed-worktrees-and-approvals'
+  )));
+  assert.equal(
+    unavailableDecision.plan.previewCommand,
+    'node scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --json',
+  );
+  assert.equal(
+    unavailableDecision.plan.applyCommand,
+    'node scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --apply --json',
+  );
 });
 
 test('repository policy overrides use a deterministic custom display identity', () => {

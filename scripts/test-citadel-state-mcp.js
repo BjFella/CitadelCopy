@@ -130,8 +130,12 @@ async function run() {
       call(0, 'citadel_operation_list', {}),
     ]);
     assert.equal(disabled.get(0).error.code, -32003);
-    assert.equal(disabled.get(0).error.data.activation.status, 'unavailable');
+    assert.equal(disabled.get(0).error.data.activation.status, 'disabled');
     assert.equal(disabled.get(0).error.data.activation.bundleId, 'operations');
+    assert.match(
+      disabled.get(0).error.data.activation.plan.applyCommand,
+      /--runtime codex --allow-degraded-runtime --apply --json$/,
+    );
     assert.equal(
       fs.existsSync(path.join(disabledRoot, '.citadel')),
       false,

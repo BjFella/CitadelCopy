@@ -2,6 +2,20 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.3.3 - 2026-08-13
+
+### Fixed
+
+- Codex `$skill` invocations now pass the same product-bundle activation gate
+  as Claude Code `/skill` invocations.
+- Fleet activation now presents one complete, runtime-bound recovery command.
+  When Codex needs Citadel's managed worktree and approval adapter, that command
+  explicitly records the required degraded-runtime opt-in instead of leaving
+  Fleet unavailable after the bundle is enabled.
+- The bug-report form no longer asks plugin users to clone Citadel and run the
+  maintainer test suite, and its examples show both Codex and Claude Code skill
+  syntax.
+
 ## 1.3.2 - 2026-08-12
 
 ### Fixed

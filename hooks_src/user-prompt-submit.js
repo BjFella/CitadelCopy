@@ -44,9 +44,10 @@ function main() {
     });
 
     const prompt = event.original_prompt || event.prompt || '';
-    const match = String(prompt).trim().match(/^\/([a-z][a-z0-9-]*)/i);
+    const match = String(prompt).trim().match(/^([/$])((?:[a-z][a-z0-9-]*:)?[a-z][a-z0-9-]*)/i);
     if (match) {
-      const skillName = match[1].toLowerCase();
+      const invocation = `${match[1]}${match[2]}`;
+      const skillName = match[2].toLowerCase().split(':').pop();
       const decision = health.checkSkillActivation(skillName).decision;
       if (!['enabled', 'degraded'].includes(decision.status)
         && decision.reasonCode !== 'ACTIVATION_OWNERSHIP_UNKNOWN') {
@@ -59,7 +60,7 @@ function main() {
           `${skillName}:${decision.reasonCode}`,
         );
         process.stderr.write(
-          `[Citadel activation] /${skillName} is ${decision.status} `
+          `[Citadel activation] ${invocation} is ${decision.status} `
           + `(${decision.reasonCode}).${apply}\n`,
         );
         process.exit(2);
