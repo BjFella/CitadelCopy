@@ -110,6 +110,43 @@ npm run codex:install -- --project-root /path/to/your-project
 npm run codex:verify
 ```
 
+## Choose Models And Reasoning Effort
+
+Citadel uses current Codex defaults when it projects `agents/*.md` into
+`.codex/agents/*.toml`:
+
+- `fable` and `opus` roles use `gpt-5.6-sol`
+- `sonnet` roles use `gpt-5.6-terra`
+- `haiku` roles use `gpt-5.6-luna`
+
+You can change a family default or one agent without editing Citadel source.
+The governed config command previews the exact change first and writes only
+when `--apply` is present:
+
+```bash
+node /path/to/Citadel/scripts/citadel-config.js configure-codex-agents \
+  --agent-model arbiter=gpt-5.6-sol \
+  --agent-effort arbiter=ultra
+
+# Review the plan, then apply it and refresh the managed agent files.
+node /path/to/Citadel/scripts/citadel-config.js configure-codex-agents \
+  --agent-model arbiter=gpt-5.6-sol \
+  --agent-effort arbiter=ultra \
+  --apply
+node /path/to/Citadel/scripts/generate-agent-projections.js --project-root .
+```
+
+Available Codex reasoning levels are `low`, `medium`, `high`, `xhigh`, `max`,
+and `ultra`. The selected Codex model must support the selected level. Claude
+Code executor profiles accept `low`, `medium`, `high`, `xhigh`, and `max`;
+`ultra` is not offered there because Claude Code does not support it.
+
+The setting is stored under
+`extensions["citadel.codex-agents"]` in `.claude/harness.json`. Family aliases,
+`defaultModel`, `defaultReasoningEffort`, and per-agent `model` or
+`reasoningEffort` overrides are supported. Use the config command so the
+protected file remains plan-bound and recoverable.
+
 ## Manual Steps The Installer Replaces
 
 The installer is equivalent to running the old sequence:

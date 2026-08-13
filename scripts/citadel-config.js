@@ -5,6 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const { sha256Digest } = require('../core/operations/canonical');
 const config = require('../core/config');
+const {
+  CODEX_AGENT_EXTENSION,
+  normalizeCodexAgentConfig,
+} = require('../core/agents/model-config');
 
 function parseArgs(argv) {
   const result = {
@@ -19,6 +23,11 @@ function parseArgs(argv) {
     disable: [],
     allowDegradedRuntime: null,
     input: null,
+    defaultModel: null,
+    defaultEffort: null,
+    modelAliases: [],
+    agentModels: [],
+    agentEfforts: [],
   };
   function nextValue(flag, index) {
     const value = argv[index + 1];
@@ -31,6 +40,11 @@ function parseArgs(argv) {
     else if (arg === '--runtime') result.runtime = nextValue(arg, index++);
     else if (arg === '--profile') result.profile = nextValue(arg, index++);
     else if (arg === '--input') result.input = path.resolve(nextValue(arg, index++));
+    else if (arg === '--default-model') result.defaultModel = nextValue(arg, index++);
+    else if (arg === '--default-effort') result.defaultEffort = nextValue(arg, index++);
+    else if (arg === '--model-alias') result.modelAliases.push(nextValue(arg, index++));
+    else if (arg === '--agent-model') result.agentModels.push(nextValue(arg, index++));
+    else if (arg === '--agent-effort') result.agentEfforts.push(nextValue(arg, index++));
     else if (arg === '--enable') result.enable.push(nextValue(arg, index++));
     else if (arg === '--disable') result.disable.push(nextValue(arg, index++));
     else if (arg === '--allow-degraded-runtime') result.allowDegradedRuntime = true;
@@ -54,11 +68,70 @@ function usage() {
     '  node scripts/citadel-config.js plan [--profile ID[@VERSION]] [--enable BUNDLE] [--disable BUNDLE]',
     '  node scripts/citadel-config.js migrate [--apply]',
     '  node scripts/citadel-config.js set-profile ID[@VERSION] [--apply]',
+    '  node scripts/citadel-config.js configure-codex-agents [--default-model MODEL] [--default-effort LEVEL]',
+    '       [--model-alias FAMILY=MODEL] [--agent-model AGENT=MODEL] [--agent-effort AGENT=LEVEL] [--apply]',
     '  node scripts/citadel-config.js enable BUNDLE [--apply]',
     '  node scripts/citadel-config.js disable BUNDLE [--apply]',
     '',
     'Planning is the default. No command writes harness.json unless --apply is explicit.',
   ].join('\n');
+}
+
+function assignment(value, flag) {
+  const separator = value.indexOf('=');
+  if (separator < 1 || separator === value.length - 1) {
+    throw new TypeError(`${flag} requires NAME=VALUE`);
+  }
+  return [value.slice(0, separator), value.slice(separator + 1)];
+}
+
+function withCodexAgentConfig(raw, args) {
+  const candidate = config.migrationCandidate(raw);
+  const existing = config.plain(candidate.extensions?.[CODEX_AGENT_EXTENSION])
+    ? candidate.extensions[CODEX_AGENT_EXTENSION]
+    : {};
+  const next = {
+    ...existing,
+    modelAliases: { ...(existing.modelAliases || {}) },
+    agents: Object.fromEntries(Object.entries(existing.agents || {}).map(([name, value]) => (
+      [name, { ...value }]
+    ))),
+  };
+  let changes = 0;
+  if (args.defaultModel !== null) {
+    next.defaultModel = args.defaultModel;
+    changes++;
+  }
+  if (args.defaultEffort !== null) {
+    next.defaultReasoningEffort = args.defaultEffort;
+    changes++;
+  }
+  for (const rawAlias of args.modelAliases) {
+    const [name, model] = assignment(rawAlias, '--model-alias');
+    next.modelAliases[name] = model;
+    changes++;
+  }
+  for (const rawAgent of args.agentModels) {
+    const [name, model] = assignment(rawAgent, '--agent-model');
+    next.agents[name] = { ...(next.agents[name] || {}), model };
+    changes++;
+  }
+  for (const rawAgent of args.agentEfforts) {
+    const [name, reasoningEffort] = assignment(rawAgent, '--agent-effort');
+    next.agents[name] = { ...(next.agents[name] || {}), reasoningEffort };
+    changes++;
+  }
+  if (!changes) {
+    throw new TypeError('configure-codex-agents requires at least one model or effort option');
+  }
+  normalizeCodexAgentConfig(next);
+  return {
+    ...candidate,
+    extensions: {
+      ...candidate.extensions,
+      [CODEX_AGENT_EXTENSION]: next,
+    },
+  };
 }
 
 function runtimeContract(runtimeId) {
@@ -114,6 +187,12 @@ function buildPlan(raw, args) {
     if (args.values.length > 1) throw new TypeError('set-profile accepts exactly one profile');
     return config.createChangePlan(raw, `set-profile:${reference}`, (value) =>
       config.withProfile(value, reference));
+  }
+  if (args.command === 'configure-codex-agents') {
+    if (args.values.length) throw new TypeError('configure-codex-agents does not accept positional values');
+    return config.createChangePlan(raw, 'configure-codex-agents', (value) => (
+      withCodexAgentConfig(value, args)
+    ));
   }
   if (args.command === 'enable') {
     const bundle = args.values[0];
@@ -323,9 +402,15 @@ function main(argv = process.argv.slice(2)) {
       return plan.blocked ? 1 : 0;
     }
     const receipt = applyPlan(loaded, plan, { runtime: selectedRuntime });
+    const result = args.command === 'configure-codex-agents'
+      ? {
+        ...receipt,
+        nextCommand: `node "${path.join(__dirname, 'generate-agent-projections.js')}" --project-root "${loaded.projectRoot}"`,
+      }
+      : receipt;
     process.stdout.write(args.json
-      ? `${JSON.stringify(receipt, null, 2)}\n`
-      : `Applied ${receipt.action}\nConfig: ${receipt.configPath}\nDigest: ${receipt.afterDigest}\n`);
+      ? `${JSON.stringify(result, null, 2)}\n`
+      : `Applied ${receipt.action}\nConfig: ${receipt.configPath}\nDigest: ${receipt.afterDigest}\n${result.nextCommand ? `Next: ${result.nextCommand}\n` : ''}`);
     return 0;
   } catch (error) {
     process.stderr.write(`Citadel config error: ${error.message}\n`);
@@ -346,4 +431,5 @@ module.exports = Object.freeze({
   runtimeContract,
   transformPlan,
   usage,
+  withCodexAgentConfig,
 });

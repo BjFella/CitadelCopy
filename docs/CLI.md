@@ -53,6 +53,28 @@ node "$CITADEL_ROOT/bin/citadel.js" doctor --json
 `CITADEL_RUNTIME`, then an unambiguous project marker or installed runtime. If
 both runtimes are available, it stops and requires `--runtime`.
 
+## Agent model configuration
+
+Codex agent models and reasoning effort are governed project settings. Preview
+the change first, add `--apply` when it is correct, then refresh the managed
+agent projection:
+
+```sh
+node "$CITADEL_ROOT/scripts/citadel-config.js" configure-codex-agents \
+  --agent-model arbiter=gpt-5.6-sol \
+  --agent-effort arbiter=ultra
+node "$CITADEL_ROOT/scripts/citadel-config.js" configure-codex-agents \
+  --agent-model arbiter=gpt-5.6-sol \
+  --agent-effort arbiter=ultra --apply
+node "$CITADEL_ROOT/scripts/generate-agent-projections.js" --project-root .
+```
+
+Use `--model-alias FAMILY=MODEL` for a model family, `--default-model MODEL`
+for roles without a family, and `--default-effort LEVEL` for the project
+default. Codex levels are `low`, `medium`, `high`, `xhigh`, `max`, and
+`ultra`; the chosen model must support the chosen level. Claude executor
+profiles support through `max`, not `ultra`.
+
 ## Update and rollback
 
 Download and verify the next release trio before using its extracted directory

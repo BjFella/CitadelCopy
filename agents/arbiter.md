@@ -18,9 +18,9 @@ description: >-
 # Decorrelation (catching what the generator's blind spots miss) comes from a DIFFERENT
 # LINEAGE, not from a weaker model: if the worker is gpt-5.x, set this to a strong Claude
 # (and vice-versa). NEVER downgrade this to the small-model tier used by phase-validator.
-model: claude-opus-4-8
+model: fable
 maxTurns: 30
-effort: high
+effort: max
 tools:
   - Read
   - Glob
