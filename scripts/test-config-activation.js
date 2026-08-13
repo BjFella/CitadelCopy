@@ -261,11 +261,11 @@ test('runtime negotiation distinguishes degraded and unavailable activation', ()
   )));
   assert.equal(
     unavailableDecision.plan.previewCommand,
-    'node scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --json',
+    'node .citadel/scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --json',
   );
   assert.equal(
     unavailableDecision.plan.applyCommand,
-    'node scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --apply --json',
+    'node .citadel/scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --apply --json',
   );
 });
 

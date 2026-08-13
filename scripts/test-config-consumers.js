@@ -65,7 +65,7 @@ assert.equal(bootstrapMarshal.activation.decision.bundleId, 'operations');
 assert.equal(bootstrapMarshal.activation.decision.status, 'disabled');
 assert.equal(bootstrapMarshal.boundary, 'product-bundle-activation');
 assert.equal(bootstrapMarshal.canRunNow, false);
-assert.match(bootstrapMarshal.approval, /citadel-config\.js enable operations .*--apply/);
+assert.match(bootstrapMarshal.approval, /\.citadel\/scripts\/citadel-config\.js enable operations .*--apply/);
 
 const value = config.createDefaultConfig();
 writeHarness(value);
@@ -110,6 +110,16 @@ config.reconcileEffectiveConfig(codexRoot, {
   runtime: require('../runtimes/codex/runtime'),
   reconciledAt: '2026-07-30T20:00:30.000Z',
 });
+const codexInit = spawnSync(
+  process.execPath,
+  [path.join(__dirname, '..', 'hooks_src', 'init-project.js')],
+  {
+    cwd: codexRoot,
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: codexRoot, CITADEL_RUNTIME: 'codex' },
+  },
+);
+assert.equal(codexInit.status, 0, codexInit.stderr);
 const codexFleetBlocked = spawnSync(
   process.execPath,
   [path.join(__dirname, '..', 'hooks_src', 'user-prompt-submit.js')],
@@ -127,12 +137,14 @@ assert.match(
   /enable parallel --runtime codex --allow-degraded-runtime --apply --json/,
 );
 
+const displayedApply = codexFleetBlocked.stderr.match(/Review and explicitly apply: (.+)\r?\n$/)?.[1];
+assert(displayedApply, 'Codex Fleet block must contain one apply command');
+const displayedArgs = displayedApply.split(/\s+/);
+assert.equal(displayedArgs.shift(), 'node');
+const displayedScript = displayedArgs.shift();
 const codexFleetApply = spawnSync(
   process.execPath,
-  [
-    path.join(__dirname, 'citadel-config.js'),
-    'enable', 'parallel', '--runtime', 'codex', '--allow-degraded-runtime', '--apply', '--json',
-  ],
+  [displayedScript, ...displayedArgs],
   { cwd: codexRoot, encoding: 'utf8', env: { ...process.env } },
 );
 assert.equal(codexFleetApply.status, 0, codexFleetApply.stderr || codexFleetApply.stdout);
