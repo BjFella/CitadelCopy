@@ -12,6 +12,7 @@ const { buildRelease, sanitizeReleaseInstructions, sha256 } = require('./release
 const { parseTar, verifyRelease } = require('./release-verify');
 
 const ROOT = path.resolve(__dirname, '..');
+const SOURCE_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 const LARGE_BINARY_FIXTURE = Buffer.concat([
   Buffer.from([0x00, 0x0d, 0x0a, 0xff]),
   Buffer.alloc((2 * 1024 * 1024) + 17, 0xa5),
@@ -344,7 +345,7 @@ try {
     assert(!productPaths.has(sourceOnlyProofPath), `release leaked source-only proof path ${sourceOnlyProofPath}`);
   }
   assert(![...productPaths].some((relative) => relative.startsWith('.planning/rubrics/')), 'release leaked maintainer-only rubrics');
-  assert.equal(verifyRelease(product.archivePath, { version: '1.3.2', ref: product.manifest.ref }).files, productPaths.size);
+  assert.equal(verifyRelease(product.archivePath, { version: SOURCE_VERSION, ref: product.manifest.ref }).files, productPaths.size);
 
   const extracted = path.join(temp, 'product-extracted');
   const archiveFiles = parseTar(zlib.gunzipSync(fs.readFileSync(product.archivePath)));

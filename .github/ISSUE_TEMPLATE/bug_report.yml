@@ -26,8 +26,8 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. /do setup --express
-        2. /do review src/auth
+        1. Codex: $do setup --express (Claude Code: /do setup --express)
+        2. Codex: $do review src/auth (Claude Code: /do review src/auth)
         3. ...
     validations:
       required: true
@@ -49,7 +49,8 @@ body:
     validations:
       required: true
   - type: textarea
-    id: doctor
+    id: diagnostics
     attributes:
-      label: Output of `npm test` from your Citadel clone (optional)
+      label: Additional Citadel diagnostics (optional)
+      description: Paste relevant Citadel error output here. You do not need to clone Citadel or run its maintainer test suite just to file a report.
       render: text

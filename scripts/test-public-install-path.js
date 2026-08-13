@@ -19,6 +19,7 @@ const SECURITY = fs.readFileSync(path.join(ROOT, 'SECURITY.md'), 'utf8');
 const ROUTING = fs.readFileSync(path.join(ROOT, 'docs', 'ROUTING_PREVIEW.md'), 'utf8');
 const ARCHITECTURE = fs.readFileSync(path.join(ROOT, 'docs', 'ARCHITECTURE.md'), 'utf8');
 const RELEASES = fs.readFileSync(path.join(ROOT, 'docs', 'RELEASES.md'), 'utf8');
+const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 
 const TRIO = Object.freeze([
   'citadel-vX.Y.Z.tar.gz',
@@ -58,11 +59,11 @@ for (const snippet of WINDOWS_SNIPPETS) {
 assert(INSTALL.includes('node "$CITADEL_ROOT/scripts/release-verify.js"'), 'INSTALL.md missing Linux/macOS release verifier path');
 assert(README.includes('Windows users should use the'), 'README must identify its compact manual block as Linux/macOS syntax');
 for (const [name, document] of [['README.md', README], ['INSTALL.md', INSTALL]]) {
-  assert(document.includes('codex plugin marketplace add SethGammon/Citadel --ref v1.3.2'),
+  assert(document.includes(`codex plugin marketplace add SethGammon/Citadel --ref v${VERSION}`),
     `${name} missing exact Codex marketplace install`);
   assert(document.includes('codex plugin add citadel@citadel-local'),
     `${name} missing exact Codex plugin install`);
-  assert(document.includes('claude plugin marketplace add SethGammon/Citadel@v1.3.2 --scope local'),
+  assert(document.includes(`claude plugin marketplace add SethGammon/Citadel@v${VERSION} --scope local`),
     `${name} missing exact Claude marketplace install`);
   assert(document.includes('claude plugin install citadel@citadel-local --scope local'),
     `${name} missing exact Claude plugin install`);

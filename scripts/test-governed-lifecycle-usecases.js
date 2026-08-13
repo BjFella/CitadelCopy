@@ -533,8 +533,12 @@ function configScenario(suite) {
     display: 'config check route marshal --project-root <project> --runtime codex --json',
     expected: [2],
   }).json;
-  assert.equal(disabled.decision.status, 'unavailable');
-  assert.equal(disabled.decision.reasonCode, 'ACTIVATION_BUNDLE_UNAVAILABLE');
+  assert.equal(disabled.decision.status, 'disabled');
+  assert.equal(disabled.decision.reasonCode, 'ACTIVATION_PROMPT_REQUIRED');
+  assert.match(
+    disabled.decision.plan.applyCommand,
+    /--runtime codex --allow-degraded-runtime --apply --json$/,
+  );
 
   const beforePlan = fs.readFileSync(path.join(projectRoot, '.claude', 'harness.json'));
   runCitadel(scenario, 'operations-enable-plan', [

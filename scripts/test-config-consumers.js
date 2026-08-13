@@ -65,7 +65,7 @@ assert.equal(bootstrapMarshal.activation.decision.bundleId, 'operations');
 assert.equal(bootstrapMarshal.activation.decision.status, 'disabled');
 assert.equal(bootstrapMarshal.boundary, 'product-bundle-activation');
 assert.equal(bootstrapMarshal.canRunNow, false);
-assert.match(bootstrapMarshal.approval, /citadel-config\.js enable operations --apply/);
+assert.match(bootstrapMarshal.approval, /citadel-config\.js enable operations .*--apply/);
 
 const value = config.createDefaultConfig();
 writeHarness(value);
@@ -99,6 +99,54 @@ const customAllowed = run(
   { CLAUDE_PROJECT_DIR: root, CITADEL_RUNTIME: 'claude-code' },
 );
 assert.equal(customAllowed.status, 0, customAllowed.stderr);
+
+const codexRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-config-codex-fleet-'));
+fs.mkdirSync(path.join(codexRoot, '.claude'), { recursive: true });
+fs.writeFileSync(
+  path.join(codexRoot, '.claude', 'harness.json'),
+  `${JSON.stringify(config.createDefaultConfig(), null, 2)}\n`,
+);
+config.reconcileEffectiveConfig(codexRoot, {
+  runtime: require('../runtimes/codex/runtime'),
+  reconciledAt: '2026-07-30T20:00:30.000Z',
+});
+const codexFleetBlocked = spawnSync(
+  process.execPath,
+  [path.join(__dirname, '..', 'hooks_src', 'user-prompt-submit.js')],
+  {
+    cwd: codexRoot,
+    encoding: 'utf8',
+    input: JSON.stringify({ prompt: '$fleet coordinate these tasks' }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: codexRoot, CITADEL_RUNTIME: 'codex' },
+  },
+);
+assert.equal(codexFleetBlocked.status, 2);
+assert.match(codexFleetBlocked.stderr, /\$fleet is disabled \(ACTIVATION_PROMPT_REQUIRED\)/);
+assert.match(
+  codexFleetBlocked.stderr,
+  /enable parallel --runtime codex --allow-degraded-runtime --apply --json/,
+);
+
+const codexFleetApply = spawnSync(
+  process.execPath,
+  [
+    path.join(__dirname, 'citadel-config.js'),
+    'enable', 'parallel', '--runtime', 'codex', '--allow-degraded-runtime', '--apply', '--json',
+  ],
+  { cwd: codexRoot, encoding: 'utf8', env: { ...process.env } },
+);
+assert.equal(codexFleetApply.status, 0, codexFleetApply.stderr || codexFleetApply.stdout);
+const codexFleetEnabled = spawnSync(
+  process.execPath,
+  [path.join(__dirname, '..', 'hooks_src', 'user-prompt-submit.js')],
+  {
+    cwd: codexRoot,
+    encoding: 'utf8',
+    input: JSON.stringify({ prompt: '$fleet coordinate these tasks' }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: codexRoot, CITADEL_RUNTIME: 'codex' },
+  },
+);
+assert.equal(codexFleetEnabled.status, 0, codexFleetEnabled.stderr);
 
 value.activation = {
   ...value.activation,

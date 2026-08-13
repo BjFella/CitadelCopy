@@ -80,9 +80,28 @@ function createActivationPlan(receipt, bundleId) {
         && bundle.autoSafe === true
         && bundle.reversibleActivation === true;
     });
-  const prospective = negotiateBundles(closure, receipt.runtime, {
-    allowDegradedRuntime: receipt.activation.allowDegradedRuntime,
+  const configuredAllowDegraded = receipt.activation.allowDegradedRuntime === true;
+  let prospective = negotiateBundles(closure, receipt.runtime, {
+    allowDegradedRuntime: configuredAllowDegraded,
   });
+  let degradedRuntimeOptInRequired = false;
+  if (!configuredAllowDegraded
+    && prospective.unavailable.some((entry) => (
+      entry.reasonCode === 'DEGRADED_RUNTIME_REQUIRES_OPT_IN'
+    ))) {
+    const adapterAware = negotiateBundles(closure, receipt.runtime, {
+      allowDegradedRuntime: true,
+    });
+    if (adapterAware.effective.includes(bundleId)) {
+      prospective = adapterAware;
+      degradedRuntimeOptInRequired = true;
+    }
+  }
+  const runtimeId = receipt.runtime && /^[a-z0-9-]+$/i.test(receipt.runtime.id)
+    ? receipt.runtime.id
+    : 'unknown';
+  const commandOptions = `--runtime ${runtimeId}`
+    + (degradedRuntimeOptInRequired ? ' --allow-degraded-runtime' : '');
   return deepFreeze({
     contractVersion: 1,
     action: 'enable-bundle',
@@ -92,10 +111,11 @@ function createActivationPlan(receipt, bundleId) {
     resources: resourceChanges(addedBundles),
     onDemand: receipt.activation.onDemand,
     autoSafeEligible,
+    degradedRuntimeOptInRequired,
     requiresExplicitApply: true,
     mutatesConfig: false,
-    previewCommand: `node scripts/citadel-config.js enable ${bundleId} --json`,
-    applyCommand: `node scripts/citadel-config.js enable ${bundleId} --apply --json`,
+    previewCommand: `node scripts/citadel-config.js enable ${bundleId} ${commandOptions} --json`,
+    applyCommand: `node scripts/citadel-config.js enable ${bundleId} ${commandOptions} --apply --json`,
     prospective,
   });
 }
