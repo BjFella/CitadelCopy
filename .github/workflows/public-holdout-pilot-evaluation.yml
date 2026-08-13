@@ -26,7 +26,7 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       count: ${{ steps.matrix.outputs.count }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: matrix
         shell: bash
         run: node scripts/public-holdout-matrix.js prediction "${{ inputs.selection_path }}" "${{ inputs.pool_path }}" "${{ inputs.prediction_path }}" 0 0 >> "$GITHUB_OUTPUT"
@@ -42,11 +42,11 @@ jobs:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - name: Check out Citadel protocol and predictions
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: citadel
       - name: Check out pinned official evaluator
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: microsoft/SWE-bench-Live
           ref: 70ec57e852e3f2d195790fe71f553e272c691833
