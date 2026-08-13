@@ -618,7 +618,7 @@ try {
   const releaseAgentGenerator = path.join(productRoot, 'scripts', 'generate-agent-projections.js');
   assert.equal(
     modelConfigReceipt.nextCommand,
-    `node "${releaseAgentGenerator}" --project-root "${modelConfigTarget}"`,
+    `node "${fs.realpathSync(releaseAgentGenerator)}" --project-root "${modelConfigTarget}"`,
     'release config must return an executable, source-bound projection command',
   );
   const projectModels = spawnSync(process.execPath, [
